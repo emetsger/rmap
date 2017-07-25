@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:solr="http://www.springframework.org/schema/data/solr"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/data/solr
+     http://www.springframework.org/schema/data/solr/spring-solr.xsd">
+
+    <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true" />
+
+    <solr:solr-client id="solrClient" url="http://192.168.99.100:8983/solr" />
+
+    <bean id="discoTemplate" name="discos" class="org.springframework.data.solr.core.SolrTemplate" scope="prototype">
+        <constructor-arg ref="solrClient"/>
+        <constructor-arg value="discos"/>
+    </bean>
+
+    <bean id="versionTemplate" name="versions" class="org.springframework.data.solr.core.SolrTemplate" scope="prototype">
+        <constructor-arg ref="solrClient"/>
+        <constructor-arg value="versions"/>
+    </bean>
+
+    <bean id="resourceTemplate" name="resources" class="org.springframework.data.solr.core.SolrTemplate" scope="prototype">
+        <constructor-arg ref="solrClient"/>
+        <constructor-arg value="resources"/>
+    </bean>
+
+</beans>

@@ -78,7 +78,7 @@
         - Inactivate:
         - Tombstone:
     -->
-    <field name="source_object_uris" type="uris"/>
+    <field name="event_source_object_uris" type="uris"/>
 
     <!--
       Example targets:
@@ -89,7 +89,7 @@
         - Inactivate: inactivatedObjectId
         - Tombstone:  tombstonedResourceId
     -->
-    <field name="target_object_uris" type="uris"/>
+    <field name="event_target_object_uris" type="uris"/>
 
     <!--
       Agent that is responsible for the event and state of the DiSCO
