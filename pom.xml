@@ -27,7 +27,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <java-version>1.8</java-version>
-        <org.springframework-version>4.1.6.RELEASE</org.springframework-version>
+        <org.springframework-version>4.3.10.RELEASE</org.springframework-version>
         <org.aspectj-version>1.6.10</org.aspectj-version>
         <org.powermock-version>1.6.6</org.powermock-version>
         <org.slf4j-version>1.7.25</org.slf4j-version>
@@ -39,7 +39,7 @@
         <commons-collections.version>4.0</commons-collections.version>
         <commons-configuration.version>1.10</commons-configuration.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
-        <junit.version>4.11</junit.version>
+        <junit.version>4.12</junit.version>
         <jstl.version>1.2</jstl.version>
         <jsp-api.version>2.1</jsp-api.version>
         <servlet-api.version>3.1.0</servlet-api.version>
@@ -56,6 +56,7 @@
         <okhttp.version>3.8.0</okhttp.version>
         <ant.version>1.10.1</ant.version>
         <solr.version>6.6.0</solr.version>
+        <spring-data.version>2.1.4.RELEASE</spring-data.version>
     </properties>
 
     <build>
@@ -251,6 +252,14 @@
                 <artifactId>spring-beans</artifactId>
                 <version>${org.springframework-version}</version>
             </dependency>
+
+            <!-- Spring Data -->
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-solr</artifactId>
+                <version>${spring-data.version}</version>
+            </dependency>
+
 
             <!-- testing -->
             <dependency>
