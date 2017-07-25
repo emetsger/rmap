@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="version-schema" version="1.6">
+
+    <uniqueKey>id</uniqueKey>
+
+    <fieldType name="id" class="solr.LongPointField"/>
+    <fieldType name="disco_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="disco_status" class="solr.StrField"/> <!-- enum? -->
+    <fieldType name="past_uris" class="solr.TextField" multivalued="true"> <!-- limit to n uris? -->
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="last_updated" class="solr.DatePointField"/>
+
+</schema>

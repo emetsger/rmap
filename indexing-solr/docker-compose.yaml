@@ -1,0 +1,18 @@
+version: '2'
+services:
+  solr:
+    image: solr:6.6.0-alpine
+    ports:
+     - "8983:8983"
+    volumes:
+#      - "./src/test/resources/cores:/opt/solr/server/solr/mycores"
+      - "./precreate.sh:/docker-entrypoint-initdb.d/precreate.sh"
+     # - data
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr
+#      - solr-precreate
+#      - discos resources versions
+#volumes:
+# data:
+#    - "./src/test/resources/cores:/opt/solr/server/solr/mycores"

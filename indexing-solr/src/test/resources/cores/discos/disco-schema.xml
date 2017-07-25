@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="disco-schema" version="1.6">
+
+    <uniqueKey>id</uniqueKey>
+    <fieldType name="id" class="solr.LongPointField"/>
+
+    <!-- DiSCO state as a Solr document -->
+
+    <fieldType name="disco_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <!-- other interesting tokenizers -->
+            <!-- solr.PathHierarchyTokenizerFactory -->
+            <!-- solr.UAX29URLEmailTokenizerFactory -->
+
+            <!-- interesting filters -->
+            <!-- solr.ASCIIFoldingFilterFactory
+                 solr.MappingCharFilterFactory
+             (handling literals with diacritics, etc.) -->
+
+            <filter class="solr.TrimFilterFactory"/>
+
+            <!-- solr.TypeTokenFilterFactory -->
+            <!-- solr.HTMLStripCharFilterFactory -->
+
+        </analyzer>
+    </fieldType>
+    <fieldType name="disco_creator_uri" class="solr.TextField"> <!-- what is the rdf:type of the creator URI and do we need to index literal values? -->
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="disco_description" class="solr.TextField"/>
+    <fieldType name="disco_providerid" class="solr.StrField"/> <!-- any literal values to index here? -->
+    <fieldType name="disco_aggregated_resource_uris" class="solr.TextField" multivalued="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="disco_provenance_uri" class="solr.TextField"> <!-- any literal values to index here? -->
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="disco_related_statements" class="solr.TextField"> <!-- subject predicate object n3 format? -->
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+
+    <!-- labels for predicates/edges? -->
+
+    <!-- Event that resulted in state of this DiSCO document -->
+
+    <fieldType name="event_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="event_agent_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="event_start_time" class="solr.DatePointField"/>
+    <fieldType name="event_end_time" class="solr.DatePointField"/>
+    <fieldType name="event_description" class="solr.TextField"/>
+
+    <!--
+      Event type supplies the semantics for event source and target
+    -->
+    <fieldType name="event_type" class="solr.StrField"/> <!-- enum? -->
+
+    <!--
+      Example sources:
+        - Derivation: sourceObjectId
+        - Update:     inactivatedObjectId
+        - Create:
+        - Delete:
+        - Inactivate:
+        - Tombstone:
+    -->
+    <fieldType name="source_object_uris" class="solr.TextField" multivalued="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+
+    <!--
+      Example targets:
+        - Derivation: derivedObjectId (createdObjectIds?)
+        - Update:     derivedObjectId  (createdObjectIds?)
+        - Create:     createdObjectIds
+        - Delete:     deletedObjectIds
+        - Inactivate: inactivatedObjectId
+        - Tombstone:  tombstonedResourceId
+    -->
+    <fieldType name="target_object_uris" class="solr.TextField" multivalued="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+
+    <!--
+      Agent that is responsible for the event and state of the DiSCO
+    -->
+
+    <fieldType name="agent_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="agent_provider_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="agent_name" class="solr.TextField"/>
+    <!-- auth id? -->
+
+</schema>
