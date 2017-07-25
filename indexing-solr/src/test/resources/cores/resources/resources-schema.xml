@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="resources-schema" version="1.6">
+
+    <uniqueKey>subject_uri</uniqueKey>
+
+    <fieldType name="subject_uri" class="solr.TextField">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="related_statements" class="solr.TextField" multivalued="true"> <!-- subject predicate object n3 format? -->
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <tokenizer class="solr.LowerCaseTokenizerFactory"/>
+            <filter class="solr.TrimFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="last_updated" class="solr.DatePointField"/>
+    <fieldType name="literal_values" class="solr.TextField"/>
+
+</schema>
