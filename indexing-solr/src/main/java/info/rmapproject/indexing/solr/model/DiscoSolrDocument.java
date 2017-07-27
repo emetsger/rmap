@@ -74,6 +74,10 @@ public class DiscoSolrDocument {
     @Field
     private String agent_description;
 
+    public DiscoSolrDocument() {
+
+    }
+
     public Long getDisco_id() {
         return disco_id;
     }
