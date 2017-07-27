@@ -25,7 +25,7 @@ public class DiscoSolrDocument {
     private URI disco_creator_uri;
 
     @Field
-    private URI disco_description;
+    private String disco_description;
 
     @Field
     private URI disco_providerid;
@@ -102,11 +102,11 @@ public class DiscoSolrDocument {
         this.disco_creator_uri = disco_creator_uri;
     }
 
-    public URI getDisco_description() {
+    public String getDisco_description() {
         return disco_description;
     }
 
-    public void setDisco_description(URI disco_description) {
+    public void setDisco_description(String disco_description) {
         this.disco_description = disco_description;
     }
 
