@@ -5,6 +5,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.springframework.data.solr.core.convert.SolrConverter;
 import org.springframework.data.solr.server.SolrClientFactory;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
@@ -14,12 +17,63 @@ public class Solr6xxTemplate extends SolrTemplate {
         super(solrClient);
     }
 
+    /**
+     * Use a naive factory instead of {@link org.springframework.data.solr.server.support.HttpSolrClientFactory}.
+     * Prevents munging of the base Solr URL by appending a core when it isn't needed.
+     *
+     * @param solrClient
+     * @param core
+     */
     public Solr6xxTemplate(SolrClient solrClient, String core) {
-        super(solrClient, core);
+        this(new SolrClientFactory() {
+            @Override
+            public SolrClient getSolrClient() {
+                return solrClient;
+            }
+
+            @Override
+            public SolrClient getSolrClient(String core) {
+                return solrClient;
+            }
+
+            @Override
+            public List<String> getCores() {
+                return Collections.singletonList(core);
+            }
+        });
+
+        // set the core as the super constructor does
+        setSolrCore(core);
     }
 
+    /**
+     * Use a naive factory instead of {@link org.springframework.data.solr.server.support.HttpSolrClientFactory}.
+     * Prevents munging of the base Solr URL by appending a core when it isn't needed.
+     *
+     * @param solrClient
+     * @param core
+     * @param requestMethod
+     */
     public Solr6xxTemplate(SolrClient solrClient, String core, RequestMethod requestMethod) {
-        super(solrClient, core, requestMethod);
+        this(new SolrClientFactory() {
+            @Override
+            public SolrClient getSolrClient() {
+                return solrClient;
+            }
+
+            @Override
+            public SolrClient getSolrClient(String core) {
+                return solrClient;
+            }
+
+            @Override
+            public List<String> getCores() {
+                return Collections.singletonList(core);
+            }
+        }, requestMethod);
+
+        // set the core as the super constructor does
+        setSolrCore(core);
     }
 
     public Solr6xxTemplate(SolrClientFactory solrClientFactory) {
