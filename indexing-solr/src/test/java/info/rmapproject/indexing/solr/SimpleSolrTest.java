@@ -106,4 +106,34 @@ public class SimpleSolrTest {
         DiscoSolrDocument saved = discoRepository.save(doc);
         assertNotNull(saved);
     }
+
+    @Test
+    public void simpleCountAndDelete() throws Exception {
+        DiscoSolrDocument doc = new DiscoSolrDocument();
+        doc.setDisco_id(20L);
+        doc.setDisco_description("simpleCountAndDelete");
+        doc.setDisco_uri(URI.create("http://rmapproject.org/disco/5678f"));
+        doc.setDisco_creator_uri(URI.create("http://foaf.org/Elliot_Metsger"));
+        doc.setDisco_aggregated_resource_uris(new ArrayList() {
+            {
+                add("http://doi.org/10.1109/disco.test");
+                add("http://ieeexplore.ieee.org/example/000000-mm.zip");
+            }
+        });
+        doc.setDisco_provenance_uri(URI.create("http://rmapproject.org/prov/5678"));
+        doc.setDisco_related_statements(new ArrayList() {
+            {
+                add("TODO n3 triples");
+            }
+        });
+
+        DiscoSolrDocument saved = discoRepository.save(doc);
+        assertNotNull(saved);
+
+        assertTrue(discoRepository.count() > 0);
+
+        discoRepository.deleteAll();
+
+        assertEquals(0, discoRepository.count());
+    }
 }
