@@ -1,3 +1,3 @@
-indexing-solr/src/test/resources/docker/cores/discos/data/
-indexing-solr/src/test/resources/docker/cores/versions/data/
-indexing-solr/src/test/resources/docker/cores/resources/data/
+src/test/resources/docker/cores/discos/data/*
+src/test/resources/docker/cores/versions/data/*
+src/test/resources/docker/cores/resources/data/*
