@@ -1,6 +1,7 @@
 package info.rmapproject.indexing.solr;
 
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.junit.Ignore;
@@ -28,27 +29,30 @@ import static org.junit.Assert.assertTrue;
 public class SimpleSolrTest {
 
     @Autowired
-    @Qualifier("discos")
-    private SolrTemplate solrTemplate;
+    @Qualifier("solrTemplate")
+    private SolrTemplate solrTemplateWithCore;
 
+    @Autowired
+    private DiscoRepository discoRepository;
+
+    /**
+     * Fails: can't specify a core name to ping
+     */
     @Test
     public void testPing() throws Exception {
-        SolrPingResponse res = solrTemplate.ping();
+        SolrPingResponse res = solrTemplateWithCore.ping();
         assertNotNull(res);
         assertTrue(res.getElapsedTime() > 0);
         assertEquals(0, res.getStatus());
     }
 
-    @Test
-    @Ignore
-    public void testMod() throws Exception {
-        System.err.println(2 % 2);
-        System.err.println(0 % 2);
-    }
-
+    /**
+     * Write a document using the SolrTemplate
+     */
     @Test
     @SuppressWarnings("unchecked")
     public void simpleWrite() throws Exception {
+
         DiscoSolrDocument doc = new DiscoSolrDocument();
         doc.setDisco_id(5L);
         doc.setDisco_uri(URI.create("http://rmapproject.org/disco/1234"));
@@ -66,9 +70,39 @@ public class SimpleSolrTest {
             }
         });
 
-        UpdateResponse res = solrTemplate.saveBean(doc);
+        // Don't need to use the saveBean(core, doc) method, because the document has the core as an annotation
+        UpdateResponse res = solrTemplateWithCore.saveBean(doc);
         assertNotNull(res);
 
-        solrTemplate.commit("discos");
+        solrTemplateWithCore.commit("discos");
+    }
+
+    /**
+     * Write a document using domain-specific DiscoRepository
+     *
+     * Fails on commit() with no core specified
+     */
+    @Test
+    public void simpleWriteWithRepo() throws Exception {
+        DiscoSolrDocument doc = new DiscoSolrDocument();
+        doc.setDisco_id(10L);
+        doc.setDisco_description("simpleWriteWithRepo");
+        doc.setDisco_uri(URI.create("http://rmapproject.org/disco/5678f"));
+        doc.setDisco_creator_uri(URI.create("http://foaf.org/Elliot_Metsger"));
+        doc.setDisco_aggregated_resource_uris(new ArrayList() {
+            {
+                add("http://doi.org/10.1109/disco.test");
+                add("http://ieeexplore.ieee.org/example/000000-mm.zip");
+            }
+        });
+        doc.setDisco_provenance_uri(URI.create("http://rmapproject.org/prov/5678"));
+        doc.setDisco_related_statements(new ArrayList() {
+            {
+                add("TODO n3 triples");
+            }
+        });
+
+        DiscoSolrDocument saved = discoRepository.save(doc);
+        assertNotNull(saved);
     }
 }
