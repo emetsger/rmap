@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:solr="http://www.springframework.org/schema/data/solr"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-     http://www.springframework.org/schema/beans/spring-beans.xsd">
+     http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr.xsd">
+
+    <solr:repositories base-package="info.rmapproject.indexing.solr" solr-client-ref="solrClient" solr-template-ref="solrTemplate"/>
 
     <bean id="solrClient" class="org.apache.solr.client.solrj.impl.HttpSolrClient">
         <constructor-arg value="http://192.168.99.100:8983/solr/"/>
-    </bean>
-
-    <bean id="discoRepository" class="info.rmapproject.indexing.solr.client.DiscoRepositoryImpl">
-        <constructor-arg ref="solrTemplate"/>
     </bean>
 
     <bean id="solrTemplate" class="org.springframework.data.solr.core.Solr6xxTemplate">
