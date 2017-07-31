@@ -30,8 +30,8 @@ public class DiscoSolrDocument {
     @Field
     private URI disco_providerid;
 
-    @Field
-    private List<URI> disco_aggregated_resource_uris;
+    @Field("disco_aggregated_resource_uris")
+    private List<URI> discoAggregatedResourceUris;
 
     @Field
     private URI disco_provenance_uri;
@@ -118,12 +118,12 @@ public class DiscoSolrDocument {
         this.disco_providerid = disco_providerid;
     }
 
-    public List<URI> getDisco_aggregated_resource_uris() {
-        return disco_aggregated_resource_uris;
+    public List<URI> getDiscoAggregatedResourceUris() {
+        return discoAggregatedResourceUris;
     }
 
-    public void setDisco_aggregated_resource_uris(List<URI> disco_aggregated_resource_uris) {
-        this.disco_aggregated_resource_uris = disco_aggregated_resource_uris;
+    public void setDiscoAggregatedResourceUris(List<URI> discoAggregatedResourceUris) {
+        this.discoAggregatedResourceUris = discoAggregatedResourceUris;
     }
 
     public URI getDisco_provenance_uri() {
