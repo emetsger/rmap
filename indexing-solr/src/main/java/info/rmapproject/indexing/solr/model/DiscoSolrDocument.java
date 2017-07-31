@@ -229,4 +229,69 @@ public class DiscoSolrDocument {
     public void setAgent_description(String agent_description) {
         this.agent_description = agent_description;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DiscoSolrDocument that = (DiscoSolrDocument) o;
+
+        if (disco_id != null ? !disco_id.equals(that.disco_id) : that.disco_id != null) return false;
+        if (disco_uri != null ? !disco_uri.equals(that.disco_uri) : that.disco_uri != null) return false;
+        if (disco_creator_uri != null ? !disco_creator_uri.equals(that.disco_creator_uri) : that.disco_creator_uri != null)
+            return false;
+        if (disco_description != null ? !disco_description.equals(that.disco_description) : that.disco_description != null)
+            return false;
+        if (disco_providerid != null ? !disco_providerid.equals(that.disco_providerid) : that.disco_providerid != null)
+            return false;
+        if (discoAggregatedResourceUris != null ? !discoAggregatedResourceUris.equals(that.discoAggregatedResourceUris) : that.discoAggregatedResourceUris != null)
+            return false;
+        if (disco_provenance_uri != null ? !disco_provenance_uri.equals(that.disco_provenance_uri) : that.disco_provenance_uri != null)
+            return false;
+        if (disco_related_statements != null ? !disco_related_statements.equals(that.disco_related_statements) : that.disco_related_statements != null)
+            return false;
+        if (event_uri != null ? !event_uri.equals(that.event_uri) : that.event_uri != null) return false;
+        if (event_agent_uri != null ? !event_agent_uri.equals(that.event_agent_uri) : that.event_agent_uri != null)
+            return false;
+        if (event_start_time != null ? !event_start_time.equals(that.event_start_time) : that.event_start_time != null)
+            return false;
+        if (event_end_time != null ? !event_end_time.equals(that.event_end_time) : that.event_end_time != null)
+            return false;
+        if (event_description != null ? !event_description.equals(that.event_description) : that.event_description != null)
+            return false;
+        if (event_type != null ? !event_type.equals(that.event_type) : that.event_type != null) return false;
+        if (event_source_object_uris != null ? !event_source_object_uris.equals(that.event_source_object_uris) : that.event_source_object_uris != null)
+            return false;
+        if (event_target_object_uris != null ? !event_target_object_uris.equals(that.event_target_object_uris) : that.event_target_object_uris != null)
+            return false;
+        if (agent_uri != null ? !agent_uri.equals(that.agent_uri) : that.agent_uri != null) return false;
+        if (agent_provider_uri != null ? !agent_provider_uri.equals(that.agent_provider_uri) : that.agent_provider_uri != null)
+            return false;
+        return agent_description != null ? agent_description.equals(that.agent_description) : that.agent_description == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = disco_id != null ? disco_id.hashCode() : 0;
+        result = 31 * result + (disco_uri != null ? disco_uri.hashCode() : 0);
+        result = 31 * result + (disco_creator_uri != null ? disco_creator_uri.hashCode() : 0);
+        result = 31 * result + (disco_description != null ? disco_description.hashCode() : 0);
+        result = 31 * result + (disco_providerid != null ? disco_providerid.hashCode() : 0);
+        result = 31 * result + (discoAggregatedResourceUris != null ? discoAggregatedResourceUris.hashCode() : 0);
+        result = 31 * result + (disco_provenance_uri != null ? disco_provenance_uri.hashCode() : 0);
+        result = 31 * result + (disco_related_statements != null ? disco_related_statements.hashCode() : 0);
+        result = 31 * result + (event_uri != null ? event_uri.hashCode() : 0);
+        result = 31 * result + (event_agent_uri != null ? event_agent_uri.hashCode() : 0);
+        result = 31 * result + (event_start_time != null ? event_start_time.hashCode() : 0);
+        result = 31 * result + (event_end_time != null ? event_end_time.hashCode() : 0);
+        result = 31 * result + (event_description != null ? event_description.hashCode() : 0);
+        result = 31 * result + (event_type != null ? event_type.hashCode() : 0);
+        result = 31 * result + (event_source_object_uris != null ? event_source_object_uris.hashCode() : 0);
+        result = 31 * result + (event_target_object_uris != null ? event_target_object_uris.hashCode() : 0);
+        result = 31 * result + (agent_uri != null ? agent_uri.hashCode() : 0);
+        result = 31 * result + (agent_provider_uri != null ? agent_provider_uri.hashCode() : 0);
+        result = 31 * result + (agent_description != null ? agent_description.hashCode() : 0);
+        return result;
+    }
 }
