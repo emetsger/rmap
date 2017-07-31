@@ -27,7 +27,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <java-version>1.8</java-version>
-        <org.springframework-version>4.3.10.RELEASE</org.springframework-version>
+        <org.springframework-version>5.0.0.RC3</org.springframework-version>
         <org.aspectj-version>1.6.10</org.aspectj-version>
         <org.powermock-version>1.6.6</org.powermock-version>
         <org.slf4j-version>1.7.25</org.slf4j-version>
@@ -56,7 +56,7 @@
         <okhttp.version>3.8.0</okhttp.version>
         <ant.version>1.10.1</ant.version>
         <solr.version>6.6.0</solr.version>
-        <spring-data.version>2.1.6.RELEASE</spring-data.version>
+        <spring-data.version>3.0.0.BUILD-SNAPSHOT</spring-data.version>
     </properties>
 
     <build>
