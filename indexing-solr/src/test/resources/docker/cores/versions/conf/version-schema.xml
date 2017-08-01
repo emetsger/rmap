@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema name="version-schema" version="1.6">
 
-    <fieldType name="id" class="solr.LongPointField"/>
     <field name="_version_" type="long" indexed="true" stored="true"/>
 
     <uniqueKey>version_id</uniqueKey>
 
-    <field name="version_id" type="id"/>
+    <field name="version_id" type="string"/>
 
     <fieldType name="uri" class="solr.TextField">
         <analyzer>
