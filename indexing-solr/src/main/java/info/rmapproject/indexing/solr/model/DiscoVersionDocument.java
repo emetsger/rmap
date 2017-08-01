@@ -99,6 +99,17 @@ public class DiscoVersionDocument {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "DiscoVersionDocument{" +
+                "version_id=" + version_id +
+                ", discoUri=" + discoUri +
+                ", discoStatus='" + discoStatus + '\'' +
+                ", pastUris=" + pastUris +
+                ", lastUpdated=" + lastUpdated +
+                '}';
+    }
+
     public static class Builder {
 
         private DiscoVersionDocument instance;
