@@ -1225,6 +1225,7 @@
         <str>yyyy-MM-dd</str>
       </arr>
     </processor>
+    <!--
     <processor class="solr.AddSchemaFieldsUpdateProcessorFactory">
       <str name="defaultFieldType">strings</str>
       <lst name="typeMapping">
@@ -1245,14 +1246,16 @@
         <str name="fieldType">tdoubles</str>
       </lst>
     </processor>
+    -->
 
-
+    <!--
     <processor class="org.apache.solr.update.processor.LangDetectLanguageIdentifierUpdateProcessorFactory">
       <lst name="defaults">
         <str name="langid.fl">content</str>
         <str name="langid.langField">language</str>
       </lst>
     </processor>
+    -->
 
     <processor class="solr.LogUpdateProcessorFactory"/>
     <processor class="solr.DistributedUpdateProcessorFactory"/>
