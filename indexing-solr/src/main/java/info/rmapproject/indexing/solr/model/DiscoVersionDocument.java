@@ -180,6 +180,12 @@ public class DiscoVersionDocument {
                 instance = new DiscoVersionDocument();
             }
         }
+
+        private void reset() {
+            instance = null;
+            lastUpdatedInvoked = false;
+        }
+
     }
 
 }
