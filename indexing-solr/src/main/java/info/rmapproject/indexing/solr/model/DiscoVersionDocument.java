@@ -113,6 +113,7 @@ public class DiscoVersionDocument {
     public static class Builder {
 
         private DiscoVersionDocument instance;
+        private boolean lastUpdatedInvoked;
 
         public Builder() {
 
@@ -153,6 +154,7 @@ public class DiscoVersionDocument {
         public Builder lastUpdated(Long lastUpdated) {
             instantiateIfNull();
             instance.setLastUpdated(lastUpdated);
+            lastUpdatedInvoked = true;
             return this;
         }
 
@@ -166,6 +168,10 @@ public class DiscoVersionDocument {
         }
 
         public DiscoVersionDocument build() {
+            instantiateIfNull();
+            if (!lastUpdatedInvoked) {
+                lastUpdated(Calendar.getInstance().getTimeInMillis());
+            }
             return instance;
         }
 
