@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.solr.core.DefaultQueryParser;
 import org.springframework.data.solr.core.SolrTemplate;
+import org.springframework.data.solr.core.query.PartialUpdate;
 import org.springframework.data.solr.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
@@ -149,13 +150,23 @@ public class SimpleSolrTest {
         assertTrue(filtered.stream().allMatch(doc -> doc.getDisco_id() >= 200 && doc.getDisco_id() < 203));
     }
 
+    /**
+     * Create a DiscoVersionDocument, then update it.  Verify the updated document can be retrieved from the index.
+     *
+     * @throws Exception
+     */
     @Test
     public void writeVersionUsingRepo() throws Exception {
+
+        versionRepository.deleteAll();
+        assertEquals(0, versionRepository.count());
+
+        // Create a document and store it in the index.
+
         DiscoVersionDocument doc = new DiscoVersionDocument.Builder()
                 .id(1L)
                 .discoUri(URI.create("http://doi.org/10.1109/disco/2"))
                 .addPastUri(URI.create("http://doi.org/10.1109/disco/1"))
-                .lastUpdated(Calendar.getInstance().getTimeInMillis())
                 .status("ACTIVE")
                 .build();
 
@@ -163,11 +174,37 @@ public class SimpleSolrTest {
         assertNotNull(saved);
         assertEquals(doc, saved);
 
-        DiscoVersionDocument updated = new DiscoVersionDocument.Builder(doc)
+        assertEquals(1, versionRepository.count());
+
+        // Update the document and save it in the index.
+
+        DiscoVersionDocument docWithUpdate = new DiscoVersionDocument.Builder(doc)
                 .activeUri(URI.create("http://doi.org/10.1109/disco/3"))
                 .build();
 
-        assertNotNull(versionRepository.save(updated));
+        DiscoVersionDocument updateResponse = versionRepository.save(docWithUpdate);
+        assertNotNull(updateResponse);
+
+        // Verify that the updated document can be retrieved
+
+        assertEquals(updateResponse, versionRepository.findById(docWithUpdate.getVersion_id())
+                .orElseThrow(() -> new RuntimeException("DiscoVersionDocument " + docWithUpdate.getVersion_id() + " not found in index.")));
+
+        // Update using Solr Atomic Updates (requires <updateLog/>)
+//        PartialUpdate update = new PartialUpdate("version_id", updated.getVersion_id());
+//        update.setValueOfField("disco_uri", updated.getDiscoUri());
+//        update.setValueOfField("past_uris", updated.getPastUris());
+//        update.setValueOfField("last_updated", updated.getLastUpdated());
+//        UpdateResponse res = solrTemplate.saveBean("versions", update);
+//
+//        assertNotNull(res);
+//        assertEquals(0, res.getStatus());
+//        assertEquals(1, versionRepository.count());
+//        solrTemplate.commit("versions");
+//
+//        Thread.sleep(10000);
+
+
     }
 
     /**
