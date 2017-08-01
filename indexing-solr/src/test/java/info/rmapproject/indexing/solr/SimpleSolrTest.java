@@ -1,7 +1,9 @@
 package info.rmapproject.indexing.solr;
 
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
+import info.rmapproject.indexing.solr.repository.VersionRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.junit.Test;
@@ -18,6 +20,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,6 +44,9 @@ public class SimpleSolrTest {
 
     @Autowired
     private DiscoRepository discoRepository;
+
+    @Autowired
+    private VersionRepository versionRepository;
 
     /**
      * Fails: can't specify a core name to ping
@@ -141,6 +147,27 @@ public class SimpleSolrTest {
 
         assertEquals(3, filtered.size());
         assertTrue(filtered.stream().allMatch(doc -> doc.getDisco_id() >= 200 && doc.getDisco_id() < 203));
+    }
+
+    @Test
+    public void writeVersionUsingRepo() throws Exception {
+        DiscoVersionDocument doc = new DiscoVersionDocument.Builder()
+                .id(1L)
+                .discoUri(URI.create("http://doi.org/10.1109/disco/2"))
+                .addPastUri(URI.create("http://doi.org/10.1109/disco/1"))
+                .lastUpdated(Calendar.getInstance().getTimeInMillis())
+                .status("ACTIVE")
+                .build();
+
+        DiscoVersionDocument saved = versionRepository.save(doc);
+        assertNotNull(saved);
+        assertEquals(doc, saved);
+
+        DiscoVersionDocument updated = new DiscoVersionDocument.Builder(doc)
+                .activeUri(URI.create("http://doi.org/10.1109/disco/3"))
+                .build();
+
+        assertNotNull(versionRepository.save(updated));
     }
 
     /**
