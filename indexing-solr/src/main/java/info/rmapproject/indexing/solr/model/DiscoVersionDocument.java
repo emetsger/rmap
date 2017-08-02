@@ -4,10 +4,11 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -20,13 +21,13 @@ public class DiscoVersionDocument {
     private Long version_id;
 
     @Field("disco_uri")
-    private URI discoUri;
+    private String discoUri;
 
     @Field("disco_status")
     private String discoStatus;
 
     @Field("past_uris")
-    private List<URI> pastUris;
+    private List<String> pastUris;
 
     @Field("last_updated")
     private Long lastUpdated;
@@ -43,11 +44,12 @@ public class DiscoVersionDocument {
         this.version_id = version_id;
     }
 
-    public URI getDiscoUri() {
+    public String getDiscoUri() {
         return discoUri;
     }
 
-    public void setDiscoUri(URI discoUri) {
+    public void setDiscoUri(String discoUri) {
+        assertValidUri(discoUri);
         this.discoUri = discoUri;
     }
 
@@ -59,11 +61,12 @@ public class DiscoVersionDocument {
         this.discoStatus = discoStatus;
     }
 
-    public List<URI> getPastUris() {
+    public List<String> getPastUris() {
         return pastUris;
     }
 
-    public void setPastUris(List<URI> pastUris) {
+    public void setPastUris(List<String> pastUris) {
+        assertValidUri(pastUris);
         this.pastUris = pastUris;
     }
 
@@ -129,8 +132,9 @@ public class DiscoVersionDocument {
             return this;
         }
 
-        public Builder activeUri(URI uri) {
+        public Builder activeUri(String uri) {
             instantiateIfNull();
+            assertValidUri(uri);
             if (instance.getDiscoUri() != null) {
                 this.addPastUri(instance.getDiscoUri());
             }
@@ -139,8 +143,9 @@ public class DiscoVersionDocument {
             return this;
         }
 
-        public Builder discoUri(URI uri) {
+        public Builder discoUri(String uri) {
             instantiateIfNull();
+            assertValidUri(uri);
             instance.setDiscoUri(uri);
             return this;
         }
@@ -158,10 +163,11 @@ public class DiscoVersionDocument {
             return this;
         }
 
-        public Builder addPastUri(URI uri) {
+        public Builder addPastUri(String uri) {
             instantiateIfNull();
+            assertValidUri(uri);
             if (instance.getPastUris() == null) {
-                instance.setPastUris(new ArrayList<>());
+                instance.pastUris = new ArrayList<>();
             }
             instance.getPastUris().add(uri);
             return this;
