@@ -137,6 +137,56 @@ public class SimpleSolrTest {
         assertTrue(filtered.stream().allMatch(doc -> doc.getDisco_id() >= 200 && doc.getDisco_id() < 203));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCaseInsensitiveUriSearch() throws Exception {
+        registerUriConverter(solrTemplate);
+        discoRepository.deleteAll();
+
+        // Store a disco document that has a lower-case resource url and try to find it with an upper case URL
+
+        DiscoSolrDocument doc = discoDocument(300L, "testCaseInsensitiveUriSearch");
+        assertEquals("http://doi.org/10.1109/disco.test",
+                doc.getDiscoAggregatedResourceUris().iterator().next());
+        discoRepository.save(doc);
+
+        Set<DiscoSolrDocument> found = discoRepository
+                .findDiscoSolrDocumentsByDiscoAggregatedResourceUris(URI.create("http://DOI.ORG/10.1109/disco.test"));
+
+        assertNotNull(found);
+
+        assertEquals(1, found.size());
+        assertEquals((Long)300L, found.iterator().next().getDisco_id());
+        assertEquals("http://doi.org/10.1109/disco.test",
+                found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
+
+        discoRepository.deleteAll();
+
+        // Store a disco document that has an upper-case resource url and try to find it with a lower case URL
+
+        doc = new DiscoSolrDocument();
+        doc.setDisco_id(301L);
+        doc.setDiscoAggregatedResourceUris(new ArrayList() {
+            {
+                add("http://DOI.ORG/10.1109/disco.test");
+            }
+        });
+        discoRepository.save(doc);
+
+
+
+        found = discoRepository
+                .findDiscoSolrDocumentsByDiscoAggregatedResourceUris(URI.create("http://doi.org/10.1109/disco.test"));
+
+        assertNotNull(found);
+
+        assertEquals(1, found.size());
+        assertEquals((Long)301L, found.iterator().next().getDisco_id());
+        assertEquals("http://DOI.ORG/10.1109/disco.test",
+                found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
+
+    }
+
     /**
      * Create a DiscoVersionDocument, then update it.  Verify the updated document can be retrieved from the index.
      *
