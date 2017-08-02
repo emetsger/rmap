@@ -187,6 +187,23 @@ public class SimpleSolrTest {
 
     }
 
+    @Test
+    public void testWildcardUriSearch() throws Exception {
+        discoRepository.deleteAll();
+
+        // Store a disco document that has a field containing a URL, and see if we can retrieve that document using
+        // a wildcard search
+
+        DiscoSolrDocument doc = discoDocument(400L, "testWildcardUriSearch");
+        discoRepository.save(doc);
+
+        Set<DiscoSolrDocument> found = discoRepository.findDiscoSolrDocumentsByDiscoAggregatedResourceUrisContains("http://doi.org/10.1109/");
+        assertEquals(1, found.size());
+
+        found = discoRepository.findDiscoSolrDocumentsByDiscoAggregatedResourceUrisContains("10.1109");
+        assertEquals(1, found.size());
+    }
+
     /**
      * Create a DiscoVersionDocument, then update it.  Verify the updated document can be retrieved from the index.
      *
