@@ -13,4 +13,6 @@ public interface DiscoRepository extends SolrCrudRepository<DiscoSolrDocument, L
 
     Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoAggregatedResourceUris(URI discoAggregatedResourceUri);
 
+    Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoAggregatedResourceUrisContains(String uriSubstring);
+
 }
