@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema name="disco-schema" version="1.6">
 
-    <fieldType name="id" class="solr.LongPointField"/>
     <field name="_version_" type="long" indexed="true" stored="true"/>
 
-    <field name="disco_id" type="id"/>
     <uniqueKey>disco_id</uniqueKey>
+
+    <field name="disco_id" type="string"/>
 
     <!-- other interesting tokenizers -->
     <!-- solr.PathHierarchyTokenizerFactory -->
