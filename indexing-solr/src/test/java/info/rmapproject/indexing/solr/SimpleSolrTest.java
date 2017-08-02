@@ -154,8 +154,8 @@ public class SimpleSolrTest {
 
         DiscoVersionDocument doc = new DiscoVersionDocument.Builder()
                 .id(1L)
-                .discoUri(URI.create("http://doi.org/10.1109/disco/2"))
-                .addPastUri(URI.create("http://doi.org/10.1109/disco/1"))
+                .discoUri("http://doi.org/10.1109/disco/2")
+                .addPastUri("http://doi.org/10.1109/disco/1")
                 .status("ACTIVE")
                 .build();
 
@@ -170,7 +170,7 @@ public class SimpleSolrTest {
         // Update the document and save it in the index.
 
         DiscoVersionDocument docWithUpdate = new DiscoVersionDocument.Builder(doc)
-                .activeUri(URI.create("http://doi.org/10.1109/disco/3"))
+                .activeUri("http://doi.org/10.1109/disco/3")
                 .build();
 
         DiscoVersionDocument updateResponse = versionRepository.save(docWithUpdate);
@@ -228,15 +228,15 @@ public class SimpleSolrTest {
         DiscoSolrDocument doc = new DiscoSolrDocument();
         doc.setDisco_description(testDescription);
         doc.setDisco_id(id);
-        doc.setDisco_uri(URI.create("http://rmapproject.org/disco/5678f"));
-        doc.setDisco_creator_uri(URI.create("http://foaf.org/Elliot_Metsger"));
+        doc.setDisco_uri("http://rmapproject.org/disco/5678f");
+        doc.setDisco_creator_uri("http://foaf.org/Elliot_Metsger");
         doc.setDiscoAggregatedResourceUris(new ArrayList() {
             {
                 add("http://doi.org/10.1109/disco.test");
                 add("http://ieeexplore.ieee.org/example/000000-mm.zip");
             }
         });
-        doc.setDisco_provenance_uri(URI.create("http://rmapproject.org/prov/5678"));
+        doc.setDisco_provenance_uri("http://rmapproject.org/prov/5678");
         doc.setDisco_related_statements(new ArrayList() {
             {
                 add("TODO n3 triples");

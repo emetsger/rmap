@@ -4,9 +4,10 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
-import java.net.URI;
 import java.util.Calendar;
 import java.util.List;
+
+import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -19,32 +20,32 @@ public class DiscoSolrDocument {
     private Long disco_id;
 
     @Field
-    private URI disco_uri;
+    private String disco_uri;
 
     @Field
-    private URI disco_creator_uri;
+    private String disco_creator_uri;
 
     @Field
     private String disco_description;
 
     @Field
-    private URI disco_providerid;
+    private String disco_providerid;
 
     @Field("disco_aggregated_resource_uris")
-    private List<URI> discoAggregatedResourceUris;
+    private List<String> discoAggregatedResourceUris;
 
     @Field
-    private URI disco_provenance_uri;
+    private String disco_provenance_uri;
 
     @Field
     private List<String> disco_related_statements;
 
 
     @Field
-    private URI event_uri;
+    private String event_uri;
 
     @Field
-    private URI event_agent_uri;
+    private String event_agent_uri;
 
     @Field
     private Calendar event_start_time;
@@ -59,17 +60,17 @@ public class DiscoSolrDocument {
     private String event_type;
 
     @Field
-    private List<URI> event_source_object_uris;
+    private List<String> event_source_object_uris;
 
     @Field
-    private List<URI> event_target_object_uris;
+    private List<String> event_target_object_uris;
 
 
     @Field
-    private URI agent_uri;
+    private String agent_uri;
 
     @Field
-    private URI agent_provider_uri;
+    private String agent_provider_uri;
 
     @Field
     private String agent_description;
@@ -86,19 +87,21 @@ public class DiscoSolrDocument {
         this.disco_id = disco_id;
     }
 
-    public URI getDisco_uri() {
+    public String getDisco_uri() {
         return disco_uri;
     }
 
-    public void setDisco_uri(URI disco_uri) {
+    public void setDisco_uri(String disco_uri) {
+        assertValidUri(disco_uri);
         this.disco_uri = disco_uri;
     }
 
-    public URI getDisco_creator_uri() {
+    public String getDisco_creator_uri() {
         return disco_creator_uri;
     }
 
-    public void setDisco_creator_uri(URI disco_creator_uri) {
+    public void setDisco_creator_uri(String disco_creator_uri) {
+        assertValidUri(disco_creator_uri);
         this.disco_creator_uri = disco_creator_uri;
     }
 
@@ -110,27 +113,30 @@ public class DiscoSolrDocument {
         this.disco_description = disco_description;
     }
 
-    public URI getDisco_providerid() {
+    public String getDisco_providerid() {
         return disco_providerid;
     }
 
-    public void setDisco_providerid(URI disco_providerid) {
+    public void setDisco_providerid(String disco_providerid) {
+        assertValidUri(disco_providerid);
         this.disco_providerid = disco_providerid;
     }
 
-    public List<URI> getDiscoAggregatedResourceUris() {
+    public List<String> getDiscoAggregatedResourceUris() {
         return discoAggregatedResourceUris;
     }
 
-    public void setDiscoAggregatedResourceUris(List<URI> discoAggregatedResourceUris) {
+    public void setDiscoAggregatedResourceUris(List<String> discoAggregatedResourceUris) {
+        assertValidUri(discoAggregatedResourceUris);
         this.discoAggregatedResourceUris = discoAggregatedResourceUris;
     }
 
-    public URI getDisco_provenance_uri() {
+    public String getDisco_provenance_uri() {
         return disco_provenance_uri;
     }
 
-    public void setDisco_provenance_uri(URI disco_provenance_uri) {
+    public void setDisco_provenance_uri(String disco_provenance_uri) {
+        assertValidUri(disco_provenance_uri);
         this.disco_provenance_uri = disco_provenance_uri;
     }
 
@@ -142,19 +148,21 @@ public class DiscoSolrDocument {
         this.disco_related_statements = disco_related_statements;
     }
 
-    public URI getEvent_uri() {
+    public String getEvent_uri() {
         return event_uri;
     }
 
-    public void setEvent_uri(URI event_uri) {
+    public void setEvent_uri(String event_uri) {
+        assertValidUri(event_uri);
         this.event_uri = event_uri;
     }
 
-    public URI getEvent_agent_uri() {
+    public String getEvent_agent_uri() {
         return event_agent_uri;
     }
 
-    public void setEvent_agent_uri(URI event_agent_uri) {
+    public void setEvent_agent_uri(String event_agent_uri) {
+        assertValidUri(event_agent_uri);
         this.event_agent_uri = event_agent_uri;
     }
 
@@ -190,35 +198,39 @@ public class DiscoSolrDocument {
         this.event_type = event_type;
     }
 
-    public List<URI> getEvent_source_object_uris() {
+    public List<String> getEvent_source_object_uris() {
         return event_source_object_uris;
     }
 
-    public void setEvent_source_object_uris(List<URI> event_source_object_uris) {
+    public void setEvent_source_object_uris(List<String> event_source_object_uris) {
+        assertValidUri(event_source_object_uris);
         this.event_source_object_uris = event_source_object_uris;
     }
 
-    public List<URI> getEvent_target_object_uris() {
+    public List<String> getEvent_target_object_uris() {
         return event_target_object_uris;
     }
 
-    public void setEvent_target_object_uris(List<URI> event_target_object_uris) {
+    public void setEvent_target_object_uris(List<String> event_target_object_uris) {
+        assertValidUri(event_target_object_uris);
         this.event_target_object_uris = event_target_object_uris;
     }
 
-    public URI getAgent_uri() {
+    public String getAgent_uri() {
         return agent_uri;
     }
 
-    public void setAgent_uri(URI agent_uri) {
+    public void setAgent_uri(String agent_uri) {
+        assertValidUri(agent_uri);
         this.agent_uri = agent_uri;
     }
 
-    public URI getAgent_provider_uri() {
+    public String getAgent_provider_uri() {
         return agent_provider_uri;
     }
 
-    public void setAgent_provider_uri(URI agent_provider_uri) {
+    public void setAgent_provider_uri(String agent_provider_uri) {
+        assertValidUri(agent_provider_uri);
         this.agent_provider_uri = agent_provider_uri;
     }
 
