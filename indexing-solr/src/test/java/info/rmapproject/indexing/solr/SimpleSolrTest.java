@@ -7,6 +7,7 @@ import info.rmapproject.indexing.solr.repository.VersionRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +23,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -144,9 +143,7 @@ public class SimpleSolrTest {
      * @throws Exception
      */
     @Test
-    public void writeVersionUsingRepo() throws Exception {
-//        registerUriConverter(solrTemplate);
-
+    public void writeAndUpdateVersionUsingRepo() throws Exception {
         versionRepository.deleteAll();
         assertEquals(0, versionRepository.count());
 
@@ -158,8 +155,6 @@ public class SimpleSolrTest {
                 .addPastUri("http://doi.org/10.1109/disco/1")
                 .status("ACTIVE")
                 .build();
-
-        SolrInputDocument inDoc = solrTemplate.convertBeanToSolrInputDocument(doc);
 
         DiscoVersionDocument saved = versionRepository.save(doc);
         assertNotNull(saved);
@@ -180,25 +175,40 @@ public class SimpleSolrTest {
 
         final DiscoVersionDocument actual = versionRepository.findById(docWithUpdate.getVersion_id())
                 .orElseThrow(() -> new RuntimeException("DiscoVersionDocument " + docWithUpdate.getVersion_id() + " not found in index."));
-//        assertEquals(updateResponse, actual);
+        assertEquals(updateResponse, actual);
+    }
 
-        assertEquals(updateResponse.getDiscoUri(), actual.getDiscoUri());
+    @Test
+    public void writeAndUpdateVersionUsingPartialUpdate() throws Exception {
+
+        DiscoVersionDocument doc = new DiscoVersionDocument.Builder()
+                .id(200L)
+                .discoUri("http://doi.org/10.1109/disco/2")
+                .addPastUri("http://doi.org/10.1109/disco/1")
+                .status("ACTIVE")
+                .build();
+
+        UpdateResponse res = solrTemplate.saveBean("versions", doc);
+        assertNotNull(res);
+        assertEquals(0, res.getStatus());
+        solrTemplate.commit("versions");
+
+        assertEquals(doc, solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
+                .orElseThrow(() -> new RuntimeException(
+                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersion_id() + " in the index.")));
 
         // Update using Solr Atomic Updates (requires <updateLog/>)
-//        PartialUpdate update = new PartialUpdate("version_id", updated.getVersion_id());
-//        update.setValueOfField("disco_uri", updated.getDiscoUri());
-//        update.setValueOfField("past_uris", updated.getPastUris());
-//        update.setValueOfField("last_updated", updated.getLastUpdated());
-//        UpdateResponse res = solrTemplate.saveBean("versions", update);
-//
-//        assertNotNull(res);
-//        assertEquals(0, res.getStatus());
-//        assertEquals(1, versionRepository.count());
-//        solrTemplate.commit("versions");
-//
-//        Thread.sleep(10000);
+        PartialUpdate update = new PartialUpdate("version_id", doc.getVersion_id());
+        update.setValueOfField("disco_status", "INACTIVE");
+        res = solrTemplate.saveBean("versions", update);
+        assertNotNull(res);
+        assertEquals(0, res.getStatus());
+        solrTemplate.commit("versions");
 
-
+        assertEquals("INACTIVE", solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
+                .orElseThrow(() -> new RuntimeException(
+                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersion_id() + " in the index."))
+                .getDiscoStatus());
     }
 
     private static void registerUriConverter(SolrTemplate solrTemplate) {
