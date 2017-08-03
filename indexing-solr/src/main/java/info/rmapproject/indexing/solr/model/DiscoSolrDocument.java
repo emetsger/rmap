@@ -16,110 +16,110 @@ import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
 public class DiscoSolrDocument {
 
     @Id
-    @Field
-    private Long disco_id;
+    @Field("disco_id")
+    private Long discoId;
 
-    @Field
-    private String disco_uri;
+    @Field("disco_uri")
+    private String discoUri;
 
-    @Field
-    private String disco_creator_uri;
+    @Field("disco_creator_uri")
+    private String discoCreatorUri;
 
-    @Field
-    private String disco_description;
+    @Field("disco_description")
+    private String discoDescription;
 
-    @Field
-    private String disco_providerid;
+    @Field("disco_providerid")
+    private String discoProviderid;
 
     @Field("disco_aggregated_resource_uris")
     private List<String> discoAggregatedResourceUris;
 
-    @Field
-    private String disco_provenance_uri;
+    @Field("disco_provenance_uri")
+    private String discoProvenanceUri;
 
-    @Field
-    private List<String> disco_related_statements;
-
-
-    @Field
-    private String event_uri;
-
-    @Field
-    private String event_agent_uri;
-
-    @Field
-    private Calendar event_start_time;
-
-    @Field
-    private Calendar event_end_time;
-
-    @Field
-    private String event_description;
-
-    @Field
-    private String event_type;
-
-    @Field
-    private List<String> event_source_object_uris;
-
-    @Field
-    private List<String> event_target_object_uris;
+    @Field("disco_related_statements")
+    private List<String> discoRelatedStatements;
 
 
-    @Field
-    private String agent_uri;
+    @Field("event_uri")
+    private String eventUri;
 
-    @Field
-    private String agent_provider_uri;
+    @Field("event_agent_uri")
+    private String eventAgentUri;
 
-    @Field
-    private String agent_description;
+    @Field("event_start_time")
+    private Calendar eventStartTime;
+
+    @Field("event_end_time")
+    private Calendar eventEndTime;
+
+    @Field("event_description")
+    private String eventDescription;
+
+    @Field("event_type")
+    private String eventType;
+
+    @Field("event_source_object_uris")
+    private List<String> eventSourceObjectUris;
+
+    @Field("event_target_object_uris")
+    private List<String> eventTargetObjectUris;
+
+
+    @Field("agent_uri")
+    private String agentUri;
+
+    @Field("agent_provider_uri")
+    private String agentProviderUri;
+
+    @Field("agent_description")
+    private String agentDescription;
 
     public DiscoSolrDocument() {
 
     }
 
-    public Long getDisco_id() {
-        return disco_id;
+    public Long getDiscoId() {
+        return discoId;
     }
 
-    public void setDisco_id(Long disco_id) {
-        this.disco_id = disco_id;
+    public void setDiscoId(Long discoId) {
+        this.discoId = discoId;
     }
 
-    public String getDisco_uri() {
-        return disco_uri;
+    public String getDiscoUri() {
+        return discoUri;
     }
 
-    public void setDisco_uri(String disco_uri) {
-        assertValidUri(disco_uri);
-        this.disco_uri = disco_uri;
+    public void setDiscoUri(String discoUri) {
+        assertValidUri(discoUri);
+        this.discoUri = discoUri;
     }
 
-    public String getDisco_creator_uri() {
-        return disco_creator_uri;
+    public String getDiscoCreatorUri() {
+        return discoCreatorUri;
     }
 
-    public void setDisco_creator_uri(String disco_creator_uri) {
-        assertValidUri(disco_creator_uri);
-        this.disco_creator_uri = disco_creator_uri;
+    public void setDiscoCreatorUri(String discoCreatorUri) {
+        assertValidUri(discoCreatorUri);
+        this.discoCreatorUri = discoCreatorUri;
     }
 
-    public String getDisco_description() {
-        return disco_description;
+    public String getDiscoDescription() {
+        return discoDescription;
     }
 
-    public void setDisco_description(String disco_description) {
-        this.disco_description = disco_description;
+    public void setDiscoDescription(String discoDescription) {
+        this.discoDescription = discoDescription;
     }
 
-    public String getDisco_providerid() {
-        return disco_providerid;
+    public String getDiscoProviderid() {
+        return discoProviderid;
     }
 
-    public void setDisco_providerid(String disco_providerid) {
-        assertValidUri(disco_providerid);
-        this.disco_providerid = disco_providerid;
+    public void setDiscoProviderid(String discoProviderid) {
+        assertValidUri(discoProviderid);
+        this.discoProviderid = discoProviderid;
     }
 
     public List<String> getDiscoAggregatedResourceUris() {
@@ -131,115 +131,115 @@ public class DiscoSolrDocument {
         this.discoAggregatedResourceUris = discoAggregatedResourceUris;
     }
 
-    public String getDisco_provenance_uri() {
-        return disco_provenance_uri;
+    public String getDiscoProvenanceUri() {
+        return discoProvenanceUri;
     }
 
-    public void setDisco_provenance_uri(String disco_provenance_uri) {
-        assertValidUri(disco_provenance_uri);
-        this.disco_provenance_uri = disco_provenance_uri;
+    public void setDiscoProvenanceUri(String discoProvenanceUri) {
+        assertValidUri(discoProvenanceUri);
+        this.discoProvenanceUri = discoProvenanceUri;
     }
 
-    public List<String> getDisco_related_statements() {
-        return disco_related_statements;
+    public List<String> getDiscoRelatedStatements() {
+        return discoRelatedStatements;
     }
 
-    public void setDisco_related_statements(List<String> disco_related_statements) {
-        this.disco_related_statements = disco_related_statements;
+    public void setDiscoRelatedStatements(List<String> discoRelatedStatements) {
+        this.discoRelatedStatements = discoRelatedStatements;
     }
 
-    public String getEvent_uri() {
-        return event_uri;
+    public String getEventUri() {
+        return eventUri;
     }
 
-    public void setEvent_uri(String event_uri) {
-        assertValidUri(event_uri);
-        this.event_uri = event_uri;
+    public void setEventUri(String eventUri) {
+        assertValidUri(eventUri);
+        this.eventUri = eventUri;
     }
 
-    public String getEvent_agent_uri() {
-        return event_agent_uri;
+    public String getEventAgentUri() {
+        return eventAgentUri;
     }
 
-    public void setEvent_agent_uri(String event_agent_uri) {
-        assertValidUri(event_agent_uri);
-        this.event_agent_uri = event_agent_uri;
+    public void setEventAgentUri(String eventAgentUri) {
+        assertValidUri(eventAgentUri);
+        this.eventAgentUri = eventAgentUri;
     }
 
-    public Calendar getEvent_start_time() {
-        return event_start_time;
+    public Calendar getEventStartTime() {
+        return eventStartTime;
     }
 
-    public void setEvent_start_time(Calendar event_start_time) {
-        this.event_start_time = event_start_time;
+    public void setEventStartTime(Calendar eventStartTime) {
+        this.eventStartTime = eventStartTime;
     }
 
-    public Calendar getEvent_end_time() {
-        return event_end_time;
+    public Calendar getEventEndTime() {
+        return eventEndTime;
     }
 
-    public void setEvent_end_time(Calendar event_end_time) {
-        this.event_end_time = event_end_time;
+    public void setEventEndTime(Calendar eventEndTime) {
+        this.eventEndTime = eventEndTime;
     }
 
-    public String getEvent_description() {
-        return event_description;
+    public String getEventDescription() {
+        return eventDescription;
     }
 
-    public void setEvent_description(String event_description) {
-        this.event_description = event_description;
+    public void setEventDescription(String eventDescription) {
+        this.eventDescription = eventDescription;
     }
 
-    public String getEvent_type() {
-        return event_type;
+    public String getEventType() {
+        return eventType;
     }
 
-    public void setEvent_type(String event_type) {
-        this.event_type = event_type;
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
     }
 
-    public List<String> getEvent_source_object_uris() {
-        return event_source_object_uris;
+    public List<String> getEventSourceObjectUris() {
+        return eventSourceObjectUris;
     }
 
-    public void setEvent_source_object_uris(List<String> event_source_object_uris) {
-        assertValidUri(event_source_object_uris);
-        this.event_source_object_uris = event_source_object_uris;
+    public void setEventSourceObjectUris(List<String> eventSourceObjectUris) {
+        assertValidUri(eventSourceObjectUris);
+        this.eventSourceObjectUris = eventSourceObjectUris;
     }
 
-    public List<String> getEvent_target_object_uris() {
-        return event_target_object_uris;
+    public List<String> getEventTargetObjectUris() {
+        return eventTargetObjectUris;
     }
 
-    public void setEvent_target_object_uris(List<String> event_target_object_uris) {
-        assertValidUri(event_target_object_uris);
-        this.event_target_object_uris = event_target_object_uris;
+    public void setEventTargetObjectUris(List<String> eventTargetObjectUris) {
+        assertValidUri(eventTargetObjectUris);
+        this.eventTargetObjectUris = eventTargetObjectUris;
     }
 
-    public String getAgent_uri() {
-        return agent_uri;
+    public String getAgentUri() {
+        return agentUri;
     }
 
-    public void setAgent_uri(String agent_uri) {
-        assertValidUri(agent_uri);
-        this.agent_uri = agent_uri;
+    public void setAgentUri(String agentUri) {
+        assertValidUri(agentUri);
+        this.agentUri = agentUri;
     }
 
-    public String getAgent_provider_uri() {
-        return agent_provider_uri;
+    public String getAgentProviderUri() {
+        return agentProviderUri;
     }
 
-    public void setAgent_provider_uri(String agent_provider_uri) {
-        assertValidUri(agent_provider_uri);
-        this.agent_provider_uri = agent_provider_uri;
+    public void setAgentProviderUri(String agentProviderUri) {
+        assertValidUri(agentProviderUri);
+        this.agentProviderUri = agentProviderUri;
     }
 
-    public String getAgent_description() {
-        return agent_description;
+    public String getAgentDescription() {
+        return agentDescription;
     }
 
-    public void setAgent_description(String agent_description) {
-        this.agent_description = agent_description;
+    public void setAgentDescription(String agentDescription) {
+        this.agentDescription = agentDescription;
     }
 
     @Override
@@ -249,61 +249,61 @@ public class DiscoSolrDocument {
 
         DiscoSolrDocument that = (DiscoSolrDocument) o;
 
-        if (disco_id != null ? !disco_id.equals(that.disco_id) : that.disco_id != null) return false;
-        if (disco_uri != null ? !disco_uri.equals(that.disco_uri) : that.disco_uri != null) return false;
-        if (disco_creator_uri != null ? !disco_creator_uri.equals(that.disco_creator_uri) : that.disco_creator_uri != null)
+        if (discoId != null ? !discoId.equals(that.discoId) : that.discoId != null) return false;
+        if (discoUri != null ? !discoUri.equals(that.discoUri) : that.discoUri != null) return false;
+        if (discoCreatorUri != null ? !discoCreatorUri.equals(that.discoCreatorUri) : that.discoCreatorUri != null)
             return false;
-        if (disco_description != null ? !disco_description.equals(that.disco_description) : that.disco_description != null)
+        if (discoDescription != null ? !discoDescription.equals(that.discoDescription) : that.discoDescription != null)
             return false;
-        if (disco_providerid != null ? !disco_providerid.equals(that.disco_providerid) : that.disco_providerid != null)
+        if (discoProviderid != null ? !discoProviderid.equals(that.discoProviderid) : that.discoProviderid != null)
             return false;
         if (discoAggregatedResourceUris != null ? !discoAggregatedResourceUris.equals(that.discoAggregatedResourceUris) : that.discoAggregatedResourceUris != null)
             return false;
-        if (disco_provenance_uri != null ? !disco_provenance_uri.equals(that.disco_provenance_uri) : that.disco_provenance_uri != null)
+        if (discoProvenanceUri != null ? !discoProvenanceUri.equals(that.discoProvenanceUri) : that.discoProvenanceUri != null)
             return false;
-        if (disco_related_statements != null ? !disco_related_statements.equals(that.disco_related_statements) : that.disco_related_statements != null)
+        if (discoRelatedStatements != null ? !discoRelatedStatements.equals(that.discoRelatedStatements) : that.discoRelatedStatements != null)
             return false;
-        if (event_uri != null ? !event_uri.equals(that.event_uri) : that.event_uri != null) return false;
-        if (event_agent_uri != null ? !event_agent_uri.equals(that.event_agent_uri) : that.event_agent_uri != null)
+        if (eventUri != null ? !eventUri.equals(that.eventUri) : that.eventUri != null) return false;
+        if (eventAgentUri != null ? !eventAgentUri.equals(that.eventAgentUri) : that.eventAgentUri != null)
             return false;
-        if (event_start_time != null ? !event_start_time.equals(that.event_start_time) : that.event_start_time != null)
+        if (eventStartTime != null ? !eventStartTime.equals(that.eventStartTime) : that.eventStartTime != null)
             return false;
-        if (event_end_time != null ? !event_end_time.equals(that.event_end_time) : that.event_end_time != null)
+        if (eventEndTime != null ? !eventEndTime.equals(that.eventEndTime) : that.eventEndTime != null)
             return false;
-        if (event_description != null ? !event_description.equals(that.event_description) : that.event_description != null)
+        if (eventDescription != null ? !eventDescription.equals(that.eventDescription) : that.eventDescription != null)
             return false;
-        if (event_type != null ? !event_type.equals(that.event_type) : that.event_type != null) return false;
-        if (event_source_object_uris != null ? !event_source_object_uris.equals(that.event_source_object_uris) : that.event_source_object_uris != null)
+        if (eventType != null ? !eventType.equals(that.eventType) : that.eventType != null) return false;
+        if (eventSourceObjectUris != null ? !eventSourceObjectUris.equals(that.eventSourceObjectUris) : that.eventSourceObjectUris != null)
             return false;
-        if (event_target_object_uris != null ? !event_target_object_uris.equals(that.event_target_object_uris) : that.event_target_object_uris != null)
+        if (eventTargetObjectUris != null ? !eventTargetObjectUris.equals(that.eventTargetObjectUris) : that.eventTargetObjectUris != null)
             return false;
-        if (agent_uri != null ? !agent_uri.equals(that.agent_uri) : that.agent_uri != null) return false;
-        if (agent_provider_uri != null ? !agent_provider_uri.equals(that.agent_provider_uri) : that.agent_provider_uri != null)
+        if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
+        if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
             return false;
-        return agent_description != null ? agent_description.equals(that.agent_description) : that.agent_description == null;
+        return agentDescription != null ? agentDescription.equals(that.agentDescription) : that.agentDescription == null;
     }
 
     @Override
     public int hashCode() {
-        int result = disco_id != null ? disco_id.hashCode() : 0;
-        result = 31 * result + (disco_uri != null ? disco_uri.hashCode() : 0);
-        result = 31 * result + (disco_creator_uri != null ? disco_creator_uri.hashCode() : 0);
-        result = 31 * result + (disco_description != null ? disco_description.hashCode() : 0);
-        result = 31 * result + (disco_providerid != null ? disco_providerid.hashCode() : 0);
+        int result = discoId != null ? discoId.hashCode() : 0;
+        result = 31 * result + (discoUri != null ? discoUri.hashCode() : 0);
+        result = 31 * result + (discoCreatorUri != null ? discoCreatorUri.hashCode() : 0);
+        result = 31 * result + (discoDescription != null ? discoDescription.hashCode() : 0);
+        result = 31 * result + (discoProviderid != null ? discoProviderid.hashCode() : 0);
         result = 31 * result + (discoAggregatedResourceUris != null ? discoAggregatedResourceUris.hashCode() : 0);
-        result = 31 * result + (disco_provenance_uri != null ? disco_provenance_uri.hashCode() : 0);
-        result = 31 * result + (disco_related_statements != null ? disco_related_statements.hashCode() : 0);
-        result = 31 * result + (event_uri != null ? event_uri.hashCode() : 0);
-        result = 31 * result + (event_agent_uri != null ? event_agent_uri.hashCode() : 0);
-        result = 31 * result + (event_start_time != null ? event_start_time.hashCode() : 0);
-        result = 31 * result + (event_end_time != null ? event_end_time.hashCode() : 0);
-        result = 31 * result + (event_description != null ? event_description.hashCode() : 0);
-        result = 31 * result + (event_type != null ? event_type.hashCode() : 0);
-        result = 31 * result + (event_source_object_uris != null ? event_source_object_uris.hashCode() : 0);
-        result = 31 * result + (event_target_object_uris != null ? event_target_object_uris.hashCode() : 0);
-        result = 31 * result + (agent_uri != null ? agent_uri.hashCode() : 0);
-        result = 31 * result + (agent_provider_uri != null ? agent_provider_uri.hashCode() : 0);
-        result = 31 * result + (agent_description != null ? agent_description.hashCode() : 0);
+        result = 31 * result + (discoProvenanceUri != null ? discoProvenanceUri.hashCode() : 0);
+        result = 31 * result + (discoRelatedStatements != null ? discoRelatedStatements.hashCode() : 0);
+        result = 31 * result + (eventUri != null ? eventUri.hashCode() : 0);
+        result = 31 * result + (eventAgentUri != null ? eventAgentUri.hashCode() : 0);
+        result = 31 * result + (eventStartTime != null ? eventStartTime.hashCode() : 0);
+        result = 31 * result + (eventEndTime != null ? eventEndTime.hashCode() : 0);
+        result = 31 * result + (eventDescription != null ? eventDescription.hashCode() : 0);
+        result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+        result = 31 * result + (eventSourceObjectUris != null ? eventSourceObjectUris.hashCode() : 0);
+        result = 31 * result + (eventTargetObjectUris != null ? eventTargetObjectUris.hashCode() : 0);
+        result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
+        result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
+        result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
         return result;
     }
 }

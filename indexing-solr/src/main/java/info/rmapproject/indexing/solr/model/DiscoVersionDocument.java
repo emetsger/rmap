@@ -17,8 +17,8 @@ import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
 public class DiscoVersionDocument {
 
     @Id
-    @Field
-    private Long version_id;
+    @Field("version_id")
+    private Long versionId;
 
     @Field("disco_uri")
     private String discoUri;
@@ -36,12 +36,12 @@ public class DiscoVersionDocument {
 
     }
 
-    public Long getVersion_id() {
-        return version_id;
+    public Long getVersionId() {
+        return versionId;
     }
 
-    public void setVersion_id(Long version_id) {
-        this.version_id = version_id;
+    public void setVersionId(Long versionId) {
+        this.versionId = versionId;
     }
 
     public String getDiscoUri() {
@@ -85,7 +85,7 @@ public class DiscoVersionDocument {
 
         DiscoVersionDocument that = (DiscoVersionDocument) o;
 
-        if (version_id != null ? !version_id.equals(that.version_id) : that.version_id != null) return false;
+        if (versionId != null ? !versionId.equals(that.versionId) : that.versionId != null) return false;
         if (discoUri != null ? !discoUri.equals(that.discoUri) : that.discoUri != null) return false;
         if (discoStatus != null ? !discoStatus.equals(that.discoStatus) : that.discoStatus != null) return false;
         if (pastUris != null ? !pastUris.equals(that.pastUris) : that.pastUris != null) return false;
@@ -94,7 +94,7 @@ public class DiscoVersionDocument {
 
     @Override
     public int hashCode() {
-        int result = version_id != null ? version_id.hashCode() : 0;
+        int result = versionId != null ? versionId.hashCode() : 0;
         result = 31 * result + (discoUri != null ? discoUri.hashCode() : 0);
         result = 31 * result + (discoStatus != null ? discoStatus.hashCode() : 0);
         result = 31 * result + (pastUris != null ? pastUris.hashCode() : 0);
@@ -105,7 +105,7 @@ public class DiscoVersionDocument {
     @Override
     public String toString() {
         return "DiscoVersionDocument{" +
-                "version_id=" + version_id +
+                "versionId=" + versionId +
                 ", discoUri=" + discoUri +
                 ", discoStatus='" + discoStatus + '\'' +
                 ", pastUris=" + pastUris +
@@ -128,7 +128,7 @@ public class DiscoVersionDocument {
 
         public Builder id(Long id) {
             instantiateIfNull();
-            instance.setVersion_id(id);
+            instance.setVersionId(id);
             return this;
         }
 

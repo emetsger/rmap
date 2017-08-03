@@ -6,8 +6,6 @@ import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import info.rmapproject.indexing.solr.repository.VersionRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.apache.solr.common.SolrInputDocument;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +108,7 @@ public class SimpleSolrTest {
 
         Set<Long> found = StreamSupport.stream(
                 discoRepository.findAllById(ids).spliterator(), false)
-                .map(DiscoSolrDocument::getDisco_id)
+                .map(DiscoSolrDocument::getDiscoId)
                 .collect(Collectors.toSet());
 
         ids.forEach(expectedId -> assertTrue(found.stream().anyMatch(expectedId::equals)));
@@ -130,11 +128,11 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         Set<DiscoSolrDocument> filtered = found.stream()
-                .filter(doc -> (doc.getDisco_id() > 199 && doc.getDisco_id() < 300))
+                .filter(doc -> (doc.getDiscoId() > 199 && doc.getDiscoId() < 300))
                 .collect(Collectors.toSet());
 
         assertEquals(3, filtered.size());
-        assertTrue(filtered.stream().allMatch(doc -> doc.getDisco_id() >= 200 && doc.getDisco_id() < 203));
+        assertTrue(filtered.stream().allMatch(doc -> doc.getDiscoId() >= 200 && doc.getDiscoId() < 203));
     }
 
     @Test
@@ -156,7 +154,7 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         assertEquals(1, found.size());
-        assertEquals((Long)300L, found.iterator().next().getDisco_id());
+        assertEquals((Long)300L, found.iterator().next().getDiscoId());
         assertEquals("http://doi.org/10.1109/disco.test",
                 found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
 
@@ -165,7 +163,7 @@ public class SimpleSolrTest {
         // Store a disco document that has an upper-case resource url and try to find it with a lower case URL
 
         doc = new DiscoSolrDocument();
-        doc.setDisco_id(301L);
+        doc.setDiscoId(301L);
         doc.setDiscoAggregatedResourceUris(new ArrayList() {
             {
                 add("http://DOI.ORG/10.1109/disco.test");
@@ -181,7 +179,7 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         assertEquals(1, found.size());
-        assertEquals((Long)301L, found.iterator().next().getDisco_id());
+        assertEquals((Long)301L, found.iterator().next().getDiscoId());
         assertEquals("http://DOI.ORG/10.1109/disco.test",
                 found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
 
@@ -240,8 +238,8 @@ public class SimpleSolrTest {
 
         // Verify that the updated document can be retrieved
 
-        final DiscoVersionDocument actual = versionRepository.findById(docWithUpdate.getVersion_id())
-                .orElseThrow(() -> new RuntimeException("DiscoVersionDocument " + docWithUpdate.getVersion_id() + " not found in index."));
+        final DiscoVersionDocument actual = versionRepository.findById(docWithUpdate.getVersionId())
+                .orElseThrow(() -> new RuntimeException("DiscoVersionDocument " + docWithUpdate.getVersionId() + " not found in index."));
         assertEquals(updateResponse, actual);
     }
 
@@ -262,10 +260,10 @@ public class SimpleSolrTest {
 
         assertEquals(doc, solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
                 .orElseThrow(() -> new RuntimeException(
-                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersion_id() + " in the index.")));
+                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersionId() + " in the index.")));
 
         // Update using Solr Atomic Updates (requires <updateLog/>)
-        PartialUpdate update = new PartialUpdate("version_id", doc.getVersion_id());
+        PartialUpdate update = new PartialUpdate("version_id", doc.getVersionId());
         update.setValueOfField("disco_status", "INACTIVE");
         res = solrTemplate.saveBean("versions", update);
         assertNotNull(res);
@@ -274,7 +272,7 @@ public class SimpleSolrTest {
 
         assertEquals("INACTIVE", solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
                 .orElseThrow(() -> new RuntimeException(
-                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersion_id() + " in the index."))
+                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersionId() + " in the index."))
                 .getDiscoStatus());
     }
 
@@ -303,18 +301,18 @@ public class SimpleSolrTest {
      */
     private static DiscoSolrDocument discoDocument(long id, String testDescription) {
         DiscoSolrDocument doc = new DiscoSolrDocument();
-        doc.setDisco_description(testDescription);
-        doc.setDisco_id(id);
-        doc.setDisco_uri("http://rmapproject.org/disco/5678f");
-        doc.setDisco_creator_uri("http://foaf.org/Elliot_Metsger");
+        doc.setDiscoDescription(testDescription);
+        doc.setDiscoId(id);
+        doc.setDiscoUri("http://rmapproject.org/disco/5678f");
+        doc.setDiscoCreatorUri("http://foaf.org/Elliot_Metsger");
         doc.setDiscoAggregatedResourceUris(new ArrayList() {
             {
                 add("http://doi.org/10.1109/disco.test");
                 add("http://ieeexplore.ieee.org/example/000000-mm.zip");
             }
         });
-        doc.setDisco_provenance_uri("http://rmapproject.org/prov/5678");
-        doc.setDisco_related_statements(new ArrayList() {
+        doc.setDiscoProvenanceUri("http://rmapproject.org/prov/5678");
+        doc.setDiscoRelatedStatements(new ArrayList() {
             {
                 add("TODO n3 triples");
             }
