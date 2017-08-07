@@ -11,17 +11,17 @@ import java.util.Collection;
 class ModelUtils {
 
     /**
-     * Asserts the supplied string is a valid URI according to {@link URI#create(String)}.
+     * Asserts the supplied string is a valid URI according to {@link URI#create(String)}.  {@code null} URIs are OK,
+     * which make the calling code a little easier to write, and cleaner looking.
      *
      * @param uri a string that claims to be a URI
-     * @throws IllegalArgumentException if {@code uri} is {@code null} or is not a valid {@code URI}
+     * @throws IllegalArgumentException if {@code uri} is not a valid {@code URI}
      */
     static void assertValidUri(String uri) {
-        if (uri == null) {
-            throw new IllegalArgumentException("Supplied URI must not be null.");
+        if (uri != null) {
+            //noinspection ResultOfMethodCallIgnored
+            URI.create(uri);
         }
-        //noinspection ResultOfMethodCallIgnored
-        URI.create(uri);
     }
 
     /**
