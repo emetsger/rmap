@@ -31,6 +31,17 @@
             <artifactId>spring-data-solr</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+
         <!--<dependency>-->
             <!--<groupId>org.apache.solr</groupId>-->
             <!--<artifactId>solr-solrj</artifactId>-->

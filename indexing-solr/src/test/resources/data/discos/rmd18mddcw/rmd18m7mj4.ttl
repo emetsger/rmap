@@ -1,0 +1,5 @@
+
+<rmap:rmd18m7mj4> a <http://rmap-project.org/rmap/terms/Agent> ;
+	<http://xmlns.com/foaf/0.1/name> "Portico" ;
+	<http://rmap-project.org/rmap/terms/identityProvider> <http://twitter.org> ;
+	<http://rmap-project.org/rmap/terms/userAuthId> <http://rmap-project.org/identities/faketempporticoid> .
