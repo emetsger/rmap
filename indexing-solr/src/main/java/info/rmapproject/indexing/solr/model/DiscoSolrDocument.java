@@ -48,10 +48,10 @@ public class DiscoSolrDocument {
     private String eventAgentUri;
 
     @Field("event_start_time")
-    private Calendar eventStartTime;
+    private String eventStartTime;
 
     @Field("event_end_time")
-    private Calendar eventEndTime;
+    private String eventEndTime;
 
     @Field("event_description")
     private String eventDescription;
@@ -166,19 +166,19 @@ public class DiscoSolrDocument {
         this.eventAgentUri = eventAgentUri;
     }
 
-    public Calendar getEventStartTime() {
+    public String getEventStartTime() {
         return eventStartTime;
     }
 
-    public void setEventStartTime(Calendar eventStartTime) {
+    public void setEventStartTime(String eventStartTime) {
         this.eventStartTime = eventStartTime;
     }
 
-    public Calendar getEventEndTime() {
+    public String getEventEndTime() {
         return eventEndTime;
     }
 
-    public void setEventEndTime(Calendar eventEndTime) {
+    public void setEventEndTime(String eventEndTime) {
         this.eventEndTime = eventEndTime;
     }
 
