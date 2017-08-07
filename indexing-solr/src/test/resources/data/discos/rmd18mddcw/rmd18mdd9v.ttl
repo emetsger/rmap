@@ -1,0 +1,10 @@
+
+<rmap:rmd18mdd9v> a <http://rmap-project.org/rmap/terms/Event> ;
+	<http://www.w3.org/ns/prov#wasAssociatedWith> <rmap:rmd18m7mj4> ;
+	<http://rmap-project.org/rmap/terms/eventType> <http://rmap-project.org/rmap/terms/update> ;
+	<http://rmap-project.org/rmap/terms/eventTargetType> <http://rmap-project.org/rmap/terms/DiSCO> ;
+	<http://www.w3.org/ns/prov#startedAtTime> "2015-07-29T17:40:24Z" ;
+	<http://www.w3.org/ns/prov#endedAtTime> "2015-07-29T17:40:24Z" ;
+	<http://www.w3.org/ns/prov#generated> <rmap:rmd18mdd8b> ;
+	<http://rmap-project.org/rmap/terms/inactivatedObject> <rmap:rmd18m7mr7> ;
+	<http://rmap-project.org/rmap/terms/derivedObject> <rmap:rmd18mdd8b> .
