@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
+import static info.rmapproject.indexing.solr.IndexUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
