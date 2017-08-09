@@ -4,10 +4,9 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
-import java.util.Calendar;
 import java.util.List;
 
-import static info.rmapproject.indexing.solr.model.ModelUtils.assertValidUri;
+import static info.rmapproject.indexing.solr.IndexUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -17,7 +16,7 @@ public class DiscoSolrDocument {
 
     @Id
     @Field("disco_id")
-    private Long discoId;
+    private String discoId;
 
     @Field("disco_uri")
     private String discoUri;
@@ -39,6 +38,9 @@ public class DiscoSolrDocument {
 
     @Field("disco_related_statements")
     private List<String> discoRelatedStatements;
+
+    @Field("disco_status")
+    private String discoStatus;
 
 
     @Field("event_uri")
@@ -79,11 +81,11 @@ public class DiscoSolrDocument {
 
     }
 
-    public Long getDiscoId() {
+    public String getDiscoId() {
         return discoId;
     }
 
-    public void setDiscoId(Long discoId) {
+    public void setDiscoId(String discoId) {
         this.discoId = discoId;
     }
 
@@ -146,6 +148,14 @@ public class DiscoSolrDocument {
 
     public void setDiscoRelatedStatements(List<String> discoRelatedStatements) {
         this.discoRelatedStatements = discoRelatedStatements;
+    }
+
+    public String getDiscoStatus() {
+        return discoStatus;
+    }
+
+    public void setDiscoStatus(String discoStatus) {
+        this.discoStatus = discoStatus;
     }
 
     public String getEventUri() {
@@ -263,13 +273,13 @@ public class DiscoSolrDocument {
             return false;
         if (discoRelatedStatements != null ? !discoRelatedStatements.equals(that.discoRelatedStatements) : that.discoRelatedStatements != null)
             return false;
+        if (discoStatus != null ? !discoStatus.equals(that.discoStatus) : that.discoStatus != null) return false;
         if (eventUri != null ? !eventUri.equals(that.eventUri) : that.eventUri != null) return false;
         if (eventAgentUri != null ? !eventAgentUri.equals(that.eventAgentUri) : that.eventAgentUri != null)
             return false;
         if (eventStartTime != null ? !eventStartTime.equals(that.eventStartTime) : that.eventStartTime != null)
             return false;
-        if (eventEndTime != null ? !eventEndTime.equals(that.eventEndTime) : that.eventEndTime != null)
-            return false;
+        if (eventEndTime != null ? !eventEndTime.equals(that.eventEndTime) : that.eventEndTime != null) return false;
         if (eventDescription != null ? !eventDescription.equals(that.eventDescription) : that.eventDescription != null)
             return false;
         if (eventType != null ? !eventType.equals(that.eventType) : that.eventType != null) return false;
@@ -293,6 +303,7 @@ public class DiscoSolrDocument {
         result = 31 * result + (discoAggregatedResourceUris != null ? discoAggregatedResourceUris.hashCode() : 0);
         result = 31 * result + (discoProvenanceUri != null ? discoProvenanceUri.hashCode() : 0);
         result = 31 * result + (discoRelatedStatements != null ? discoRelatedStatements.hashCode() : 0);
+        result = 31 * result + (discoStatus != null ? discoStatus.hashCode() : 0);
         result = 31 * result + (eventUri != null ? eventUri.hashCode() : 0);
         result = 31 * result + (eventAgentUri != null ? eventAgentUri.hashCode() : 0);
         result = 31 * result + (eventStartTime != null ? eventStartTime.hashCode() : 0);

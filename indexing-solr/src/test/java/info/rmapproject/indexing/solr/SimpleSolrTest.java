@@ -15,13 +15,10 @@ import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
+import info.rmapproject.indexing.solr.repository.IndexDTO;
 import info.rmapproject.indexing.solr.repository.VersionRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,8 +48,8 @@ import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +62,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static info.rmapproject.core.model.RMapStatus.ACTIVE;
+import static info.rmapproject.core.model.RMapStatus.INACTIVE;
+import static java.lang.Long.parseLong;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -96,6 +96,12 @@ public class SimpleSolrTest {
         System.setProperty("spring.profiles.active", "default, inmemory-triplestore, inmemory-idservice");
     }
 
+//    @After
+//    public void tearDown() throws Exception {
+//        discoRepository.deleteAll();
+//        assertEquals(0, discoRepository.count());
+//    }
+
     /**
      * Fails: can't specify a core name to ping
      */
@@ -113,7 +119,7 @@ public class SimpleSolrTest {
     @Test
     @SuppressWarnings("unchecked")
     public void simpleWrite() throws Exception {
-        DiscoSolrDocument doc = discoDocument(1, "simpleWriteWithTemplate");
+        DiscoSolrDocument doc = discoDocument("1", "simpleWriteWithTemplate");
 
         // NOT TRUE WITH spring-data-solr 3: Don't need to use the saveBean(core, doc) method, because the document has the core as an annotation
         UpdateResponse res = solrTemplate.saveBean("discos", doc);
@@ -129,7 +135,7 @@ public class SimpleSolrTest {
      */
     @Test
     public void simpleWriteWithRepo() throws Exception {
-        DiscoSolrDocument doc = discoDocument(10, "simpleWriteWithRepo");
+        DiscoSolrDocument doc = discoDocument("10", "simpleWriteWithRepo");
 
         DiscoSolrDocument saved = discoRepository.save(doc);
         assertNotNull(saved);
@@ -137,7 +143,7 @@ public class SimpleSolrTest {
 
     @Test
     public void simpleCountAndDelete() throws Exception {
-        DiscoSolrDocument doc = discoDocument(20, "simpleCountAndDelete");
+        DiscoSolrDocument doc = discoDocument("20", "simpleCountAndDelete");
 
         DiscoSolrDocument saved = discoRepository.save(doc);
         assertNotNull(saved);
@@ -152,23 +158,23 @@ public class SimpleSolrTest {
     @Test
     public void testSimpleFindUsingDocumentId() throws Exception {
         List<Long> ids = Arrays.asList(100L, 101L, 102L);
-        ids.stream().map(id -> discoDocument(id, "testSimpleSearchUsingDocumentId"))
+        ids.stream().map(String::valueOf).map(id -> discoDocument(id, "testSimpleSearchUsingDocumentId"))
                 .forEach(doc -> discoRepository.save(doc));
 
-        Set<Long> found = StreamSupport.stream(
+        Set<String> found = StreamSupport.stream(
                 discoRepository.findAllById(ids).spliterator(), false)
                 .map(DiscoSolrDocument::getDiscoId)
                 .collect(Collectors.toSet());
 
-        ids.forEach(expectedId -> assertTrue(found.stream().anyMatch(expectedId::equals)));
-        assertTrue(found.stream().noneMatch(id -> (id < 100 || id > 102)));
+        ids.forEach(expectedId -> assertTrue(found.stream().map(Long::parseLong).anyMatch(expectedId::equals)));
     }
 
     @Test
     public void testSimpleFindUsingCriteria() throws Exception {
+        discoRepository.deleteAll();
         registerUriConverter(solrTemplate);
         List<Long> ids = Arrays.asList(200L, 201L, 202L);
-        ids.stream().map(id -> discoDocument(id, "testSimpleFindUsingCriteria"))
+        ids.stream().map(String::valueOf).map(id -> discoDocument(id, "testSimpleFindUsingCriteria"))
                 .forEach(doc -> discoRepository.save(doc));
 
         Set<DiscoSolrDocument> found = discoRepository
@@ -177,11 +183,11 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         Set<DiscoSolrDocument> filtered = found.stream()
-                .filter(doc -> (doc.getDiscoId() > 199 && doc.getDiscoId() < 300))
+                .filter(doc -> (parseLong(doc.getDiscoId()) > 199 && parseLong(doc.getDiscoId()) < 300))
                 .collect(Collectors.toSet());
 
         assertEquals(3, filtered.size());
-        assertTrue(filtered.stream().allMatch(doc -> doc.getDiscoId() >= 200 && doc.getDiscoId() < 203));
+        assertTrue(filtered.stream().allMatch(doc -> parseLong(doc.getDiscoId()) >= 200 && parseLong(doc.getDiscoId()) < 203));
     }
 
     @Test
@@ -192,7 +198,7 @@ public class SimpleSolrTest {
 
         // Store a disco document that has a lower-case resource url and try to find it with an upper case URL
 
-        DiscoSolrDocument doc = discoDocument(300L, "testCaseInsensitiveUriSearch");
+        DiscoSolrDocument doc = discoDocument("300", "testCaseInsensitiveUriSearch");
         assertEquals("http://doi.org/10.1109/disco.test",
                 doc.getDiscoAggregatedResourceUris().iterator().next());
         discoRepository.save(doc);
@@ -203,7 +209,7 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         assertEquals(1, found.size());
-        assertEquals((Long)300L, found.iterator().next().getDiscoId());
+        assertEquals("300", found.iterator().next().getDiscoId());
         assertEquals("http://doi.org/10.1109/disco.test",
                 found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
 
@@ -212,7 +218,7 @@ public class SimpleSolrTest {
         // Store a disco document that has an upper-case resource url and try to find it with a lower case URL
 
         doc = new DiscoSolrDocument();
-        doc.setDiscoId(301L);
+        doc.setDiscoId("301");
         doc.setDiscoAggregatedResourceUris(new ArrayList() {
             {
                 add("http://DOI.ORG/10.1109/disco.test");
@@ -228,7 +234,7 @@ public class SimpleSolrTest {
         assertNotNull(found);
 
         assertEquals(1, found.size());
-        assertEquals((Long)301L, found.iterator().next().getDiscoId());
+        assertEquals("301", found.iterator().next().getDiscoId());
         assertEquals("http://DOI.ORG/10.1109/disco.test",
                 found.iterator().next().getDiscoAggregatedResourceUris().iterator().next());
 
@@ -241,7 +247,7 @@ public class SimpleSolrTest {
         // Store a disco document that has a field containing a URL, and see if we can retrieve that document using
         // a wildcard search
 
-        DiscoSolrDocument doc = discoDocument(400L, "testWildcardUriSearch");
+        DiscoSolrDocument doc = discoDocument("400", "testWildcardUriSearch");
         discoRepository.save(doc);
 
         Set<DiscoSolrDocument> found = discoRepository.findDiscoSolrDocumentsByDiscoAggregatedResourceUrisContains("http://doi.org/10.1109/");
@@ -415,7 +421,7 @@ public class SimpleSolrTest {
 
                     DiscoSolrDocument doc = new DiscoSolrDocument();
 
-                    doc.setDiscoId((long)idCounter.getAndIncrement());
+                    doc.setDiscoId(String.valueOf(idCounter.getAndIncrement()));
                     doc.setDiscoRelatedStatements(toIndex.disco.getRelatedStatements().stream().map(t -> t.getSubject().getStringValue() + " " + t.getPredicate().getStringValue() + " " + t.getObject().getStringValue()).collect(Collectors.toList()));
                     doc.setDiscoUri(toIndex.disco.getId().getStringValue());
                     doc.setDiscoCreatorUri(toIndex.disco.getCreator().getStringValue());               // TODO: Resolve creator and index creator properties?
@@ -432,8 +438,8 @@ public class SimpleSolrTest {
                     doc.setEventUri(toIndex.event.getId().getStringValue());
                     doc.setEventAgentUri(toIndex.event.getAssociatedAgent().getStringValue());
                     doc.setEventDescription(toIndex.event.getDescription() != null ? toIndex.event.getDescription().getStringValue() : null);
-                    doc.setEventStartTime(dateToString(toIndex.event.getStartTime()));
-                    doc.setEventEndTime(dateToString(toIndex.event.getEndTime()));
+                    doc.setEventStartTime(IndexUtils.dateToString(toIndex.event.getStartTime()));
+                    doc.setEventEndTime(IndexUtils.dateToString(toIndex.event.getEndTime()));
                     doc.setEventType(toIndex.event.getEventType().name());
                     doc.setEventTargetObjectUris(Collections.singletonList(toIndex.eventTarget.getStringValue()));
                     if (toIndex.eventSource != null) {
@@ -446,8 +452,99 @@ public class SimpleSolrTest {
                 .forEach(doc -> discoRepository.save(doc));
     }
 
-    private static String dateToString(Date d) {
-        return ISODateTimeFormat.dateTime().withZoneUTC().print(new DateTime(d));
+    @Test
+    public void writableDiscoRepository() throws Exception {
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+        Stream<IndexDTO> dtos = prepareIndexableDtos("/data/discos/rmd18mddcw");
+
+        dtos.forEach(dto -> discoRepository.index(dto));
+
+        // 5 documents should have been added
+        // - one document per DiSCO, Event tuple
+        assertEquals(5, discoRepository.count());
+
+        // 1 document should be active
+        Set<DiscoSolrDocument> docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(ACTIVE.toString());
+        assertEquals(1, docs.size());
+
+        // assert it is the uri we expect
+        DiscoSolrDocument active = docs.iterator().next();
+        assertTrue(active.getDiscoUri().endsWith("rmd18mddcw"));
+
+        // the other four should be inactive
+        docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(INACTIVE.toString());
+        assertEquals(4, discoRepository.count());
+
+        // assert they have the uris we expect
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mdd8b")).count());
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18m7mr7")).count());
+    }
+
+    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath) {
+        Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
+        getRmapResources(resourcePath, RDFFormat.NQUADS, rmapObjects);
+
+        List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO);
+        assertEquals(3, discos.size());
+
+        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT);
+        assertEquals(3, events.size());
+
+        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT);
+        assertEquals(1, agents.size());
+
+        return events.stream()
+                .sorted(Comparator.comparing(RMapEvent::getStartTime))
+                .map(event -> {
+            RMapAgent agent = agents.stream()
+                    .filter(a -> a.getId().getStringValue().equals(event.getAssociatedAgent().getStringValue()))
+                    .findAny()
+                    .orElseThrow(() ->
+                            new RuntimeException("Missing expected agent " + event.getAssociatedAgent().getStringValue()));
+
+            RMapIri source;
+            RMapIri target;
+
+            switch (event.getEventType()) {
+                case CREATION:
+                    source = null;
+                    target = ((RMapEventWithNewObjects) event).getCreatedObjectIds().get(0);
+                    break;
+                case UPDATE:
+                    source = ((RMapEventUpdate) event).getInactivatedObjectId();
+                    target = ((RMapEventUpdate) event).getDerivedObjectId();
+                    break;
+                case DERIVATION:
+                    source = ((RMapEventDerivation) event).getSourceObjectId();
+                    target = ((RMapEventDerivation) event).getDerivedObjectId();
+                    break;
+                default:
+                    throw new RuntimeException("Unhandled event type " + event);
+            }
+
+            IndexDTO indexDto = new IndexDTO();
+            indexDto.setAgent(agent);
+            indexDto.setEvent(event);
+
+            if (source != null) {
+                indexDto.setSourceDisco(discos.stream()
+                        .filter(disco -> disco.getId().getStringValue().equals(source.getStringValue()))
+                        .findAny()
+                        .orElseThrow(() ->
+                                new RuntimeException("Missing expected source DiSCO: " + source.getStringValue())));
+            }
+
+            IndexUtils.assertNotNull(target);
+
+            indexDto.setTargetDisco(discos.stream()
+                    .filter(disco -> disco.getId().getStringValue().equals(target.getStringValue()))
+                    .findAny()
+                    .orElseThrow(() ->
+                            new RuntimeException("Missing expected target DiSCO: " + target.getStringValue())));
+
+            return indexDto;
+        });
     }
 
     /**
@@ -619,7 +716,7 @@ public class SimpleSolrTest {
      * @param testDescription
      * @return
      */
-    private static DiscoSolrDocument discoDocument(long id, String testDescription) {
+    private static DiscoSolrDocument discoDocument(String id, String testDescription) {
         DiscoSolrDocument doc = new DiscoSolrDocument();
         doc.setDiscoDescription(testDescription);
         doc.setDiscoId(id);

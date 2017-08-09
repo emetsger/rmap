@@ -54,6 +54,8 @@
     <field name="disco_provenance_uri" type="uri"/>         <!-- TODO: any literal values to index here? -->
     <field name="disco_related_statements" type="triples"/> <!-- TODO: could have a single field containing all triples -->
 
+    <field name="disco_status" type="description"/>
+
     <!-- TODO: fields for predicate/edge labels for GUI visualization? -->
 
     <!-- Event that resulted in state of this DiSCO document -->
