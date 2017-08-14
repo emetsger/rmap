@@ -1,36 +1,24 @@
 package info.rmapproject.indexing.solr.repository;
 
-import com.sun.javafx.event.EventDispatchTree;
 import info.rmapproject.core.model.RMapIri;
-import info.rmapproject.core.model.RMapObject;
-import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.RMapStatus;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.core.model.event.RMapEventCreation;
-import info.rmapproject.core.model.event.RMapEventDeletion;
 import info.rmapproject.core.model.event.RMapEventDerivation;
-import info.rmapproject.core.model.event.RMapEventInactivation;
-import info.rmapproject.core.model.event.RMapEventTombstone;
 import info.rmapproject.core.model.event.RMapEventType;
 import info.rmapproject.core.model.event.RMapEventUpdate;
-import info.rmapproject.core.model.event.RMapEventUpdateWithReplace;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.indexing.solr.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import org.apache.zookeeper.Op;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.solr.repository.SolrCrudRepository;
+import org.springframework.data.solr.core.SolrTemplate;
+import org.springframework.data.solr.core.query.PartialUpdate;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,10 +27,19 @@ import static info.rmapproject.core.model.RMapStatus.ACTIVE;
 import static info.rmapproject.core.model.RMapStatus.DELETED;
 import static info.rmapproject.core.model.RMapStatus.INACTIVE;
 import static info.rmapproject.core.model.RMapStatus.TOMBSTONED;
+import static info.rmapproject.core.model.event.RMapEventType.CREATION;
+import static info.rmapproject.core.model.event.RMapEventType.DELETION;
+import static info.rmapproject.core.model.event.RMapEventType.DERIVATION;
+import static info.rmapproject.core.model.event.RMapEventType.REPLACE;
+import static info.rmapproject.core.model.event.RMapEventType.UPDATE;
 import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
 import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
 import static info.rmapproject.indexing.solr.IndexUtils.dateToString;
 import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.CORE_NAME;
+import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DISCO_STATUS;
+import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_ID;
+import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_LAST_UPDATED;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -54,42 +51,27 @@ public class CustomRepoImpl implements CustomRepo {
     @Autowired
     private DiscoRepository delegate;
 
+    @Autowired
+    private SolrTemplate template;
+
     @Override
     public void index(IndexDTO toIndex) {
         assertNotNull(toIndex);
 
-        RMapEvent event = toIndex.getEvent();
-        RMapAgent agent = toIndex.getAgent();
-        assertNotNull(event);
-        assertNotNull(agent);
+        RMapEvent event = assertNotNull(toIndex.getEvent());
+        RMapAgent agent = assertNotNull(toIndex.getAgent());
 
-        if ( !(event.getAssociatedAgent().getStringValue().equals(agent.getId().getStringValue()))) {
+        if (!(irisEqual(event.getAssociatedAgent(), agent.getId()))) {
             throw new RuntimeException("Missing agent '" + event.getAssociatedAgent().getStringValue() +
                     "' of event " + event);
         }
 
-        RMapIri source;
-        RMapIri target;
-
-        switch (event.getEventType()) {
-            case CREATION:
-                source = null;
-                target = ((RMapEventWithNewObjects) event).getCreatedObjectIds().get(0);
-                break;
-            case UPDATE:
-                source = ((RMapEventUpdate) event).getInactivatedObjectId();
-                target = ((RMapEventUpdate) event).getDerivedObjectId();
-                break;
-            case DERIVATION:
-                source = ((RMapEventDerivation) event).getSourceObjectId();
-                target = ((RMapEventDerivation) event).getDerivedObjectId();
-                break;
-            default:
-                throw new RuntimeException("Unhandled event type " + event);
-        }
+        // The source IRI will be null in the case of a creation event
+        RMapIri source = toIndex.getEventSourceIri();
+        // The target IRI will be null in the case of a delete, tombstone, or inactivation event
+        RMapIri target = toIndex.getEventTargetIri();
 
         IndexableThing forSource = null;
-        // The source IRI will be null in the case of a creation event
         if (source != null) {
             forSource = new IndexableThing();
 
@@ -104,35 +86,61 @@ public class CustomRepoImpl implements CustomRepo {
                                     toIndex.getSourceDisco().getId(), toIndex.getEvent().getId(), toIndex.getAgent().getId())));
         }
 
-        // The target IRI should never be null
-        IndexableThing forTarget = new IndexableThing();
-
-        forTarget.eventSource = source;
-        forTarget.eventTarget = target;
-        forTarget.event = event;
-        forTarget.agent = agent;
-        forTarget.disco = toIndex.getTargetDisco();
-        forTarget.status = inferDiscoStatus(forTarget.disco, forTarget.event, forTarget.agent)
-                .orElseThrow(() -> new RuntimeException(
-                        String.format("Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s",
-                                toIndex.getTargetDisco().getId(), toIndex.getEvent().getId(), toIndex.getAgent().getId())));
-
-        if (forSource != null) {
-            delegate.save(toDocument(forSource));
-
-            Set<DiscoSolrDocument> docsToUpdate = delegate.findDiscoSolrDocumentsByDiscoStatusAndDiscoUri(
-                    ACTIVE.toString(), forSource.disco.getId().getStringValue())
-                    .stream()
-                    .peek(doc -> doc.setDiscoStatus(INACTIVE.toString()))
-                    .collect(Collectors.toSet());
-
-            delegate.saveAll(docsToUpdate);
+        IndexableThing forTarget = null;
+        if (target != null) {
+            forTarget = new IndexableThing();
+            forTarget.eventSource = source;
+            forTarget.eventTarget = target;
+            forTarget.event = event;
+            forTarget.agent = agent;
+            forTarget.disco = toIndex.getTargetDisco();
+            forTarget.status = inferDiscoStatus(forTarget.disco, forTarget.event, forTarget.agent)
+                    .orElseThrow(() -> new RuntimeException(
+                            String.format("Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s",
+                                    toIndex.getTargetDisco().getId(), toIndex.getEvent().getId(), toIndex.getAgent().getId())));
         }
 
-        delegate.save(toDocument(forTarget));
+        if (forSource != null) {
+            // can the SOURCE of an event ever be set to ACTIVE?  I suspect YES
+            delegate.save(toDocument(forSource));
+            inactivateDocumentsForDisco(forSource.disco.getId());
+        }
 
-
+        if (forTarget != null) {
+            delegate.save(toDocument(forTarget));
+        }
     }
+
+    private void onIndex(IndexableThing it) {
+        // On UPDATE, update past discos to INACTIVE
+        // On 
+    }
+
+    /**
+     * Searches the index for documents that contain the referenced DiSCO <em>and</em> that have a DiSCO status of
+     * {@link RMapStatus#ACTIVE ACTIVE}.  Each matching document will have the DiSCO status set to {@link
+     * RMapStatus#INACTIVE INACTIVE}, and have their last updated timestamp set.
+     * <p>
+     * Implementation note: this method uses the {@link SolrTemplate} in order to perform a <em>partial update</em> of
+     * the matching documents.  This is for two reasons: 1) partial updates are more efficient, 2) round-tripping the
+     * entire {@link DiscoSolrDocument} is not possible due to how the {@link org.apache.solr.common.util.JavaBinCodec}
+     * writes dates in Solr responses.
+     * </p>
+     * @param discoIri
+     */
+    private void inactivateDocumentsForDisco(RMapIri discoIri) {
+        Set<PartialUpdate> statusUpdates = delegate.findDiscoSolrDocumentsByDiscoStatusAndDiscoUri(
+                ACTIVE.toString(), discoIri.getStringValue())
+                .stream()
+                .map(doc -> new PartialUpdate(DOC_ID, doc.getDocId()))
+                .peek(update -> update.setValueOfField(DISCO_STATUS, INACTIVE.toString()))
+                .peek(update -> update.setValueOfField(DOC_LAST_UPDATED, System.currentTimeMillis()))
+                .collect(Collectors.toSet());
+
+        template.saveBeans(CORE_NAME, statusUpdates);
+    }
+
+
 
     DiscoSolrDocument toDocument(IndexableThing indexableThing) {
         DiscoSolrDocument doc = new DiscoSolrDocument();
@@ -167,12 +175,163 @@ public class CustomRepoImpl implements CustomRepo {
         return doc;
     }
 
-    public DiscoRepository getDelegate() {
-        return delegate;
+    /**
+     * Infer the status of the supplied DiSCO.  The DiSCO can be considered as input to, or output from, the supplied
+     * {@code event}, depending on whether the DiSCO is the source or target referenced by the {@code event}.
+     * <p>
+     * For example, if the DiSCO is the <em>target</em> of a {@link RMapEventType#CREATION CREATION event}, then it is
+     * inferred to have an {@link RMapStatus#ACTIVE ACTIVE status}.  If the DiSCO is the <em>source</em> of a {@link
+     * RMapEventType#UPDATE UPDATE event}, then it is inferred to have an {@link RMapStatus#INACTIVE INACTIVE status}.
+     * Likewise, if the DiSCO is the <em>target</em> of an {@code UPDATE} event, then it would be inferred to have an
+     * {@code ACTIVE} status.
+     * </p>
+     * <p>
+     * The {@code agent} is supplied for completeness, but it not considered in the implementation.
+     * </p>
+     *
+     * @param disco the DiSCO referenced by {@code event}
+     * @param event the event referencing the {@code disco}; the {@code disco} may be the source or target of the
+     *              {@code event}
+     * @param agent the agent that generated the event, supplied for completeness but not used
+     * @return the inferred status
+     * @throws IllegalStateException if the {@code event} target or source does not reference the supplied
+     *                               {@code disco}, or if a reference is missing
+     * @throws RuntimeException if the {@code event} source or target IRI is {@code null}
+     */
+    Optional<RMapStatus> inferDiscoStatus(RMapDiSCO disco, RMapEvent event, RMapAgent agent) {
+        log.debug("Inferring DiSCO status for DiSCO '{}', {} event '{}', agent '{}'",
+                    disco.getId().getStringValue(), event.getEventType().toString(), event.getId().getStringValue(),
+                    agent.getId().getStringValue());
+
+        RMapStatus status = null;
+
+        Optional<RMapIri> sourceIri = null;
+        Optional<RMapIri> targetIri = null;
+        try {
+            sourceIri = IndexUtils.findEventIri(event, IndexUtils.EventDirection.SOURCE);
+            targetIri = IndexUtils.findEventIri(event, IndexUtils.EventDirection.TARGET);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(String.format(
+                    "Error resolving an event IRI for DiSCO %s, Event %s, Agent %s: %s",
+                    disco.getId().getStringValue(), event.getId().getStringValue(), agent.getId().getStringValue(),
+                    e.getMessage()), e);
+        }
+
+        log.trace("Found source event: '{}', target event: '{}'",
+                sourceIri.orElse(null), targetIri.orElse(null));
+
+        switch (event.getEventType()) {
+            case CREATION:
+                if (!targetIri.isPresent()) {
+                    throw new IllegalStateException("No CREATION event target for event " +
+                            event.getId().getStringValue());
+                }
+
+                if (irisEqual(targetIri, disco.getId())) {
+                    logInference(CREATION, disco.getId(), IndexUtils.EventDirection.TARGET);
+                    status = ACTIVE;
+                } else {
+                    throw new IllegalStateException(String.format(
+                            "Missing DiSCO %s for CREATION event target %s%n",
+                            targetIri.get().getStringValue(), event.getId().getStringValue()));
+                }
+
+                break;
+
+            case DERIVATION:
+                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
+                    logInference(DERIVATION, disco.getId(), IndexUtils.EventDirection.TARGET);
+                    status = ACTIVE;
+                } else if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
+                    logInference(DERIVATION, disco.getId(), IndexUtils.EventDirection.SOURCE);
+                    status = INACTIVE;
+                } else {
+                    throw new IllegalStateException("Missing DERIVATION event source and target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            case UPDATE:
+                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
+                    logInference(UPDATE, disco.getId(), IndexUtils.EventDirection.TARGET);
+                    status = ACTIVE;
+                } else if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
+                    logInference(UPDATE, disco.getId(), IndexUtils.EventDirection.SOURCE);
+                    status = INACTIVE;
+                } else {
+                    throw new IllegalStateException("Missing UPDATE event source and target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            case DELETION:
+                if (targetIri.isPresent() || sourceIri.isPresent() &&
+                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
+                    logInference(DELETION, disco.getId(), IndexUtils.EventDirection.TARGET);
+                    status = DELETED;
+                } else {
+                    throw new IllegalStateException("Missing DELETION event source or target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            case TOMBSTONE:
+                if (targetIri.isPresent() || sourceIri.isPresent() &&
+                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
+                    status = TOMBSTONED;
+                } else {
+                    throw new IllegalStateException("Missing TOMBSTONED event source or target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            case INACTIVATION:
+                if (targetIri.isPresent() || sourceIri.isPresent() &&
+                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
+                    status = INACTIVE;
+                } else {
+                    throw new IllegalStateException("Missing INACTIVATION event source or target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            case REPLACE:
+                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
+                    logInference(REPLACE, disco.getId(), IndexUtils.EventDirection.TARGET);
+                    status = ACTIVE;
+                } else {
+                    throw new IllegalStateException("Missing REPLACE event target IRI for event " +
+                            event.getId().getStringValue());
+                }
+                break;
+
+            default:
+                throw new RuntimeException("Unknown RMap event type: " + event.getEventType());
+        }
+
+        log.debug("Inferred status: {}", status);
+        return Optional.of(status);
     }
 
-    public void setDelegate(DiscoRepository delegate) {
-        this.delegate = delegate;
+    /**
+     * Logs the reason behind the inferencing result at TRACE level
+     *
+     * @param type event type
+     * @param iri the iri of the disco
+     * @param direction whether the disco is the source of the event, the target of the event, or either (i.e. it
+     *                  the direction doesn't matter)
+     */
+    private void logInference(RMapEventType type, RMapIri iri, IndexUtils.EventDirection direction) {
+        if (!log.isTraceEnabled()) {
+            return;
+        }
+
+        if (direction != IndexUtils.EventDirection.EITHER) {
+            log.trace("{} event {} iri equals disco iri: {}",
+                    type, (direction == IndexUtils.EventDirection.SOURCE ? "source" : "target"), iri.getStringValue());
+        } else {
+            log.trace("{} event source or target iri equals disco iri: {}", type, direction, iri.getStringValue());
+        }
     }
 
     /**
@@ -186,230 +345,4 @@ public class CustomRepoImpl implements CustomRepo {
         RMapIri eventSource;
         RMapIri eventTarget;
     }
-
-    Optional<RMapStatus> inferDiscoStatus(RMapDiSCO disco, RMapEvent event, RMapAgent agent) {
-        log.debug("Inferring DiSCO status for DiSCO '{}', {} event '{}', agent '{}'",
-                    disco.getId().getStringValue(), event.getEventType().toString(), event.getId().getStringValue(),
-                    agent.getId().getStringValue());
-
-        RMapStatus status = null;
-
-        Optional<RMapIri> sourceIri = null;
-        Optional<RMapIri> targetIri = null;
-        try {
-            sourceIri = findEventIri(event, EventDirection.SOURCE);
-            targetIri = findEventIri(event, EventDirection.TARGET);
-        } catch (RuntimeException e) {
-            throw new RuntimeException(String.format(
-                    "Error resolving an event IRI for DiSCO %s, Event %s, Agent %s: %s",
-                    disco.getId().getStringValue(), event.getId().getStringValue(), agent.getId().getStringValue(),
-                    e.getMessage()), e);
-        }
-
-        log.debug("Found source event IRI: '{}', target event IRI: '{}'",
-                sourceIri.orElse(null), targetIri.orElse(null));
-
-        switch (event.getEventType()) {
-            case CREATION:
-                if (!targetIri.isPresent()) {
-                    throw new IllegalArgumentException("No CREATION event target IRI for event " +
-                            event.getId().getStringValue());
-                }
-
-                if (irisEqual(targetIri, disco.getId())) {
-                    status = ACTIVE;
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                            "Missing DiSCO %s for CREATION event target %s%n",
-                            targetIri.get().getStringValue(), event.getId().getStringValue()));
-                }
-
-                break;
-
-            case DERIVATION:
-                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
-                    status = ACTIVE;
-                } else if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
-                    status = INACTIVE;
-                } else {
-                    throw new IllegalArgumentException("Missing DERIVATION event source and target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            case UPDATE:
-                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
-                    status = ACTIVE;
-                } else if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
-                    status = INACTIVE;
-                } else {
-                    throw new IllegalArgumentException("Missing UPDATE event source and target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            case DELETION:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
-                    status = DELETED;
-                } else {
-                    throw new IllegalArgumentException("Missing DELETION event source or target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            case TOMBSTONE:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
-                    status = TOMBSTONED;
-                } else {
-                    throw new IllegalArgumentException("Missing TOMBSTONED event source or target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            case INACTIVATION:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
-                    status = INACTIVE;
-                } else {
-                    throw new IllegalArgumentException("Missing INACTIVATION event source or target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            case REPLACE:
-                if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
-                    status = ACTIVE;
-                } else {
-                    throw new IllegalArgumentException("Missing REPLACE event target IRI for event " +
-                            event.getId().getStringValue());
-                }
-                break;
-
-            default:
-                throw new RuntimeException("Unknown RMap event type: " + event.getEventType());
-        }
-
-        log.debug("Inferred status: {}", status);
-        return Optional.of(status);
-    }
-
-    Optional<RMapDiSCO> findDiscoForEvent(RMapEvent event, EventDirection sourceOrTarget, RMapDiSCO disco) {
-        Map<RMapObjectType, Set<? extends RMapObject>> discoMap = new HashMap<>();
-        discoMap.put(RMapObjectType.DISCO, Collections.singleton(disco));
-        return findDiscoForEvent(event, sourceOrTarget, discoMap);
-    }
-
-    @SuppressWarnings("unchecked")
-    Optional<RMapDiSCO> findDiscoForEvent(RMapEvent event, EventDirection sourceOrTarget,
-                                          Map<RMapObjectType, Set<? extends RMapObject>> objects) {
-
-        assertNotNullOrEmpty(objects);
-
-        Optional<RMapIri> eventIri = findEventIri(event, sourceOrTarget);
-
-        if (!eventIri.isPresent()) {
-            return Optional.empty();
-        }
-
-        return (Optional<RMapDiSCO>) assertNotNullOrEmpty(objects.get(RMapObjectType.DISCO))
-                .stream()
-                .filter(disco -> disco.getId().getStringValue().equals(eventIri.get().getStringValue()))
-                .findAny();
-    }
-
-    private Optional<RMapIri> findEventIri(RMapEvent event, EventDirection direction) {
-        Optional<RMapIri> iri = Optional.empty();
-
-        if (direction == EventDirection.TARGET) {
-            switch (event.getEventType()) {
-                case CREATION:
-                    // TODO: handle multiple creation ids
-                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventCreation) event).getCreatedObjectIds()).get(0));
-                    break;
-
-                case DERIVATION:
-                    iri = Optional.of(((RMapEventDerivation) event).getDerivedObjectId());
-                    break;
-
-                case UPDATE:
-                    iri = Optional.of(((RMapEventUpdate) event).getDerivedObjectId());
-                    break;
-
-                case DELETION:
-                    // TODO: handle multiple deletion ids
-                    // TODO: decide what the source IRI and target IRI is for a deletion event
-                    // Right now, the IRI of the deleted DiSCO is used for both
-                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
-                    break;
-
-                case TOMBSTONE:
-                    // TODO: decide what the source IRI and target IRI is for a tombstone event
-                    // Right now, the IRI of the tombstoned resource is used for both
-                    iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
-                    break;
-
-                case INACTIVATION:
-                    // TODO: decide what the source IRI and target IRI is for an inactivation event
-                    // Right now, the IRI of the inactivated disco is used for both
-                    iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
-                    break;
-
-                case REPLACE:
-                    // TODO: missing the source object of a replacement?
-                    iri = Optional.empty();
-
-                default:
-                    throw new IllegalArgumentException("Unknown RMap event type: " + event);
-
-            }
-        }
-
-        if (direction == EventDirection.SOURCE) {
-            switch (event.getEventType()) {
-                case CREATION:
-                    // TODO: handle multiple creation ids
-                    iri = Optional.empty();
-                    break;
-
-                case DERIVATION:
-                    iri = Optional.of(((RMapEventDerivation) event).getSourceObjectId());
-                    break;
-
-                case UPDATE:
-                    iri = Optional.of(((RMapEventUpdate)event).getInactivatedObjectId());
-                    break;
-
-                case DELETION:
-                    // TODO: handle multiple deletion ids
-                    // TODO: decide what the source IRI and target IRI is for a deletion event
-                    // Right now, the IRI of the deleted DiSCO is used for both
-                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
-                    break;
-
-                case TOMBSTONE:
-                    // TODO: decide what the source IRI and target IRI is for a tombstone event
-                    // Right now, the IRI of the tombstoned resource is used for both
-                    iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
-
-                case INACTIVATION:
-                    // TODO: decide what the source IRI and target IRI is for an inactivation event
-                    // Right now, the IRI of the inactivated disco is used for both
-                    iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
-                    break;
-
-                case REPLACE:
-                    iri = Optional.of(((RMapEventUpdateWithReplace) event).getUpdatedObjectId());
-
-                default:
-                    throw new IllegalArgumentException("Unknown RMap event type: " + event.getEventType());
-
-            }
-        }
-
-        return iri;
-    }
-
-    private enum EventDirection { SOURCE, TARGET }
 }

@@ -1,6 +1,14 @@
 package info.rmapproject.indexing.solr;
 
 import info.rmapproject.core.model.RMapIri;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.event.RMapEventCreation;
+import info.rmapproject.core.model.event.RMapEventDeletion;
+import info.rmapproject.core.model.event.RMapEventDerivation;
+import info.rmapproject.core.model.event.RMapEventInactivation;
+import info.rmapproject.core.model.event.RMapEventTombstone;
+import info.rmapproject.core.model.event.RMapEventUpdate;
+import info.rmapproject.core.model.event.RMapEventUpdateWithReplace;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -13,12 +21,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
+
 /**
  * Provides common utility methods used by model classes.
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 public class IndexUtils {
+
+    public enum EventDirection { SOURCE, TARGET, EITHER }
 
     /**
      * Asserts the supplied string is a valid URI according to {@link URI#create(String)}.  {@code null} URIs are OK,
@@ -126,5 +138,111 @@ public class IndexUtils {
 
     public static boolean irisEqual(Optional<RMapIri> optionalOne, Optional<RMapIri> optionalTwo) {
         return irisEqual(optionalOne.get(), optionalTwo.get());
+    }
+
+    /**
+     * Retrieves the source or target of the supplied event.
+     * <p>
+     * Most RMap events have a source and a target.  For example, an update event will have the disco <em>being
+     * updated</em> as the source and the <em>updated disco</em> as the target.  The Java method used to retrieve the
+     * source or target of the event depends on the sub-type of {@code RMapEvent}.
+     * </p>
+     *
+     * @param event the event to examine
+     * @param direction the direction of
+     * @return an {@code Optional} with the IRI of the referenced disco
+     * @throws IllegalArgumentException if an unknown {@code RMapEvent} is encountered
+     * @throws NullPointerException if the source or target IRI is {@code null}
+     */
+    public static Optional<RMapIri> findEventIri(RMapEvent event, EventDirection direction) {
+        Optional<RMapIri> iri = Optional.empty();
+
+        if (direction == EventDirection.TARGET) {
+            switch (event.getEventType()) {
+                case CREATION:
+                    // TODO: handle multiple creation ids
+                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventCreation) event).getCreatedObjectIds()).get(0));
+                    break;
+
+                case DERIVATION:
+                    iri = Optional.of(((RMapEventDerivation) event).getDerivedObjectId());
+                    break;
+
+                case UPDATE:
+                    iri = Optional.of(((RMapEventUpdate) event).getDerivedObjectId());
+                    break;
+
+                case DELETION:
+                    // TODO: handle multiple deletion ids
+                    // TODO: decide what the source IRI and target IRI is for a deletion event
+                    // Right now, the IRI of the deleted DiSCO is used for both
+                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
+                    break;
+
+                case TOMBSTONE:
+                    // TODO: decide what the source IRI and target IRI is for a tombstone event
+                    // Right now, the IRI of the tombstoned resource is used for both
+                    iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
+                    break;
+
+                case INACTIVATION:
+                    // TODO: decide what the source IRI and target IRI is for an inactivation event
+                    // Right now, the IRI of the inactivated disco is used for both
+                    iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
+                    break;
+
+                case REPLACE:
+                    // TODO: missing the source object of a replacement?
+                    iri = Optional.empty();
+
+                default:
+                    throw new IllegalArgumentException("Unknown RMap event type: " + event);
+
+            }
+        }
+
+        if (direction == EventDirection.SOURCE) {
+            switch (event.getEventType()) {
+                case CREATION:
+                    // TODO: handle multiple creation ids
+                    iri = Optional.empty();
+                    break;
+
+                case DERIVATION:
+                    iri = Optional.of(((RMapEventDerivation) event).getSourceObjectId());
+                    break;
+
+                case UPDATE:
+                    iri = Optional.of(((RMapEventUpdate)event).getInactivatedObjectId());
+                    break;
+
+                case DELETION:
+                    // TODO: handle multiple deletion ids
+                    // TODO: decide what the source IRI and target IRI is for a deletion event
+                    // Right now, the IRI of the deleted DiSCO is used for both
+                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
+                    break;
+
+                case TOMBSTONE:
+                    // TODO: decide what the source IRI and target IRI is for a tombstone event
+                    // Right now, the IRI of the tombstoned resource is used for both
+                    iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
+
+                case INACTIVATION:
+                    // TODO: decide what the source IRI and target IRI is for an inactivation event
+                    // Right now, the IRI of the inactivated disco is used for both
+                    iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
+                    break;
+
+                case REPLACE:
+                    iri = Optional.of(((RMapEventUpdateWithReplace) event).getUpdatedObjectId());
+
+                default:
+                    throw new IllegalArgumentException("Unknown RMap event type: " + event.getEventType());
+
+            }
+        }
+
+        return iri;
     }
 }
