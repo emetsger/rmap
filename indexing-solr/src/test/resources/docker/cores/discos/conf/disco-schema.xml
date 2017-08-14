@@ -3,9 +3,11 @@
 
     <field name="_version_" type="long" indexed="true" stored="true"/>
 
-    <uniqueKey>disco_id</uniqueKey>
+    <uniqueKey>doc_id</uniqueKey>
 
-    <field name="disco_id" type="string"/>
+    <field name="doc_id" type="string"/>
+
+    <field name="doc_last_updated" type="long"/>
 
     <!-- other interesting tokenizers -->
     <!-- solr.PathHierarchyTokenizerFactory -->

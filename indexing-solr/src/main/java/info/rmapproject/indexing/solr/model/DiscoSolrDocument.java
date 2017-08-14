@@ -14,9 +14,32 @@ import static info.rmapproject.indexing.solr.IndexUtils.assertValidUri;
 @SolrDocument(solrCoreName = "discos")
 public class DiscoSolrDocument {
 
+    /**
+     * Name of the Solr core which stores instances of this document
+     */
+    public static final String CORE_NAME = "discos";
+
+    /**
+     * Field name containing the Solr document id
+     */
+    public static final String DOC_ID = "doc_id";
+
+    /**
+     * Field name containing the timestamp of the last update of the Solr document
+     */
+    public static final String DOC_LAST_UPDATED = "doc_last_updated";
+
+    /**
+     * Field name containing the status of the DiSCO
+     */
+    public static final String DISCO_STATUS = "disco_status";
+
     @Id
-    @Field("disco_id")
-    private String discoId;
+    @Field(DOC_ID)
+    private String docId;
+
+    @Field(DOC_LAST_UPDATED)
+    private long docLastUpdated;
 
     @Field("disco_uri")
     private String discoUri;
@@ -39,7 +62,7 @@ public class DiscoSolrDocument {
     @Field("disco_related_statements")
     private List<String> discoRelatedStatements;
 
-    @Field("disco_status")
+    @Field(DISCO_STATUS)
     private String discoStatus;
 
 
@@ -81,12 +104,20 @@ public class DiscoSolrDocument {
 
     }
 
-    public String getDiscoId() {
-        return discoId;
+    public String getDocId() {
+        return docId;
     }
 
-    public void setDiscoId(String discoId) {
-        this.discoId = discoId;
+    public void setDocId(String docId) {
+        this.docId = docId;
+    }
+
+    public long getDocLastUpdated() {
+        return docLastUpdated;
+    }
+
+    public void setDocLastUpdated(long docLastUpdated) {
+        this.docLastUpdated = docLastUpdated;
     }
 
     public String getDiscoUri() {
@@ -259,7 +290,8 @@ public class DiscoSolrDocument {
 
         DiscoSolrDocument that = (DiscoSolrDocument) o;
 
-        if (discoId != null ? !discoId.equals(that.discoId) : that.discoId != null) return false;
+        if (docLastUpdated != that.docLastUpdated) return false;
+        if (docId != null ? !docId.equals(that.docId) : that.docId != null) return false;
         if (discoUri != null ? !discoUri.equals(that.discoUri) : that.discoUri != null) return false;
         if (discoCreatorUri != null ? !discoCreatorUri.equals(that.discoCreatorUri) : that.discoCreatorUri != null)
             return false;
@@ -295,7 +327,8 @@ public class DiscoSolrDocument {
 
     @Override
     public int hashCode() {
-        int result = discoId != null ? discoId.hashCode() : 0;
+        int result = docId != null ? docId.hashCode() : 0;
+        result = 31 * result + (int) (docLastUpdated ^ (docLastUpdated >>> 32));
         result = 31 * result + (discoUri != null ? discoUri.hashCode() : 0);
         result = 31 * result + (discoCreatorUri != null ? discoCreatorUri.hashCode() : 0);
         result = 31 * result + (discoDescription != null ? discoDescription.hashCode() : 0);
