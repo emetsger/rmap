@@ -6,6 +6,7 @@ services:
     user: root
     ports:
      - "8983:8983"
+     - "5005:5005"
     volumes:
       - "./src/test/resources/docker/cores:/opt/solr/server/solr/mycores"
       # - "./precreate.sh:/docker-entrypoint-initdb.d/precreate.sh"
@@ -16,6 +17,8 @@ services:
       - start
       - -f
       - -force
+      - -a
+      - "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 #      - solr-precreate
 #      - discos resources versions
 #volumes:
