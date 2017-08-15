@@ -1,7 +1,6 @@
 package info.rmapproject.indexing.solr;
 
 import info.rmapproject.core.model.RMapIri;
-import info.rmapproject.core.model.RMapObject;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
@@ -10,8 +9,6 @@ import info.rmapproject.core.model.event.RMapEventDerivation;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
-import info.rmapproject.core.rdfhandler.RDFType;
-import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
@@ -24,15 +21,11 @@ import org.apache.solr.common.util.NamedList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openrdf.model.IRI;
-import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.data.solr.core.DefaultQueryParser;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
@@ -42,20 +35,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -344,16 +330,16 @@ public class SimpleSolrTest {
 
         AtomicInteger idCounter = new AtomicInteger(1);
 
-        Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
-        getRmapResources("/data/discos/rmd18mddcw", RDFFormat.NQUADS, rmapObjects);
+        Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
+        TestUtils.getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
 
-        List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO);
+        List<RMapDiSCO> discos = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.DISCO, rdfHandler);
         assertEquals(3, discos.size());
 
-        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT);
+        List<RMapEvent> events = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
         assertEquals(3, events.size());
 
-        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT);
+        List<RMapAgent> agents = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
         assertEquals(1, agents.size());
 
         events.stream()
@@ -464,14 +450,14 @@ public class SimpleSolrTest {
         discoRepository.deleteAll();
         assertEquals(0, discoRepository.count());
 
-        Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions = (resources) -> {
-            List<RMapDiSCO> discos = getRmapObjects(resources, RMapObjectType.DISCO);
+        Consumer<Map<RMapObjectType, Set<TestUtils.RDFResource>>> assertions = (resources) -> {
+            List<RMapDiSCO> discos = TestUtils.getRmapObjects(resources, RMapObjectType.DISCO, rdfHandler);
             assertEquals(3, discos.size());
 
-            List<RMapEvent> events = getRmapObjects(resources, RMapObjectType.EVENT);
+            List<RMapEvent> events = TestUtils.getRmapObjects(resources, RMapObjectType.EVENT, rdfHandler);
             assertEquals(3, events.size());
 
-            List<RMapAgent> agents = getRmapObjects(resources, RMapObjectType.AGENT);
+            List<RMapAgent> agents = TestUtils.getRmapObjects(resources, RMapObjectType.AGENT, rdfHandler);
             assertEquals(1, agents.size());
         };
 
@@ -510,15 +496,15 @@ public class SimpleSolrTest {
         }
     }
 
-    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath, Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions) {
-        Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
-        getRmapResources(resourcePath, RDFFormat.NQUADS, rmapObjects);
+    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath, Consumer<Map<RMapObjectType, Set<TestUtils.RDFResource>>> assertions) {
+        Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
+        TestUtils.getRmapResources(resourcePath, rdfHandler, RDFFormat.NQUADS, rmapObjects);
 
         assertions.accept(rmapObjects);
 
-        List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO);
-        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT);
-        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT);
+        List<RMapDiSCO> discos = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.DISCO, rdfHandler);
+        List<RMapEvent> events = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
+        List<RMapAgent> agents = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
 
         return events.stream()
                 .sorted(Comparator.comparing(RMapEvent::getStartTime))
@@ -551,152 +537,6 @@ public class SimpleSolrTest {
 
                     return indexDto;
                 });
-    }
-
-    /**
-     * Deserialize Turtle RDF from Spring Resources for the specified RMap object type.
-     *
-     * @param rmapObjects
-     * @param desiredType
-     * @param <T>
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private <T extends RMapObject> List<T> getRmapObjects(Map<RMapObjectType, Set<RDFResource>> rmapObjects,
-                                                          RMapObjectType desiredType) {
-
-        List<T> objects = (List<T>)rmapObjects.keySet().stream().filter(candidate -> candidate == desiredType)
-                .flatMap(type -> rmapObjects.get(type).stream())
-                .map(resource -> {
-                    try {
-                        switch (desiredType) {
-                            case DISCO:
-                                return rdfHandler.rdf2RMapDiSCO(resource.getInputStream(),
-                                        resource.getRmapFormat(), "");
-                            case AGENT:
-                                return rdfHandler.rdf2RMapAgent(resource.getInputStream(),
-                                        resource.getRmapFormat(), "");
-                            case EVENT:
-                                return rdfHandler.rdf2RMapEvent(resource.getInputStream(),
-                                        resource.getRmapFormat(), "");
-                            default:
-                                throw new IllegalArgumentException("Unknown type " + desiredType);
-                        }
-                    } catch (IOException e) {
-                        fail("Error opening RDF resource " + resource + ": " + e.getMessage());
-                        return null;
-                    }
-
-                }).collect(Collectors.toList());
-
-        return objects;
-    }
-
-    /**
-     * Retrieve a listing of Spring {@code Resource} objects that contain RMap objects.
-     * <p>
-     * Assumes {@code resourcePath} specifies a directory containing files that contain DiSCOs, Agents, and
-     * Events.  Each file must contain a single DiSCO, or single Event, or single Agent as retrieved from the
-     * RMap HTTP API.  The supplied {@code Map} is populated by this method.
-     * </p>
-     * <p>
-     * The returned map allows the caller to obtain resources that contain the RMap object type of interest.  For
-     * example, the resources containing DiSCOs are stored under the {@code RMapObjectType#DISCO} key.
-     * </p>
-     *
-     * @param resourcePath a classpath resource that is expected to resolve to a directory on the file system
-     * @param format the RDF format of the resources in the directory
-     * @param rmapObjects a {@code Map} of Spring resources keyed by the type of RMap objects they contain
-     */
-    private void getRmapResources(String resourcePath, RDFFormat format, Map<RMapObjectType,
-            Set<RDFResource>> rmapObjects) {
-
-        URL base = this.getClass().getResource(resourcePath);
-        assertNotNull("Base resource directory " + resourcePath + " does not exist, or cannot be resolved.",
-                base);
-        File baseDir = null;
-        try {
-            baseDir = new File(base.toURI());
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Could not convert " + base.toString() + " to a URI: " + e.getMessage(), e);
-        }
-        assertTrue("Directory " + baseDir + " does not exist.", baseDir.exists());
-        assertTrue(baseDir + " must be a directory.", baseDir.isDirectory());
-
-        RDFType type;
-
-        if (format == RDFFormat.TURTLE) {
-            type = RDFType.TURTLE;
-        } else if (format == RDFFormat.NQUADS) {
-            type = RDFType.NQUADS;
-        } else {
-            throw new RuntimeException("Unsupported RDFFormat: " + format);
-        }
-
-        //noinspection ConstantConditions
-        Stream.of(baseDir.listFiles((dir, name) -> {
-            if (format == RDFFormat.TURTLE) {
-                return name.endsWith(".ttl");
-            }
-
-            if (format == RDFFormat.NQUADS) {
-                return name.endsWith(".n4");
-            }
-
-            throw new RuntimeException("Unsupported RDFFormat: " + format);
-        })).forEach(file -> {
-            try (FileInputStream fin = new FileInputStream(file)) {
-
-                // Extract all the RDF statements from the file
-                Set<Statement> statements = ((RioRDFHandler) rdfHandler).convertRDFToStmtList(fin, type, "");
-
-                // Filter the statements that have a predicate of rdf:type
-                statements.stream().filter(SimpleSolrTest::isRdfType)
-
-                        // Map the the object of the rdf:type statement to a URI
-                        .map(s -> URI.create(s.getObject().stringValue()))
-
-                        // Collect the following mapping to a Map<RMapObjectType, Resource>
-                        // (i.e. RMap objects of type X are in file Y)
-                        .collect(
-
-                                Collectors.toMap(
-                                        // Map the rdf:type URI to a RMapObjectType to use as a Map key
-                                        uri -> RMapObjectType.getObjectType(new RMapIri(uri)),
-
-                                        // Ignore the rdf:type URI, and simply create a new HashSet containing the file
-                                        ignored -> {
-                                            Set<RDFResource> resources = new HashSet<>(1);
-                                            resources.add(new RDFResourceWrapper(new FileSystemResource(file), format));
-                                            return resources;
-                                        },
-
-                                        // If there are any key conflicts, simply merge the sets
-                                        (one, two) -> {
-                                            one.addAll(two);
-                                            return one;
-                                        },
-
-                                        // Put the resulting Map entry into the supplied Map
-                                        () -> rmapObjects
-
-                        ));
-
-            } catch (IOException e) {
-                fail("Failed reading turtle RDF from " + file + ": " + e.getMessage());
-            }
-        });
-    }
-
-    /**
-     * Returns {@code true} if the supplied statement's predicate is
-     * {@code http://www.w3.org/1999/02/22-rdf-syntax-ns#type}.
-     *
-     * @param s the statement
-     * @return true if the statement represents an {@code rdf:type}
-     */
-    private static boolean isRdfType(Statement s) {
-        return s.getPredicate().stringValue().equals(RdfTypeIRI.INSTANCE.stringValue());
     }
 
     private static void registerUriConverter(SolrTemplate solrTemplate) {
@@ -743,30 +583,6 @@ public class SimpleSolrTest {
         return doc;
     }
 
-    private static class RdfTypeIRI implements IRI {
-
-        static RdfTypeIRI INSTANCE = new RdfTypeIRI();
-
-        private RdfTypeIRI() {
-
-        }
-
-        @Override
-        public String getNamespace() {
-            return "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-        }
-
-        @Override
-        public String getLocalName() {
-            return "type";
-        }
-
-        @Override
-        public String stringValue() {
-            return "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        }
-    }
-
     /**
      * Encapsulates an indexable unit.
      */
@@ -776,136 +592,6 @@ public class SimpleSolrTest {
         private RMapAgent agent;
         private RMapIri eventSource;
         private RMapIri eventTarget;
-    }
-
-    /**
-     * A Spring Resource of RDF content. A RDFResource exposes the RDF serialization of the RDF.
-     */
-    private interface RDFResource extends Resource {
-
-        /**
-         * The format of the resource, using the OpenRDF model.  Equivalent to {@link #getRmapFormat()}.
-         *
-         * @return the format of the resource in the OpenRDF model
-         */
-        RDFFormat getRdfFormat();
-
-        /**
-         * The format of the resource, using the RMap model.  Equivalent to {@link #getRdfFormat()}.
-         *
-         * @return the format of the resource in the RMap model
-         */
-        RDFType getRmapFormat();
-    }
-
-    /**
-     * Wraps a Spring {@code Resource}, retaining knowledge of the RDF serialization of the resource.
-     */
-    private class RDFResourceWrapper implements RDFResource {
-
-        /**
-         * The underlying Spring {@code Resource}
-         */
-        private Resource delegate;
-
-        /**
-         * The OpenRDF RDF format
-         */
-        private RDFFormat format;
-
-        public RDFResourceWrapper(Resource delegate, RDFFormat format) {
-            this.delegate = delegate;
-            this.format = format;
-        }
-
-        @Override
-        public RDFFormat getRdfFormat() {
-            return format;
-        }
-
-        @Override
-        public RDFType getRmapFormat() {
-            if (format == RDFFormat.TURTLE) {
-                return RDFType.TURTLE;
-            }
-
-            if (format == RDFFormat.NQUADS) {
-                return RDFType.NQUADS;
-            }
-
-            throw new RuntimeException("Unsupported RDFFormat " + format);
-        }
-
-        @Override
-        public boolean exists() {
-            return delegate.exists();
-        }
-
-        @Override
-        public boolean isReadable() {
-            return delegate.isReadable();
-        }
-
-        @Override
-        public boolean isOpen() {
-            return delegate.isOpen();
-        }
-
-        @Override
-        public boolean isFile() {
-            return delegate.isFile();
-        }
-
-        @Override
-        public URL getURL() throws IOException {
-            return delegate.getURL();
-        }
-
-        @Override
-        public URI getURI() throws IOException {
-            return delegate.getURI();
-        }
-
-        @Override
-        public File getFile() throws IOException {
-            return delegate.getFile();
-        }
-
-        @Override
-        public ReadableByteChannel readableChannel() throws IOException {
-            return delegate.readableChannel();
-        }
-
-        @Override
-        public long contentLength() throws IOException {
-            return delegate.contentLength();
-        }
-
-        @Override
-        public long lastModified() throws IOException {
-            return delegate.lastModified();
-        }
-
-        @Override
-        public Resource createRelative(String s) throws IOException {
-            return delegate.createRelative(s);
-        }
-
-        @Override
-        @Nullable
-        public String getFilename() {
-            return delegate.getFilename();
-        }
-
-        @Override
-        public String getDescription() {
-            return delegate.getDescription();
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return delegate.getInputStream();
-        }
     }
 
 }
