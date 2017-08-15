@@ -17,6 +17,8 @@ public interface DiscoRepository extends SolrCrudRepository<DiscoSolrDocument, L
 
     Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoStatus(String discoStatus);
 
-    Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoStatusAndDiscoUri(String discoStatus, String discoUri);
+    Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoUri(String discoUri);
+
+    Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoUriAndDiscoStatus(String discoUri, String discoStatus);
 
 }

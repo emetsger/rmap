@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -463,8 +464,19 @@ public class SimpleSolrTest {
         discoRepository.deleteAll();
         assertEquals(0, discoRepository.count());
 
+        Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions = (resources) -> {
+            List<RMapDiSCO> discos = getRmapObjects(resources, RMapObjectType.DISCO);
+            assertEquals(3, discos.size());
+
+            List<RMapEvent> events = getRmapObjects(resources, RMapObjectType.EVENT);
+            assertEquals(3, events.size());
+
+            List<RMapAgent> agents = getRmapObjects(resources, RMapObjectType.AGENT);
+            assertEquals(1, agents.size());
+        };
+
         LOG.debug("Preparing indexable objects.");
-        Stream<IndexDTO> dtos = prepareIndexableDtos("/data/discos/rmd18mddcw");
+        Stream<IndexDTO> dtos = prepareIndexableDtos("/data/discos/rmd18mddcw", assertions);
 
         dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discoRepository.index(dto));
 
@@ -498,18 +510,15 @@ public class SimpleSolrTest {
         }
     }
 
-    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath) {
+    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath, Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions) {
         Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
         getRmapResources(resourcePath, RDFFormat.NQUADS, rmapObjects);
 
+        assertions.accept(rmapObjects);
+
         List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO);
-        assertEquals(3, discos.size());
-
         List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT);
-        assertEquals(3, events.size());
-
         List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT);
-        assertEquals(1, agents.size());
 
         return events.stream()
                 .sorted(Comparator.comparing(RMapEvent::getStartTime))
