@@ -118,6 +118,15 @@ public class IndexUtils {
         return o;
     }
 
+    public static <T> T assertNotNull(T o, String message) {
+        if (o == null) {
+            throw new IllegalArgumentException(message);
+        }
+
+        return o;
+    }
+
+
     public static String dateToString(Date d) {
         return ISODateTimeFormat.dateTime().withZoneUTC().print(new DateTime(d));
     }

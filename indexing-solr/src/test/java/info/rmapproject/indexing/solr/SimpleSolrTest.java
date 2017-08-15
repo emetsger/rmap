@@ -64,12 +64,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"default", "inmemory-triplestore"})
-@ContextConfiguration({"classpath:/rmap-indexing-solr.xml", "classpath:/spring-rmapcore-context.xml"})
-public class SimpleSolrTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleSolrTest.class);
+public class SimpleSolrTest extends AbstractSpringIndexingTest {
 
     @Autowired
     private SolrTemplate solrTemplate;
@@ -82,11 +77,6 @@ public class SimpleSolrTest {
 
     @Autowired
     RDFHandler rdfHandler;
-
-    @Before
-    public void setUp() throws Exception {
-        System.setProperty("spring.profiles.active", "default, inmemory-triplestore, inmemory-idservice");
-    }
 
 //    @After
 //    public void tearDown() throws Exception {
