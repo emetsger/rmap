@@ -290,8 +290,14 @@ public class CustomRepoImpl implements CustomRepo {
      */
     Optional<RMapStatus> inferDiscoStatus(RMapDiSCO disco, RMapEvent event, RMapAgent agent) {
         log.trace("Inferring DiSCO status for DiSCO {}, {} event {}, agent {}",
-                    disco.getId().getStringValue(), event.getEventType().toString(), event.getId().getStringValue(),
-                    agent.getId().getStringValue());
+                (disco != null) ? disco.getId().getStringValue() : "null",
+                (event != null) ? event.getEventType().toString() : "null",
+                (event != null) ? event.getId().getStringValue() : "null",
+                (agent != null) ? agent.getId().getStringValue() : "null");
+
+        IndexUtils.assertNotNull(disco,"Supplied disco must not be null");
+        IndexUtils.assertNotNull(event, "Supplied event must not be null");
+        IndexUtils.assertNotNull(agent, "Supplied agent must not be null");
 
         RMapStatus status = null;
 

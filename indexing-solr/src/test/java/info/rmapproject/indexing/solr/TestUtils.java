@@ -44,7 +44,7 @@ public class TestUtils {
      * @param s the statement
      * @return true if the statement represents an {@code rdf:type}
      */
-    static boolean isRdfType(Statement s) {
+    public static boolean isRdfType(Statement s) {
         return s.getPredicate().stringValue().equals(RdfTypeIRI.INSTANCE.stringValue());
     }
 
@@ -64,7 +64,7 @@ public class TestUtils {
      * @param format the RDF format of the resources in the directory
      * @param rmapObjects a {@code Map} of Spring resources keyed by the type of RMap objects they contain
      */
-    static void getRmapResources(String resourcePath, RDFHandler rdfHandler, RDFFormat format, Map<RMapObjectType,
+    public static void getRmapResources(String resourcePath, RDFHandler rdfHandler, RDFFormat format, Map<RMapObjectType,
             Set<RDFResource>> rmapObjects) {
 
         URL base = SimpleSolrTest.class.getResource(resourcePath);
@@ -153,7 +153,7 @@ public class TestUtils {
      * @return
      */
     @SuppressWarnings("unchecked")
-    static <T extends RMapObject> List<T> getRmapObjects(Map<RMapObjectType, Set<RDFResource>> rmapObjects,
+    public static <T extends RMapObject> List<T> getRmapObjects(Map<RMapObjectType, Set<RDFResource>> rmapObjects,
                                                          RMapObjectType desiredType, RDFHandler rdfHandler) {
 
         List<T> objects = (List<T>)rmapObjects.keySet().stream().filter(candidate -> candidate == desiredType)
@@ -186,7 +186,7 @@ public class TestUtils {
     /**
      * A Spring Resource of RDF content. A RDFResource exposes the RDF serialization of the RDF.
      */
-    interface RDFResource extends Resource {
+    public interface RDFResource extends Resource {
 
         /**
          * The format of the resource, using the OpenRDF model.  Equivalent to {@link #getRmapFormat()}.
@@ -203,7 +203,7 @@ public class TestUtils {
         RDFType getRmapFormat();
     }
 
-    private static class RdfTypeIRI implements IRI {
+    public static class RdfTypeIRI implements IRI {
 
         static RdfTypeIRI INSTANCE = new RdfTypeIRI();
 
@@ -230,7 +230,7 @@ public class TestUtils {
     /**
      * Wraps a Spring {@code Resource}, retaining knowledge of the RDF serialization of the resource.
      */
-    static class RDFResourceWrapper implements RDFResource {
+    public static class RDFResourceWrapper implements RDFResource {
 
         /**
          * The underlying Spring {@code Resource}
