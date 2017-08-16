@@ -34,6 +34,11 @@ public class DiscoSolrDocument {
      */
     public static final String DISCO_STATUS = "disco_status";
 
+    /**
+     * Field name containing the uri of the DiSCO
+     */
+    public static final String DISCO_URI = "disco_uri";
+
     @Id
     @Field(DOC_ID)
     private String docId;
@@ -41,7 +46,7 @@ public class DiscoSolrDocument {
     @Field(DOC_LAST_UPDATED)
     private long docLastUpdated;
 
-    @Field("disco_uri")
+    @Field(DISCO_URI)
     private String discoUri;
 
     @Field("disco_creator_uri")

@@ -9,4 +9,8 @@
 
     <solr:solr-client id="solrClient" url="http://192.168.99.100:8983/solr"/>
 
+    <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
+
+    <bean id="simpleMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+
 </beans>
