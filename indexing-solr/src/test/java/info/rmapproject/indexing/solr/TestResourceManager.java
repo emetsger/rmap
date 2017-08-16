@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Provides easy access for loading RDF from classpath resources, converting the RDF to RMap objects, and retrieving
- * instances of the RDF as RMap objects.
+ * Provides easy access for loading RDF from classpath resources, deserializing the RDF to RMap objects, and accessing
+ * instances of specific RMap objects by URI.
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
@@ -49,6 +49,7 @@ public class TestResourceManager {
      *
      * @param iri
      * @return
+     * @throws RuntimeException if the event is not found
      */
     public RMapAgent getAgent(String iri) {
         return getAgents()
@@ -72,6 +73,7 @@ public class TestResourceManager {
      *
      * @param iri
      * @return
+     * * @throws RuntimeException if the event is not found
      */
     public RMapEvent getEvent(String iri) {
         return getEvents()
@@ -95,6 +97,7 @@ public class TestResourceManager {
      *
      * @param iri
      * @return
+     * @throws RuntimeException if the disco is not found
      */
     public RMapDiSCO getDisco(String iri) {
         return getDiscos()
