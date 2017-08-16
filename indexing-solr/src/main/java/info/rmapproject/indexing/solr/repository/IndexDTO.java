@@ -13,7 +13,9 @@ import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
 
 /**
  * Encapsulates the unit of information sent to the indexer for indexing.  An {@code IndexDTO} forms a connected graph
- * between an event, the DiSCOs referenced by the event, and the agent responsible for the event.
+ * between an event, the DiSCOs referenced by the event, and the agent responsible for the event. Depending on the
+ * semantics of the event, the source or target DiSCO may be {@code null} (e.g. a {@link
+ * info.rmapproject.core.model.event.RMapEventType#CREATION CREATION} event will not have a source DiSCO).
  * <p>
  * Indexing is event-driven.  Events are considered to have a source and target.  The objects referenced by the source
  * and target can be considered as input and output, respectively, to the event.  For example, the source of an

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
 
@@ -74,6 +75,31 @@ public class IndexUtils {
         return s;
     }
 
+    public static String assertNotNullOrEmpty(String s, String message) {
+        if (s == null) {
+            throw new IllegalArgumentException(message);
+        }
+
+        if (s.trim().length() == 0) {
+            throw new IllegalArgumentException(message);
+        }
+
+        return s;
+    }
+
+    public static String assertNotNullOrEmpty(String s, Supplier<? extends RuntimeException> exceptionSupplier) {
+        if (s == null) {
+            throw exceptionSupplier.get();
+        }
+
+        if (s.trim().length() == 0) {
+            throw exceptionSupplier.get();
+        }
+
+        return s;
+    }
+
+
     public static <T> List<T> assertNotNullOrEmpty(List<T> list) {
         if (list == null) {
             throw new IllegalArgumentException("Supplied List must not be null.");
@@ -126,6 +152,13 @@ public class IndexUtils {
         return o;
     }
 
+    public static <T> T assertNotNull(T o, Supplier<? extends RuntimeException> exceptionSupplier) {
+        if (o == null) {
+            throw exceptionSupplier.get();
+        }
+
+        return o;
+    }
 
     public static String dateToString(Date d) {
         return ISODateTimeFormat.dateTime().withZoneUTC().print(new DateTime(d));
@@ -253,5 +286,51 @@ public class IndexUtils {
         }
 
         return iri;
+    }
+
+    /**
+     * Supplies an {@link IllegalArgumentException} with the supplied message.
+     *
+     * @param message
+     * @return
+     */
+    public static Supplier<IllegalArgumentException> iae(String message) {
+        assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
+        return () -> new IllegalArgumentException(message);
+    }
+
+    /**
+     * Supplies an {@link IllegalArgumentException} with the supplied message and cause.
+     *
+     * @param message
+     * @return
+     */
+    public static Supplier<IllegalArgumentException> iae(String message, Throwable cause) {
+        assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
+        assertNotNull(cause, "Exception cause must not be null.");
+        return () -> new IllegalArgumentException(message, cause);
+    }
+
+    /**
+     * Supplies an {@link IllegalStateException} with the supplied message.
+     *
+     * @param message
+     * @return
+     */
+    public static Supplier<IllegalStateException> ise(String message) {
+        assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
+        return () -> new IllegalStateException(message);
+    }
+
+    /**
+     * Supplies an {@link IllegalStateException} with the supplied message and cause.
+     *
+     * @param message
+     * @return
+     */
+    public static Supplier<IllegalStateException> ise(String message, Throwable cause) {
+        assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
+        assertNotNull(cause, "Exception cause must not be null.");
+        return () -> new IllegalStateException(message, cause);
     }
 }
