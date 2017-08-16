@@ -1,9 +1,11 @@
 package info.rmapproject.indexing.solr;
 
+import info.rmapproject.core.rdfhandler.RDFHandler;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -17,6 +19,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public abstract class AbstractSpringIndexingTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractSpringIndexingTest.class);
+
+    @Autowired
+    protected RDFHandler rdfHandler;
 
     @Before
     public void setUp() throws Exception {
