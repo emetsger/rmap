@@ -35,6 +35,7 @@ import static info.rmapproject.core.model.event.RMapEventType.UPDATE;
 import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
 import static info.rmapproject.indexing.solr.IndexUtils.dateToString;
 import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.solr.IndexUtils.ise;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.CORE_NAME;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DISCO_STATUS;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_ID;
@@ -45,6 +46,8 @@ import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_LAST_UP
  */
 public class CustomRepoImpl implements CustomRepo {
 
+    private static final String ERR_INFER_STATUS = "Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s";
+
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -53,16 +56,27 @@ public class CustomRepoImpl implements CustomRepo {
     @Autowired
     private SolrTemplate template;
 
+    /**
+     * Accepts the supplied {@link IndexDTO data transfer object} (DTO) for indexing.  The caller should assume that the
+     * index is updated asynchronously, and that multiple transactions with the index may occur as a result.
+     * <p>
+     * Recall that the {@code IndexDTO} forms a connected graph rooted by the RMap event, and contains the source and
+     * target resources of the event.  This method uses the information in the {@code IndexDTO} to issue one or more
+     * updates to the index.
+     * </p>
+     *
+     * @param toIndex the DTO containing the information to be indexed
+     */
     @Override
     public void index(IndexDTO toIndex) {
-        assertNotNull(toIndex);
+        assertNotNull(toIndex, "The supplied IndexDTO must not be null.");
 
-        RMapEvent event = assertNotNull(toIndex.getEvent());
-        RMapAgent agent = assertNotNull(toIndex.getAgent());
+        RMapEvent event = assertNotNull(toIndex.getEvent(), ise("The IndexDTO must not have a null event."));
+        RMapAgent agent = assertNotNull(toIndex.getAgent(), ise("The IndexDTO must not have a null agent."));
 
         if (!(irisEqual(event.getAssociatedAgent(), agent.getId()))) {
-            throw new RuntimeException("Missing agent '" + event.getAssociatedAgent().getStringValue() +
-                    "' of event " + event);
+            throw new RuntimeException(String.format(
+                    "Missing agent '%s' of event %s", event.getAssociatedAgent().getStringValue(), event));
         }
 
         // The source IRI will be null in the case of a creation event
@@ -81,8 +95,8 @@ public class CustomRepoImpl implements CustomRepo {
             forSource.disco = toIndex.getSourceDisco();
             forSource.status = inferDiscoStatus(forSource.disco, forSource.event, forSource.agent)
                     .orElseThrow(() -> new RuntimeException(
-                            String.format("Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s",
-                                    toIndex.getSourceDisco().getId(), toIndex.getEvent().getId(), toIndex.getAgent().getId())));
+                            String.format(ERR_INFER_STATUS, toIndex.getSourceDisco().getId(),
+                                    toIndex.getEvent().getId(), toIndex.getAgent().getId())));
         }
 
         IndexableThing forTarget = null;
@@ -95,8 +109,8 @@ public class CustomRepoImpl implements CustomRepo {
             forTarget.disco = toIndex.getTargetDisco();
             forTarget.status = inferDiscoStatus(forTarget.disco, forTarget.event, forTarget.agent)
                     .orElseThrow(() -> new RuntimeException(
-                            String.format("Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s",
-                                    toIndex.getTargetDisco().getId(), toIndex.getEvent().getId(), toIndex.getAgent().getId())));
+                            String.format(ERR_INFER_STATUS, toIndex.getTargetDisco().getId(),
+                                    toIndex.getEvent().getId(), toIndex.getAgent().getId())));
         }
 
 
