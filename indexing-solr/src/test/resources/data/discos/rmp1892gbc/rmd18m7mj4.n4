@@ -1,0 +1,4 @@
+<rmap:rmd18m7mj4> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/Agent> <rmap:rmd18m7mj4> .
+<rmap:rmd18m7mj4> <http://xmlns.com/foaf/0.1/name> "Portico" <rmap:rmd18m7mj4> .
+<rmap:rmd18m7mj4> <http://rmap-project.org/rmap/terms/identityProvider> <http://twitter.org> <rmap:rmd18m7mj4> .
+<rmap:rmd18m7mj4> <http://rmap-project.org/rmap/terms/userAuthId> <http://rmap-project.org/identities/faketempporticoid> <rmap:rmd18m7mj4> .
