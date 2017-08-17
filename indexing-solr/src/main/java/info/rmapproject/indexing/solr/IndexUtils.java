@@ -31,6 +31,10 @@ import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
  */
 public class IndexUtils {
 
+    public static boolean notNull(Object o) {
+        return o != null;
+    }
+
     public enum EventDirection { SOURCE, TARGET, EITHER }
 
     /**

@@ -4,6 +4,7 @@ import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.RMapStatus;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.indexing.solr.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +52,42 @@ public class CustomRepoImpl implements CustomRepo {
 
     @Autowired
     private IndexableThingMapper mapper;
+
+    DiscoRepository getDelegate() {
+        return delegate;
+    }
+
+    void setDelegate(DiscoRepository delegate) {
+        IndexUtils.assertNotNull(delegate, "DiscoRepository delegate must not be null.");
+        this.delegate = delegate;
+    }
+
+    SolrTemplate getTemplate() {
+        return template;
+    }
+
+    void setTemplate(SolrTemplate template) {
+        IndexUtils.assertNotNull(template, "SolrTemplate must not be null.");
+        this.template = template;
+    }
+
+    StatusInferencer getInferencer() {
+        return inferencer;
+    }
+
+    void setInferencer(StatusInferencer inferencer) {
+        IndexUtils.assertNotNull(inferencer, "StatusInferencer must not be null.");
+        this.inferencer = inferencer;
+    }
+
+    IndexableThingMapper getMapper() {
+        return mapper;
+    }
+
+    void setMapper(IndexableThingMapper mapper) {
+        IndexUtils.assertNotNull(mapper, "IndexableThingMapper must not be null.");
+        this.mapper = mapper;
+    }
 
     /**
      * Accepts the supplied {@link IndexDTO data transfer object} (DTO) for indexing.  The caller should assume that the
@@ -109,8 +147,8 @@ public class CustomRepoImpl implements CustomRepo {
         }
 
 
-        DiscoSolrDocument indexedSourceDoc = (forSource != null) ? delegate.save(mapper.map(forSource)) : null;
-        DiscoSolrDocument indexedTargetDoc = (forTarget != null) ? delegate.save(mapper.map(forTarget)) : null;
+        DiscoSolrDocument indexedSourceDoc = (forSource != null) ? delegate.save(mapper.apply(forSource)) : null;
+        DiscoSolrDocument indexedTargetDoc = (forTarget != null) ? delegate.save(mapper.apply(forTarget)) : null;
 
         /*
               Event            Source                    Target

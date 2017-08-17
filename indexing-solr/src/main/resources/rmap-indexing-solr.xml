@@ -11,6 +11,12 @@
 
     <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
 
-    <bean id="simpleMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+    <bean id="indexableThingMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+
+    <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
+
+    <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
+
+    <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
 
 </beans>
