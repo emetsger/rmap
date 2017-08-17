@@ -143,6 +143,7 @@ public class CustomRepoImpl implements CustomRepo {
 
             case TOMBSTONE:
                 // need to change the status flag on _all_ versions of the disco in the disco index
+                // and/or delete all the old versions of the disco from the index and leave the tombstoned instance
                 // TODO: update the version index
                 updateDocumentStatusByDiscoIri(forSource.disco.getId(), RMapStatus.TOMBSTONED, null);
                 break;
