@@ -129,6 +129,44 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
     @Test
     public void testIndexTombstone() throws Exception {
+        Mocks mocks = new Mocks().build();
+
+        rm = TestResourceManager.load(
+                "/data/discos/rmp1892gbc", RDFFormat.NQUADS, rdfHandler);
+
+        String sourceDiscoIri = "rmap:rmp1892gbc";
+        IndexDTO dto = new IndexDTO(
+                rm.getEvent("rmap:rmp1892fdx"),
+                rm.getAgent("rmap:rmd18m7mj4"),
+                rm.getDisco(sourceDiscoIri),
+                null);
+
+        Set<String> saved = new HashSet<>();
+
+        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+                (invocation) -> {
+                    DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
+                    saved.add(doc.getDiscoUri());
+                    return null;
+                });
+
+        // This is the response from the index when we search for solr documents with a uri of rmap:rmp1892gbc.
+        // Note that the document returned from the index is ACTIVE.
+        DiscoSolrDocument mockResponse = mockRepositoryResponse2(mocks.getIndexDTOMapper().getSourceIndexableThing(dto), RMapStatus.ACTIVE, mocks);
+        when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
+                .thenReturn(Collections.singleton(mockResponse));
+
+        // Insure that the status is updated to TOMBSTONED
+        assertTemplateUpdatesStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.TOMBSTONED);
+
+        underTest.index(dto);
+
+        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        assertEquals(1, saved.size());
+        assertTrue(saved.contains(sourceDiscoIri));
+
+        verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+
 
     }
 

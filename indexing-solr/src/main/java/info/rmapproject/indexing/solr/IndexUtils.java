@@ -219,16 +219,13 @@ public class IndexUtils {
                     break;
 
                 case DELETION:
-                    // TODO: handle multiple deletion ids
-                    // TODO: decide what the source IRI and target IRI is for a deletion event
-                    // Right now, the IRI of the deleted DiSCO is used for both
-                    iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
+                    // no-op: a DELETION event has no target
+                    iri = Optional.empty();
                     break;
 
                 case TOMBSTONE:
-                    // TODO: decide what the source IRI and target IRI is for a tombstone event
-                    // Right now, the IRI of the tombstoned resource is used for both
-                    iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
+                    // no-op: a TOMBSTONE event has no target
+                    iri = Optional.empty();
                     break;
 
                 case INACTIVATION:
@@ -240,6 +237,7 @@ public class IndexUtils {
                 case REPLACE:
                     // TODO: missing the source object of a replacement?
                     iri = Optional.empty();
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unknown RMap event type: " + event);
@@ -273,6 +271,7 @@ public class IndexUtils {
                     // TODO: decide what the source IRI and target IRI is for a tombstone event
                     // Right now, the IRI of the tombstoned resource is used for both
                     iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
+                    break;
 
                 case INACTIVATION:
                     // TODO: decide what the source IRI and target IRI is for an inactivation event
@@ -282,6 +281,7 @@ public class IndexUtils {
 
                 case REPLACE:
                     iri = Optional.of(((RMapEventUpdateWithReplace) event).getUpdatedObjectId());
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unknown RMap event type: " + event.getEventType());
