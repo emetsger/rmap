@@ -63,6 +63,36 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
     }
 
     @Test
+    public void testIndexCreate() throws Exception {
+        
+    }
+
+    @Test
+    public void testIndexUpdate() throws Exception {
+        
+    }
+
+    @Test
+    public void testIndexInactivate() throws Exception {
+
+    }
+
+    @Test
+    public void testIndexTombstone() throws Exception {
+
+    }
+
+    @Test
+    public void testIndexDelete() throws Exception {
+
+    }
+
+    @Test
+    public void testIndexDerive() throws Exception {
+
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void updateDocumentStatusByDiscoIri() throws Exception {
         DiscoRepository mockRepository = mock(DiscoRepository.class);
@@ -80,7 +110,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         when(mockRepository.findDiscoSolrDocumentsByDiscoUri(disco.getId().getStringValue()))
                 .thenReturn(Collections.singleton(mockReponse));
 
-        // Insure that the status
+        // Insure that the status is updated to INACTIVE
         when(mockTemplate.saveBean(eq(CORE_NAME), anySetOf(PartialUpdate.class)))
                 .then((inv) -> {
                     // Insures that the PartialUpdate going to the index contains the correct value for the
