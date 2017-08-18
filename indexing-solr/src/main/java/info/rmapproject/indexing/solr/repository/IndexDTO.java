@@ -40,6 +40,8 @@ public class IndexDTO {
     private final RMapIri eventSourceIri;
     private final RMapIri eventTargetIri;
 
+    private IndexDTOMapper mapper;
+
     /**
      * Constructs a connected graph of objects to be indexed.
      * <p>
@@ -129,6 +131,21 @@ public class IndexDTO {
     public RMapIri getEventTargetIri() {
         return eventTargetIri;
     }
+
+    IndexableThing getSourceIndexableThing() {
+        return mapper.apply(this)
+                .filter(it -> it.eventSource != null && IndexUtils.irisEqual(it.eventSource, it.disco.getId()))
+                .findAny()
+                .orElseThrow(IndexUtils.ise("Missing source of event."));
+    }
+
+    IndexableThing getTargetIndexableThing() {
+        return mapper.apply(this)
+                .filter(it -> it.eventTarget != null && IndexUtils.irisEqual(it.eventTarget, it.disco.getId()))
+                .findAny()
+                .orElseThrow(IndexUtils.ise("Missing target of event."));
+    }
+
 
     @Override
     public String toString() {
