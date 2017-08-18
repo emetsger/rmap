@@ -178,7 +178,35 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
     @Test
     public void testIndexDerive() throws Exception {
+        Mocks mocks = new Mocks().build();
 
+        rm = TestResourceManager.load(
+                "/data/discos/jwstqjq4mq", RDFFormat.NQUADS, rdfHandler);
+
+        String sourceDiscoIri = "rmap:rmd18mddgf";
+        String targetDiscoIri = "rmap:9cnp5hqdb7";
+        IndexDTO dto = new IndexDTO(
+                rm.getEvent("rmap:jwstqjq4mq"),
+                rm.getAgent("rmap:gtht76hgmh"),
+                rm.getDisco(sourceDiscoIri),
+                rm.getDisco(targetDiscoIri));
+
+        Set<String> saved = new HashSet<>();
+
+        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+                (invocation) -> {
+                    DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
+                    saved.add(doc.getDiscoUri());
+                    return null;
+                });
+
+        underTest.index(dto);
+
+        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        assertEquals(1, saved.size());
+        assertTrue(saved.contains(targetDiscoIri));
+
+        verifyZeroInteractions(mocks.getMockTemplate());
     }
 
     @Test
