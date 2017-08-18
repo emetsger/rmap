@@ -202,7 +202,7 @@ public class CustomRepoImpl implements CustomRepo {
 
         log.debug("Updating the status of the following documents with DiSCO iri {} to {}", discoIri, newStatus);
 
-        Set<PartialUpdate> statusUpdates;
+        Set<DiscoPartialUpdate> statusUpdates;
 
         try (Stream<DiscoSolrDocument> documentStream =
                      delegate.findDiscoSolrDocumentsByDiscoUri(discoIri.getStringValue()).stream()) {
@@ -235,9 +235,9 @@ public class CustomRepoImpl implements CustomRepo {
      * @return a {@code Set} of {@code PartialUpdate} instances their state containing the commands to be sent to the
      *         index
      */
-    private Set<PartialUpdate> preparePartialUpdateOverDocuments(Stream<DiscoSolrDocument> documents,
-                                                                 Consumer<PartialUpdate> updater) {
-        return documents.map(doc -> new PartialUpdate(DOC_ID, doc.getDocId()))
+    private Set<DiscoPartialUpdate> preparePartialUpdateOverDocuments(Stream<DiscoSolrDocument> documents,
+                                                                 Consumer<DiscoPartialUpdate> updater) {
+        return documents.map(doc -> new DiscoPartialUpdate(DOC_ID, doc.getDocId(), doc.getDiscoUri()))
                 .peek(updater)
                 .collect(Collectors.toSet());
     }
