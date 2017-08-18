@@ -20,6 +20,7 @@ import static info.rmapproject.core.model.event.RMapEventType.CREATION;
 import static info.rmapproject.core.model.event.RMapEventType.DELETION;
 import static info.rmapproject.core.model.event.RMapEventType.DERIVATION;
 import static info.rmapproject.core.model.event.RMapEventType.REPLACE;
+import static info.rmapproject.core.model.event.RMapEventType.TOMBSTONE;
 import static info.rmapproject.core.model.event.RMapEventType.UPDATE;
 import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
 
@@ -130,22 +131,21 @@ class StandAloneStatusInferencer implements StatusInferencer {
                 break;
 
             case DELETION:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
-                    logInference(DELETION, disco.getId(), IndexUtils.EventDirection.TARGET);
+                if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
+                    logInference(DELETION, disco.getId(), IndexUtils.EventDirection.SOURCE);
                     status = DELETED;
                 } else {
-                    throw new IllegalStateException("Missing DELETION event source or target IRI for event " +
+                    throw new IllegalStateException("Missing DELETION event source for event " +
                             event.getId().getStringValue());
                 }
                 break;
 
             case TOMBSTONE:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
+                if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
+                    logInference(TOMBSTONE, disco.getId(), IndexUtils.EventDirection.SOURCE);
                     status = TOMBSTONED;
                 } else {
-                    throw new IllegalStateException("Missing TOMBSTONED event source or target IRI for event " +
+                    throw new IllegalStateException("Missing TOMBSTONED event source for event " +
                             event.getId().getStringValue());
                 }
                 break;
