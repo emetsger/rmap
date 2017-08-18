@@ -3,6 +3,7 @@ package info.rmapproject.indexing.solr.repository;
 import info.rmapproject.core.model.RMapStatus;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.IndexUtils;
 import info.rmapproject.indexing.solr.TestResourceManager;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.springframework.data.solr.core.query.UpdateField;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static info.rmapproject.indexing.solr.IndexUtils.iae;
@@ -102,15 +104,15 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
                     return null;
                 });
 
-        DiscoSolrDocument mockResponse = mockRepositoryResponse2(mocks.getIndexDTOMapper().getSourceIndexableThing(dto), RMapStatus.ACTIVE, mocks);
-
         // This is the response from the index when we search for solr documents with a uri of rmap:rmd18m7mr7.
         // Note that the document returned from the index is ACTIVE.
+        RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
+        repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
         when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
-                .thenReturn(Collections.singleton(mockResponse));
+                .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
 
         // Insure that the status is updated to INACTIVE
-        assertTemplateUpdatesStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.INACTIVE);
+        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.INACTIVE);
 
         underTest.index(dto);
 
@@ -152,12 +154,13 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         // This is the response from the index when we search for solr documents with a uri of rmap:rmp1892gbc.
         // Note that the document returned from the index is ACTIVE.
-        DiscoSolrDocument mockResponse = mockRepositoryResponse2(mocks.getIndexDTOMapper().getSourceIndexableThing(dto), RMapStatus.ACTIVE, mocks);
+        RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
+        repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
         when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
-                .thenReturn(Collections.singleton(mockResponse));
+                .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
 
         // Insure that the status is updated to TOMBSTONED
-        assertTemplateUpdatesStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.TOMBSTONED);
+        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.TOMBSTONED);
 
         underTest.index(dto);
 
@@ -166,8 +169,6 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         assertTrue(saved.contains(sourceDiscoIri));
 
         verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
-
-
     }
 
     @Test
@@ -197,8 +198,8 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         when(mockRepository.findDiscoSolrDocumentsByDiscoUri(disco.getId().getStringValue()))
                 .thenReturn(Collections.singleton(mockReponse));
 
-        // Insure that the status is updated to INACTIVE
-        assertTemplateUpdatesStatus(mockTemplate, disco.getId().getStringValue(), expectedStatus);
+        // Insure that the partial update to the index for the disco is updated to INACTIVE
+        whenSolrTemplateSavesBeansAssertStatus(mockTemplate, disco.getId().getStringValue(), expectedStatus);
 
         underTest.updateDocumentStatusByDiscoIri(disco.getId(), expectedStatus, null);
 
@@ -207,7 +208,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         verify(mockTemplate).commit(CORE_NAME);
     }
 
-    private void assertTemplateUpdatesStatus(SolrTemplate mockTemplate, String discoIri, RMapStatus expectedStatus) {
+    private void whenSolrTemplateSavesBeansAssertStatus(SolrTemplate mockTemplate, String discoIri, RMapStatus expectedStatus) {
         when(mockTemplate.saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class)))
                 .then((inv) -> {
                     // Insures that the PartialUpdate going to the index contains the correct value for the
@@ -221,12 +222,12 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
                             .orElseThrow(ise("Missing expected DiscoPartialUpdate for disco with iri " + discoIri));
 
                     assertValueForUpdateField(
-                            update.getUpdates().stream(),
+                            update,
                             DISCO_STATUS,
                             expectedStatus.toString());
 
                     assertValuePresenceForUpdateField(
-                            update.getUpdates().stream(),
+                            update,
                             DOC_LAST_UPDATED);
 
                     return null;
@@ -251,7 +252,8 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         return doc;
     }
 
-    private void assertValueForUpdateField(Stream<UpdateField> updateFields, String fieldName, String expectedValue) {
+    private void assertValueForUpdateField(DiscoPartialUpdate update, String fieldName, String expectedValue) {
+        Stream<UpdateField> updateFields = update.getUpdates().stream();
         String actualValue = (String)updateFields.filter(updateField -> updateField.getName().equals(fieldName))
                 .findAny()
                 .orElseThrow(iae("Did not find an update field for " + fieldName))
@@ -259,7 +261,8 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         assertEquals(expectedValue, actualValue);
     }
 
-    private void assertValuePresenceForUpdateField(Stream<UpdateField> updateFields, String fieldName) {
+    private void assertValuePresenceForUpdateField(DiscoPartialUpdate update, String fieldName) {
+        Stream<UpdateField> updateFields = update.getUpdates().stream();
         Object actualValue = updateFields.filter(updateField -> updateField.getName().equals(fieldName))
                 .findAny()
                 .orElseThrow(iae("Did not find an update field for " + fieldName))
@@ -347,6 +350,99 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         private IndexDTOMapper assembleConcreteDTOMapper() {
             return new SimpleIndexDTOMapper(new StandAloneStatusInferencer());
+        }
+    }
+
+    private class RepositoryDocuments {
+        Set<DiscoSolrDocument> docs;
+        Mocks mocks;
+
+        RepositoryDocuments build(Mocks mocks) {
+            docs = new HashSet<>();
+            this.mocks = mocks;
+            return this;
+        }
+
+        Set<DiscoSolrDocument> getDocumentsForIri(String discoIri) {
+            Set<DiscoSolrDocument> result = docs
+                    .stream()
+                    .filter(doc -> doc.getDiscoUri().equals(discoIri))
+                    .collect(Collectors.toSet());
+
+            if (result.size() == 0) {
+                throw new IllegalStateException("No document found for disco iri " + discoIri);
+            }
+
+            return result;
+        }
+
+        DiscoSolrDocument getDocumentForIri(String discoIri) {
+            Set<DiscoSolrDocument> result = docs
+                    .stream()
+                    .filter(doc -> doc.getDiscoUri().equals(discoIri))
+                    .collect(Collectors.toSet());
+
+            if (result.size() == 0) {
+                throw new IllegalStateException("No document found for disco iri " + discoIri);
+            }
+
+            if (result.size() > 1) {
+                throw new IllegalStateException("Multiple documents (" + result.size() + ") found for disco iri " + discoIri);
+            }
+
+            return result.iterator().next();
+        }
+
+        void addDTOTarget(IndexDTO dto, RMapStatus status) {
+            addWithDirectionAndStatus(dto, IndexUtils.EventDirection.TARGET, status);
+        }
+
+        void addDTOTarget(IndexDTO dto, String status) {
+            addWithDirectionAndStatus(dto, IndexUtils.EventDirection.TARGET, status);
+        }
+
+
+        void addDTOSource(IndexDTO dto, RMapStatus status) {
+            addWithDirectionAndStatus(dto, IndexUtils.EventDirection.SOURCE, status);
+        }
+
+        void addDTOSource(IndexDTO dto, String status) {
+            addWithDirectionAndStatus(dto, IndexUtils.EventDirection.SOURCE, status);
+        }
+
+        void addWithDirectionAndStatus(IndexDTO dto, IndexUtils.EventDirection direction, RMapStatus status) {
+            addWithDirectionAndStatus(dto, direction, status.toString());
+        }
+
+        void addWithDirectionAndStatus(IndexDTO dto, IndexUtils.EventDirection direction, String status) {
+            switch (direction) {
+                case SOURCE:
+                    addWithStatus(mocks.getIndexDTOMapper().getSourceIndexableThing(dto), status);
+                    break;
+                case TARGET:
+                    addWithStatus(mocks.getIndexDTOMapper().getTargetIndexableThing(dto), status);
+                    break;
+                case EITHER:
+                    addWithStatus(mocks.getIndexDTOMapper().getSourceIndexableThing(dto), status);
+                    addWithStatus(mocks.getIndexDTOMapper().getTargetIndexableThing(dto), status);
+                    break;
+                default:
+                    throw new RuntimeException("Unknown EventDirection " + direction);
+            }
+        }
+
+        void add(IndexableThing indexableThing) {
+            docs.add(mocks.getIndexableThingMapper().apply(indexableThing));
+        }
+
+        void addWithStatus(IndexableThing indexableThing, RMapStatus status) {
+            addWithStatus(indexableThing, status.toString());
+        }
+
+        void addWithStatus(IndexableThing indexableThing, String status) {
+            DiscoSolrDocument doc = mocks.getIndexableThingMapper().apply(indexableThing);
+            doc.setDiscoStatus(status);
+            docs.add(doc);
         }
     }
 }
