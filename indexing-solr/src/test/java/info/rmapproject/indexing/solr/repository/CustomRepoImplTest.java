@@ -7,6 +7,7 @@ import info.rmapproject.indexing.solr.IndexUtils;
 import info.rmapproject.indexing.solr.TestResourceManager;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.data.solr.core.SolrTemplate;
@@ -122,11 +123,50 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         assertTrue(saved.contains(targetDiscoIri));
 
         verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mocks.getMockTemplate()).commit(CORE_NAME);
     }
 
     @Test
     public void testIndexInactivate() throws Exception {
+        Mocks mocks = new Mocks().build();
 
+        rm = TestResourceManager.load(
+                "/data/discos/931zcrjgzb", RDFFormat.NQUADS, rdfHandler);
+
+        String sourceDiscoIri = "rmap:rmp1835x5x";
+        IndexDTO dto = new IndexDTO(
+                rm.getEvent("rmap:931zcrjgzb"),
+                rm.getAgent("rmap:rmp2543q5"),
+                rm.getDisco(sourceDiscoIri),
+                null);
+
+        Set<String> saved = new HashSet<>();
+
+        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+                (invocation) -> {
+                    DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
+                    saved.add(doc.getDiscoUri());
+                    return null;
+                });
+
+        // This is the response from the index when we search for solr documents with a uri of rmap:rmp1835x5x.
+        // Note that the document returned from the index is ACTIVE.
+        RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
+        repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
+        when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
+                .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
+
+        // Insure that the status is updated to INACTIVE
+        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.INACTIVE);
+
+        underTest.index(dto);
+
+        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        assertEquals(1, saved.size());
+        assertTrue(saved.contains(sourceDiscoIri));
+
+        verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mocks.getMockTemplate()).commit(CORE_NAME);
     }
 
     @Test
@@ -169,9 +209,11 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         assertTrue(saved.contains(sourceDiscoIri));
 
         verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mocks.getMockTemplate()).commit(CORE_NAME);
     }
 
     @Test
+    @Ignore("DELETE isn't implemented yet in RMAP core")
     public void testIndexDelete() throws Exception {
 
     }

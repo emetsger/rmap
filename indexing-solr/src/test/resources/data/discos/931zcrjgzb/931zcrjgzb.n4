@@ -1,0 +1,7 @@
+<rmap:931zcrjgzb> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/Event> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://www.w3.org/ns/prov#wasAssociatedWith> <rmap:rmp2543q5> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://rmap-project.org/rmap/terms/eventType> <http://rmap-project.org/rmap/terms/inactivation> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://rmap-project.org/rmap/terms/eventTargetType> <http://rmap-project.org/rmap/terms/DiSCO> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://www.w3.org/ns/prov#startedAtTime> "2017-08-18T19:07:01.858Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://www.w3.org/ns/prov#endedAtTime> "2017-08-18T19:07:01.860Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:931zcrjgzb> .
+<rmap:931zcrjgzb> <http://rmap-project.org/rmap/terms/inactivatedObject> <rmap:rmp1835x5x> <rmap:931zcrjgzb> .

@@ -229,9 +229,8 @@ public class IndexUtils {
                     break;
 
                 case INACTIVATION:
-                    // TODO: decide what the source IRI and target IRI is for an inactivation event
-                    // Right now, the IRI of the inactivated disco is used for both
-                    iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
+                    // no-op: an INACTIVATION event has no target
+                    iri = Optional.empty();
                     break;
 
                 case REPLACE:
@@ -261,21 +260,14 @@ public class IndexUtils {
                     break;
 
                 case DELETION:
-                    // TODO: handle multiple deletion ids
-                    // TODO: decide what the source IRI and target IRI is for a deletion event
-                    // Right now, the IRI of the deleted DiSCO is used for both
                     iri = Optional.of(assertNotNullOrEmpty(((RMapEventDeletion)event).getDeletedObjectIds()).get(0));
                     break;
 
                 case TOMBSTONE:
-                    // TODO: decide what the source IRI and target IRI is for a tombstone event
-                    // Right now, the IRI of the tombstoned resource is used for both
                     iri = Optional.of(((RMapEventTombstone) event).getTombstonedResourceId());
                     break;
 
                 case INACTIVATION:
-                    // TODO: decide what the source IRI and target IRI is for an inactivation event
-                    // Right now, the IRI of the inactivated disco is used for both
                     iri = Optional.of(((RMapEventInactivation) event).getInactivatedObjectId());
                     break;
 

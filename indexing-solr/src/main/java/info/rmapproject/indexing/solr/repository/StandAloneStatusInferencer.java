@@ -149,11 +149,10 @@ class StandAloneStatusInferencer implements StatusInferencer {
                 break;
 
             case INACTIVATION:
-                if (targetIri.isPresent() || sourceIri.isPresent() &&
-                        (irisEqual(targetIri, disco.getId()) || irisEqual(sourceIri, disco.getId()))) {
+                if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
                     status = INACTIVE;
                 } else {
-                    throw new IllegalStateException("Missing INACTIVATION event source or target IRI for event " +
+                    throw new IllegalStateException("Missing INACTIVATION event source IRI for event " +
                             event.getId().getStringValue());
                 }
                 break;
