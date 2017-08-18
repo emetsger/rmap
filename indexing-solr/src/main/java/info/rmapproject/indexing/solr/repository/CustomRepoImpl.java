@@ -80,15 +80,6 @@ public class CustomRepoImpl implements CustomRepo {
         this.inferencer = inferencer;
     }
 
-    IndexableThingMapper getMapper() {
-        return mapper;
-    }
-
-    void setMapper(IndexableThingMapper mapper) {
-        IndexUtils.assertNotNull(mapper, "IndexableThingMapper must not be null.");
-        this.mapper = mapper;
-    }
-
     /**
      * Accepts the supplied {@link IndexDTO data transfer object} (DTO) for indexing.  The caller should assume that the
      * index is updated asynchronously, and that multiple transactions with the index may occur as a result.
@@ -146,9 +137,13 @@ public class CustomRepoImpl implements CustomRepo {
                                     toIndex.getEvent().getId(), toIndex.getAgent().getId())));
         }
 
+        if (forSource != null) {
+            delegate.save(mapper.apply(forSource));
+        }
 
-        DiscoSolrDocument indexedSourceDoc = (forSource != null) ? delegate.save(mapper.apply(forSource)) : null;
-        DiscoSolrDocument indexedTargetDoc = (forTarget != null) ? delegate.save(mapper.apply(forTarget)) : null;
+        if (forTarget != null) {
+            delegate.save(mapper.apply(forTarget));
+        }
 
         /*
               Event            Source                    Target
