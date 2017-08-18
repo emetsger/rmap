@@ -3,6 +3,7 @@ package info.rmapproject.indexing.solr.repository;
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.event.RMapEventType;
 import info.rmapproject.indexing.solr.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +55,10 @@ public class SimpleIndexDTOMapper implements IndexDTOMapper {
         // The target IRI will be null in the case of a delete, tombstone, or inactivation event
         RMapIri target = indexDTO.getEventTargetIri();
 
+        // We do not index the source DiSCO for DERIVATION events; the source of a DERIVATION event does not need to
+        // be updated at all in the index. (TODO: version repository implications)
         IndexableThing forSource = null;
-        if (source != null) {
+        if (source != null && event.getEventType() != RMapEventType.DERIVATION) {
             forSource = new IndexableThing();
 
             forSource.eventSource = source;

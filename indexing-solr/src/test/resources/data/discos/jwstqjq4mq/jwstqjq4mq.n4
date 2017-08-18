@@ -1,0 +1,9 @@
+<rmap:jwstqjq4mq> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/Event> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://www.w3.org/ns/prov#wasAssociatedWith> <rmap:gtht76hgmh> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://rmap-project.org/rmap/terms/eventType> <http://rmap-project.org/rmap/terms/derivation> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://rmap-project.org/rmap/terms/eventTargetType> <http://rmap-project.org/rmap/terms/DiSCO> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://www.w3.org/ns/prov#startedAtTime> "2017-08-16T14:56:24.318Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://www.w3.org/ns/prov#endedAtTime> "2017-08-16T14:56:24.318Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://www.w3.org/ns/prov#generated> <rmap:9cnp5hqdb7> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://rmap-project.org/rmap/terms/hasSourceObject> <rmap:rmd18mddgf> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://rmap-project.org/rmap/terms/derivedObject> <rmap:9cnp5hqdb7> <rmap:jwstqjq4mq> .

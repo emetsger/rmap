@@ -9,6 +9,7 @@ import info.rmapproject.core.model.event.RMapEventType;
 import info.rmapproject.indexing.solr.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.management.resources.agent;
 
 import java.util.Optional;
 
@@ -108,11 +109,8 @@ class StandAloneStatusInferencer implements StatusInferencer {
                 if (targetIri.isPresent() && irisEqual(targetIri, disco.getId())) {
                     logInference(DERIVATION, disco.getId(), IndexUtils.EventDirection.TARGET);
                     status = ACTIVE;
-                } else if (sourceIri.isPresent() && irisEqual(sourceIri, disco.getId())) {
-                    logInference(DERIVATION, disco.getId(), IndexUtils.EventDirection.SOURCE);
-                    status = INACTIVE;
                 } else {
-                    throw new IllegalStateException("Missing DERIVATION event source and target IRI for event " +
+                    throw new IllegalStateException("Missing DERIVATION event target IRI for event " +
                             event.getId().getStringValue());
                 }
                 break;
