@@ -19,6 +19,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.util.JavaBinCodec;
 import org.apache.solr.common.util.NamedList;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.openrdf.rio.RDFFormat;
@@ -88,6 +89,7 @@ public class SimpleSolrTest extends AbstractSpringIndexingTest {
      * Fails: can't specify a core name to ping
      */
     @Test
+    @Ignore("Fails: can't specify a core name to ping")
     public void testPing() throws Exception {
         SolrPingResponse res = solrTemplate.ping();
         assertNotNull(res);

@@ -12,19 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
 
-import java.net.URI;
-import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static info.rmapproject.core.model.RMapStatus.ACTIVE;
-import static info.rmapproject.core.model.RMapStatus.INACTIVE;
 import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
-import static info.rmapproject.indexing.solr.IndexUtils.dateToString;
 import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
 import static info.rmapproject.indexing.solr.IndexUtils.ise;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.CORE_NAME;
@@ -37,8 +32,6 @@ import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_LAST_UP
  */
 public class CustomRepoImpl implements CustomRepo {
 
-    private static final String ERR_INFER_STATUS = "Unable to infer the status for RMap DiSCO: %s Event: %s: Agent: %s";
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -48,10 +41,10 @@ public class CustomRepoImpl implements CustomRepo {
     private SolrTemplate template;
 
     @Autowired
-    private StatusInferencer inferencer;
+    private IndexableThingMapper indexableThingMapper;
 
     @Autowired
-    private IndexableThingMapper mapper;
+    private IndexDTOMapper dtoMapper;
 
     DiscoRepository getDelegate() {
         return delegate;
@@ -71,13 +64,20 @@ public class CustomRepoImpl implements CustomRepo {
         this.template = template;
     }
 
-    StatusInferencer getInferencer() {
-        return inferencer;
+    IndexableThingMapper getIndexableThingMapper() {
+        return indexableThingMapper;
     }
 
-    void setInferencer(StatusInferencer inferencer) {
-        IndexUtils.assertNotNull(inferencer, "StatusInferencer must not be null.");
-        this.inferencer = inferencer;
+    void setIndexableThingMapper(IndexableThingMapper indexableThingMapper) {
+        this.indexableThingMapper = indexableThingMapper;
+    }
+
+    IndexDTOMapper getDtoMapper() {
+        return dtoMapper;
+    }
+
+    void setDtoMapper(IndexDTOMapper dtoMapper) {
+        this.dtoMapper = dtoMapper;
     }
 
     /**
@@ -103,47 +103,10 @@ public class CustomRepoImpl implements CustomRepo {
                     "Missing agent '%s' of event %s", event.getAssociatedAgent().getStringValue(), event));
         }
 
-        // The source IRI will be null in the case of a creation event
-        RMapIri source = toIndex.getEventSourceIri();
-        // The target IRI will be null in the case of a delete, tombstone, or inactivation event
-        RMapIri target = toIndex.getEventTargetIri();
 
-        IndexableThing forSource = null;
-        if (source != null) {
-            forSource = new IndexableThing();
-
-            forSource.eventSource = source;
-            forSource.eventTarget = target;
-            forSource.event = event;
-            forSource.agent = agent;
-            forSource.disco = toIndex.getSourceDisco();
-            forSource.status = inferencer.inferDiscoStatus(forSource.disco, forSource.event, forSource.agent)
-                    .orElseThrow(() -> new RuntimeException(
-                            String.format(ERR_INFER_STATUS, toIndex.getSourceDisco().getId(),
-                                    toIndex.getEvent().getId(), toIndex.getAgent().getId())));
-        }
-
-        IndexableThing forTarget = null;
-        if (target != null) {
-            forTarget = new IndexableThing();
-            forTarget.eventSource = source;
-            forTarget.eventTarget = target;
-            forTarget.event = event;
-            forTarget.agent = agent;
-            forTarget.disco = toIndex.getTargetDisco();
-            forTarget.status = inferencer.inferDiscoStatus(forTarget.disco, forTarget.event, forTarget.agent)
-                    .orElseThrow(() -> new RuntimeException(
-                            String.format(ERR_INFER_STATUS, toIndex.getTargetDisco().getId(),
-                                    toIndex.getEvent().getId(), toIndex.getAgent().getId())));
-        }
-
-        if (forSource != null) {
-            delegate.save(mapper.apply(forSource));
-        }
-
-        if (forTarget != null) {
-            delegate.save(mapper.apply(forTarget));
-        }
+        dtoMapper.apply(toIndex)
+                .map(it -> indexableThingMapper.apply(it))
+                .forEach(doc -> delegate.save(doc));
 
         /*
               Event            Source                    Target
@@ -165,20 +128,20 @@ public class CustomRepoImpl implements CustomRepo {
             case UPDATE:
                 // need to change the status flag on the _older_ versions of the disco in the disco index
                 // TODO: update the version index
-                inactivateDocumentsForDisco(forSource.disco.getId(), null);
+                inactivateActiveDocumentsWithDiscoIri(toIndex.getSourceDisco().getId());
                 break;
 
             case DELETION:
                 // need to change the status flag on _all_ versions of the disco in the disco index
                 // TODO: update the version index
-                updateDocumentStatusByDiscoIri(forSource.disco.getId(), RMapStatus.DELETED, null);
+                updateDocumentStatusByDiscoIri(toIndex.getSourceDisco().getId(), RMapStatus.DELETED, null);
                 break;
 
             case TOMBSTONE:
                 // need to change the status flag on _all_ versions of the disco in the disco index
                 // and/or delete all the old versions of the disco from the index and leave the tombstoned instance
                 // TODO: update the version index
-                updateDocumentStatusByDiscoIri(forSource.disco.getId(), RMapStatus.TOMBSTONED, null);
+                updateDocumentStatusByDiscoIri(toIndex.getSourceDisco().getId(), RMapStatus.TOMBSTONED, null);
                 break;
 
             case DERIVATION:
@@ -190,7 +153,7 @@ public class CustomRepoImpl implements CustomRepo {
             case INACTIVATION:
                 // need to change the status flag on _all_ versions of the disco in the disco index
                 // TODO: update the version index
-                updateDocumentStatusByDiscoIri(forSource.disco.getId(), RMapStatus.INACTIVE, null);
+                updateDocumentStatusByDiscoIri(toIndex.getSourceDisco().getId(), RMapStatus.INACTIVE, null);
                 break;
 
             default:
@@ -203,41 +166,13 @@ public class CustomRepoImpl implements CustomRepo {
      * Searches the index for documents that contain the referenced DiSCO <em>and</em> that have a DiSCO status of
      * {@link RMapStatus#ACTIVE ACTIVE}.  Each matching document will have the DiSCO status set to {@link
      * RMapStatus#INACTIVE INACTIVE}, and have their last updated timestamp set.
-     * <p>
-     * Implementation note: this method uses the {@link SolrTemplate} in order to perform a <em>partial update</em> of
-     * the matching documents.  This is for two reasons: 1) partial updates are more efficient, 2) round-tripping the
-     * entire {@link DiscoSolrDocument} is not possible due to how the {@link org.apache.solr.common.util.JavaBinCodec}
-     * writes dates in Solr responses.
-     * </p>
      *
      * @param discoIri
-     * @param filter
      */
-    private void inactivateDocumentsForDisco(RMapIri discoIri, Predicate<DiscoSolrDocument> filter) {
-
+    private void inactivateActiveDocumentsWithDiscoIri(RMapIri discoIri) {
         log.debug("Inactivating documents with DiSCO iri {}...", discoIri);
-
-        Set<PartialUpdate> statusUpdates;
-
-        try (Stream<DiscoSolrDocument> documentStream =
-                     delegate.findDiscoSolrDocumentsByDiscoUriAndDiscoStatus(discoIri.getStringValue(), ACTIVE.toString()).stream()) {
-
-            Stream<DiscoSolrDocument> filtered = documentStream;
-            if (filter != null) {
-                filtered = documentStream.filter(filter);
-            }
-
-            statusUpdates = preparePartialUpdateOverDocuments(filtered, (partialUpdate) -> {
-                partialUpdate.setValueOfField(DISCO_STATUS, INACTIVE.toString());
-                partialUpdate.setValueOfField(DOC_LAST_UPDATED, System.currentTimeMillis());
-                log.debug("Set document id {} status to {}", partialUpdate.getIdField().getValue(), INACTIVE);
-            });
-        }
-
-        if (statusUpdates.size() > 0) {
-            template.saveBeans(CORE_NAME, statusUpdates);
-            template.commit(CORE_NAME);
-        }
+        updateDocumentStatusByDiscoIri(discoIri, RMapStatus.INACTIVE, doc ->
+                doc.getDiscoStatus().equals(ACTIVE.toString()));
     }
 
     /**
@@ -251,6 +186,12 @@ public class CustomRepoImpl implements CustomRepo {
      * adding a repository-specific method expressing the more narrow criteria, and invoking that method instead.  It is
      * likely the index will be able to apply the filtering logic in a more performant manner than the supplied
      * {@code filter}.
+     * </p>
+     * <p>
+     * Implementation note: this method uses the {@link SolrTemplate} in order to perform a <em>partial update</em> of
+     * the matching documents.  This is for two reasons: 1) partial updates are more efficient, 2) round-tripping the
+     * entire {@link DiscoSolrDocument} is not possible due to how the {@link org.apache.solr.common.util.JavaBinCodec}
+     * writes dates in Solr responses.
      * </p>
      *
      * @param discoIri the IRI of the DiSCO

@@ -1,5 +1,6 @@
 package info.rmapproject.indexing.solr.repository;
 
+import info.rmapproject.indexing.solr.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,6 +29,19 @@ class SimpleIndexableThingMapper implements IndexableThingMapper {
     @Autowired
     private EventMapper eventMapper;
 
+    public SimpleIndexableThingMapper() {
+
+    }
+
+    public SimpleIndexableThingMapper(DiscoMapper discoMapper, AgentMapper agentMapper, EventMapper eventMapper) {
+        assertNotNull(discoMapper, "Disco Mapper must not be null.");
+        assertNotNull(agentMapper, "Agent Mapper must not be null.");
+        assertNotNull(eventMapper, "Event Mapper must not be null.");
+
+        this.discoMapper = discoMapper;
+        this.agentMapper = agentMapper;
+        this.eventMapper = eventMapper;
+    }
 
     /**
      * Maps a {@link IndexableThing} to a {@link DiscoSolrDocument} field by field.  The mapping logic is tolerant with
@@ -78,4 +92,27 @@ class SimpleIndexableThingMapper implements IndexableThingMapper {
         return doc;
     }
 
+    DiscoMapper getDiscoMapper() {
+        return discoMapper;
+    }
+
+    void setDiscoMapper(DiscoMapper discoMapper) {
+        this.discoMapper = discoMapper;
+    }
+
+    AgentMapper getAgentMapper() {
+        return agentMapper;
+    }
+
+    void setAgentMapper(AgentMapper agentMapper) {
+        this.agentMapper = agentMapper;
+    }
+
+    EventMapper getEventMapper() {
+        return eventMapper;
+    }
+
+    void setEventMapper(EventMapper eventMapper) {
+        this.eventMapper = eventMapper;
+    }
 }
