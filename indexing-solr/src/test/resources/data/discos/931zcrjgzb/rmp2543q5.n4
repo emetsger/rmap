@@ -1,0 +1,4 @@
+<rmap:rmp2543q5> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/Agent> <rmap:rmp2543q5> .
+<rmap:rmp2543q5> <http://xmlns.com/foaf/0.1/name> "Aaron Birkland" <rmap:rmp2543q5> .
+<rmap:rmp2543q5> <http://rmap-project.org/rmap/terms/identityProvider> <https://www.google.com> <rmap:rmp2543q5> .
+<rmap:rmp2543q5> <http://rmap-project.org/rmap/terms/userAuthId> <http://test.rmap-project.org/apptest/authids/lib3bPAyq9JfiP1vKRVbGqZAfitt5PRu> <rmap:rmp2543q5> .
