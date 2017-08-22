@@ -45,19 +45,22 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
     private CustomRepoImpl underTest = new CustomRepoImpl();
 
     private TestResourceManager rm;
+    
+    private Mocks mocks;
+    
+    private DiscoRepository mockRepository;
+    
+    private SolrTemplate mockTemplate;
 
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
-
-        rm = TestResourceManager.load(
-                "/data/discos/rmd18mddcw", RDFFormat.NQUADS, rdfHandler);
+    public void setUpMocks() throws Exception {
+        this.mocks = new Mocks().build();
+        this.mockRepository = mocks.getMockRepository();
+        this.mockTemplate = mocks.getMockTemplate();
     }
 
     @Test
     public void testIndexCreate() throws Exception {
-        Mocks mocks = new Mocks().build();
-
         rm = TestResourceManager.load(
                 "/data/discos/rmd18mddcw", RDFFormat.NQUADS, rdfHandler);
 
@@ -68,7 +71,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
                 null,
                 rm.getDisco(discoIri));
 
-        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+        when(mockRepository.save(any(DiscoSolrDocument.class))).then(
                 (invocation) -> {
                     DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
                     assertEquals(discoIri, doc.getDiscoUri());
@@ -77,14 +80,12 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         underTest.index(dto);
 
-        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
-        verifyZeroInteractions(mocks.getMockTemplate());
+        verify(mockRepository).save(any(DiscoSolrDocument.class));
+        verifyZeroInteractions(mockTemplate);
     }
 
     @Test
     public void testIndexUpdate() throws Exception {
-        Mocks mocks = new Mocks().build();
-
         rm = TestResourceManager.load(
                 "/data/discos/rmd18mddcw", RDFFormat.NQUADS, rdfHandler);
 
@@ -98,7 +99,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         Set<String> saved = new HashSet<>();
 
-        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+        when(mockRepository.save(any(DiscoSolrDocument.class))).then(
                 (invocation) -> {
                     DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
                     saved.add(doc.getDiscoUri());
@@ -109,27 +110,25 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         // Note that the document returned from the index is ACTIVE.
         RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
         repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
-        when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
+        when(mockRepository.findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
                 .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
 
         // Insure that the status is updated to INACTIVE
-        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.INACTIVE);
+        whenSolrTemplateSavesBeansAssertStatus(mockTemplate, sourceDiscoIri, RMapStatus.INACTIVE);
 
         underTest.index(dto);
 
-        verify(mocks.getMockRepository(), times(2)).save(any(DiscoSolrDocument.class));
+        verify(mockRepository, times(2)).save(any(DiscoSolrDocument.class));
         assertEquals(2, saved.size());
         assertTrue(saved.contains(sourceDiscoIri));
         assertTrue(saved.contains(targetDiscoIri));
 
-        verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
-        verify(mocks.getMockTemplate()).commit(CORE_NAME);
+        verify(mockTemplate).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mockTemplate).commit(CORE_NAME);
     }
 
     @Test
     public void testIndexInactivate() throws Exception {
-        Mocks mocks = new Mocks().build();
-
         rm = TestResourceManager.load(
                 "/data/discos/931zcrjgzb", RDFFormat.NQUADS, rdfHandler);
 
@@ -142,7 +141,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         Set<String> saved = new HashSet<>();
 
-        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+        when(mockRepository.save(any(DiscoSolrDocument.class))).then(
                 (invocation) -> {
                     DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
                     saved.add(doc.getDiscoUri());
@@ -153,26 +152,24 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         // Note that the document returned from the index is ACTIVE.
         RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
         repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
-        when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
+        when(mockRepository.findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
                 .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
 
         // Insure that the status is updated to INACTIVE
-        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.INACTIVE);
+        whenSolrTemplateSavesBeansAssertStatus(mockTemplate, sourceDiscoIri, RMapStatus.INACTIVE);
 
         underTest.index(dto);
 
-        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        verify(mockRepository).save(any(DiscoSolrDocument.class));
         assertEquals(1, saved.size());
         assertTrue(saved.contains(sourceDiscoIri));
 
-        verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
-        verify(mocks.getMockTemplate()).commit(CORE_NAME);
+        verify(mockTemplate).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mockTemplate).commit(CORE_NAME);
     }
 
     @Test
     public void testIndexTombstone() throws Exception {
-        Mocks mocks = new Mocks().build();
-
         rm = TestResourceManager.load(
                 "/data/discos/rmp1892gbc", RDFFormat.NQUADS, rdfHandler);
 
@@ -185,7 +182,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         Set<String> saved = new HashSet<>();
 
-        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+        when(mockRepository.save(any(DiscoSolrDocument.class))).then(
                 (invocation) -> {
                     DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
                     saved.add(doc.getDiscoUri());
@@ -196,20 +193,20 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         // Note that the document returned from the index is ACTIVE.
         RepositoryDocuments repodocs = new RepositoryDocuments().build(mocks);
         repodocs.addDTOSource(dto, RMapStatus.ACTIVE);
-        when(mocks.getMockRepository().findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
+        when(mockRepository.findDiscoSolrDocumentsByDiscoUri(sourceDiscoIri))
                 .thenReturn(Collections.singleton(repodocs.getDocumentForIri(sourceDiscoIri)));
 
         // Insure that the status is updated to TOMBSTONED
-        whenSolrTemplateSavesBeansAssertStatus(mocks.getMockTemplate(), sourceDiscoIri, RMapStatus.TOMBSTONED);
+        whenSolrTemplateSavesBeansAssertStatus(mockTemplate, sourceDiscoIri, RMapStatus.TOMBSTONED);
 
         underTest.index(dto);
 
-        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        verify(mockRepository).save(any(DiscoSolrDocument.class));
         assertEquals(1, saved.size());
         assertTrue(saved.contains(sourceDiscoIri));
 
-        verify(mocks.getMockTemplate()).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
-        verify(mocks.getMockTemplate()).commit(CORE_NAME);
+        verify(mockTemplate).saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class));
+        verify(mockTemplate).commit(CORE_NAME);
     }
 
     @Test
@@ -220,8 +217,6 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
     @Test
     public void testIndexDerive() throws Exception {
-        Mocks mocks = new Mocks().build();
-
         rm = TestResourceManager.load(
                 "/data/discos/jwstqjq4mq", RDFFormat.NQUADS, rdfHandler);
 
@@ -235,7 +230,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         Set<String> saved = new HashSet<>();
 
-        when(mocks.getMockRepository().save(any(DiscoSolrDocument.class))).then(
+        when(mockRepository.save(any(DiscoSolrDocument.class))).then(
                 (invocation) -> {
                     DiscoSolrDocument doc = invocation.getArgumentAt(0, DiscoSolrDocument.class);
                     saved.add(doc.getDiscoUri());
@@ -244,19 +239,18 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
 
         underTest.index(dto);
 
-        verify(mocks.getMockRepository()).save(any(DiscoSolrDocument.class));
+        verify(mockRepository).save(any(DiscoSolrDocument.class));
         assertEquals(1, saved.size());
         assertTrue(saved.contains(targetDiscoIri));
 
-        verifyZeroInteractions(mocks.getMockTemplate());
+        verifyZeroInteractions(mockTemplate);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void updateDocumentStatusByDiscoIri() throws Exception {
-        Mocks mocks = new Mocks().build();
-        DiscoRepository mockRepository = mocks.getMockRepository();
-        SolrTemplate mockTemplate = mocks.getMockTemplate();
+        rm = TestResourceManager.load(
+                "/data/discos/rmd18mddcw", RDFFormat.NQUADS, rdfHandler);
 
         // We want to INACTIVATE all disco solr docs that contain the disco iri rmap:rmd18mddcw
         RMapDiSCO disco = rm.getDisco("rmap:rmd18mddcw");
