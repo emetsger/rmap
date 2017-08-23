@@ -1,4 +1,4 @@
-version: '2'
+version: '2.2'
 services:
   solr:
     container_name: solr
@@ -7,10 +7,10 @@ services:
     ports:
      - "8983:8983"
      - "5005:5005"
+    # environment:
+    #    - PROJECT_BASEDIR
     volumes:
-      - "./src/test/resources/docker/cores:/opt/solr/server/solr/mycores"
-      # - "./precreate.sh:/docker-entrypoint-initdb.d/precreate.sh"
-     # - data
+     - "./cores:/opt/solr/server/solr/mycores"
     entrypoint:
       - docker-entrypoint.sh
       - solr
@@ -19,8 +19,3 @@ services:
       - -force
       - -a
       - "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
-#      - solr-precreate
-#      - discos resources versions
-#volumes:
-# data:
-#    - "./src/test/resources/cores:/opt/solr/server/solr/mycores"

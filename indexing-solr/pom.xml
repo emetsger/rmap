@@ -14,6 +14,35 @@
     <description>Solr indexing implementation</description>
     <packaging>jar</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>solr</alias>
+                            <name>solr:6.6.0-alpine</name>
+                            <run>
+                                <wait>
+                                    <log>.*\[discos\] Registered new searcher.*</log>
+                                    <time>120000</time>
+                                </wait>
+                            </run>
+
+                            <external>
+                                <type>compose</type>
+                                <basedir>src/test/docker</basedir>
+                                <composeFile>docker-compose.yaml</composeFile>
+                            </external>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
 
         <dependency>
