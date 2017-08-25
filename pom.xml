@@ -58,6 +58,7 @@
         <solr.version>6.6.0</solr.version>
         <spring-data.version>3.0.0.RC2</spring-data.version>
         <joda-time.version>2.9.9</joda-time.version>
+        <javax-el.version>3.0.1-b08</javax-el.version>
     </properties>
 
     <build>
@@ -371,6 +372,11 @@
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-validator</artifactId>
                 <version>${hibernate-validator.version}</version>
+            </dependency>
+            <dependency> <!-- runtime dep of hibernate-validator -->
+                <groupId>org.glassfish</groupId>
+                <artifactId>javax.el</artifactId>
+                <version>${javax-el.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-dbcp</groupId>
