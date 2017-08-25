@@ -3,9 +3,14 @@ package info.rmapproject.indexing.solr;
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.RMapObject;
 import info.rmapproject.core.model.RMapObjectType;
+import info.rmapproject.core.model.agent.RMapAgent;
+import info.rmapproject.core.model.disco.RMapDiSCO;
+import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
+import info.rmapproject.indexing.solr.repository.IndexDTO;
+import info.rmapproject.indexing.solr.repository.SimpleSolrTest;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
@@ -21,13 +26,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -184,7 +195,78 @@ public class TestUtils {
     }
 
     /**
-     * A Spring Resource of RDF content. A RDFResource exposes the RDF serialization of the RDF.
+     * Creates an {@link IndexDTO} for each {@link RMapEvent} found at the specified {@code resourcePath}.
+     * <h3>Assumptions:</h3>
+     * <ul>
+     *     <li>{@code resourcePath} names a classpath resource that resolves to a directory on the filesystem.  The
+     *         directory contains RMap objects serialized in N-Quads format.  Each file contains one RMap object, and
+     *         ends with an {@code .n4} file extension</li>
+     *     <li>The supplied {@code rdfHandler} is able to de-serialize N-Quad RDF</li>
+     *     <li>Each {@code RMapEvent} under {@code resourcePath} forms a <em>connected graph</em>, a requirement of the
+     *         {@link IndexDTO}.  That means that with every event, there ought to be an object for the agent, and at
+     *         least one source and/or target disco.</li>
+     * </ul>
+     * <p>
+     * The {@code assertions} are applied on the deserialized objects prior to preparing the {@code IndexDTO} stream.
+     * The caller may use these assertions to verify the type, number, or contents of the RMap objects that have been
+     * deserialized from the filesystem.
+     * </p>
+     *
+     * @param rdfHandler the RDFHandler capable of deserializing N-Quads
+     * @param resourcePath a classpath resource that is expected to resolve to a directory containing RDF serializations
+     *                     of RMap objects in N-Quad format.  One RMap object per file.
+     * @param assertions caller-supplied assertions that are run on the de-serialized RDF prior to assembling
+     *                   {@code IndexDTO} objects
+     * @return a stream of {@code IndexDTO} objects
+     */
+    public static Stream<IndexDTO> prepareIndexableDtos(RDFHandler rdfHandler, String resourcePath,
+                                                        Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions) {
+        Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
+        getRmapResources(resourcePath, rdfHandler, RDFFormat.NQUADS, rmapObjects);
+
+        assertions.accept(rmapObjects);
+
+        List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO, rdfHandler);
+        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
+        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
+
+        return events.stream()
+                .sorted(Comparator.comparing(RMapEvent::getStartTime))
+                .map(event -> {
+                    RMapAgent agent = agents.stream()
+                            .filter(a -> irisEqual(a.getId(), event.getAssociatedAgent()))
+                            .findAny()
+                            .orElseThrow(() ->
+                                    new RuntimeException("Missing expected agent " +
+                                            event.getAssociatedAgent().getStringValue()));
+
+                    Optional<RMapIri> source = findEventIri(event, IndexUtils.EventDirection.SOURCE);
+                    Optional<RMapIri> target = findEventIri(event, IndexUtils.EventDirection.TARGET);
+                    RMapDiSCO sourceDisco = null;
+                    RMapDiSCO targetDisco = null;
+
+                    if (source.isPresent()) {
+                        sourceDisco = discos.stream()
+                                .filter(disco -> disco.getId().getStringValue().equals(source.get().getStringValue()))
+                                .findAny().get();
+                    }
+
+                    if (target.isPresent()) {
+                        targetDisco = discos.stream()
+                                .filter(disco -> disco.getId().getStringValue().equals(target.get().getStringValue()))
+                                .findAny().get();
+                    }
+
+                    IndexDTO indexDto = new IndexDTO(event, agent, sourceDisco, targetDisco);
+
+                    return indexDto;
+                });
+    }
+
+    /**
+     * A Spring Resource of RDF content. A {@code RDFResource} exposes the RDF serialization of the RDF, along with an
+     * {@code InputStream} to the content.  This allows callers to determine which serialization to use when
+     * deserializing the content of the resource.
      */
     public interface RDFResource extends Resource {
 

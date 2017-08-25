@@ -2,23 +2,28 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:solr="http://www.springframework.org/schema/data/solr"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-     http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-2.0.xsd">
+     http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-2.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--<context:property-placeholder location="classpath:/solr.properties" ignore-unresolvable="true"/>-->
 
     <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
 
-    <solr:solr-client id="solrClient" url="http://192.168.99.100:8983/solr"/>
 
-    <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
+    <beans profile="http-solr">
+        <context:property-placeholder location="classpath*:/http-solr.properties" ignore-unresolvable="true"/>
+        <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
+    </beans>
 
-    <bean id="indexableThingMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+    <beans>
+        <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
 
-    <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
-
-    <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
-
-    <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
-
-    <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
+        <bean id="indexableThingMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+        <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
+        <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
+        <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
+        <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
+    </beans>
 
 </beans>

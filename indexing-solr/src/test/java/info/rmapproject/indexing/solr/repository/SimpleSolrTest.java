@@ -1,4 +1,4 @@
-package info.rmapproject.indexing.solr;
+package info.rmapproject.indexing.solr.repository;
 
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.RMapObjectType;
@@ -9,22 +9,18 @@ import info.rmapproject.core.model.event.RMapEventDerivation;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
-import info.rmapproject.indexing.solr.repository.DiscoRepository;
-import info.rmapproject.indexing.solr.repository.IndexDTO;
-import info.rmapproject.indexing.solr.repository.VersionRepository;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.util.JavaBinCodec;
 import org.apache.solr.common.util.NamedList;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.openrdf.rio.RDFFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.solr.core.DefaultQueryParser;
@@ -32,39 +28,32 @@ import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
 import org.springframework.data.solr.core.query.Query;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static info.rmapproject.core.model.RMapStatus.ACTIVE;
-import static info.rmapproject.core.model.RMapStatus.INACTIVE;
 import static java.lang.Long.parseLong;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
+@Ignore("Move tests to ITs")
 public class SimpleSolrTest extends AbstractSpringIndexingTest {
 
     @Autowired
@@ -436,48 +425,6 @@ public class SimpleSolrTest extends AbstractSpringIndexingTest {
                 .forEach(doc -> discoRepository.save(doc));
     }
 
-    @Test
-    public void writableDiscoRepository() throws Exception {
-        LOG.debug("Deleting everything in the index.");
-        discoRepository.deleteAll();
-        assertEquals(0, discoRepository.count());
-
-        Consumer<Map<RMapObjectType, Set<TestUtils.RDFResource>>> assertions = (resources) -> {
-            List<RMapDiSCO> discos = TestUtils.getRmapObjects(resources, RMapObjectType.DISCO, rdfHandler);
-            assertEquals(3, discos.size());
-
-            List<RMapEvent> events = TestUtils.getRmapObjects(resources, RMapObjectType.EVENT, rdfHandler);
-            assertEquals(3, events.size());
-
-            List<RMapAgent> agents = TestUtils.getRmapObjects(resources, RMapObjectType.AGENT, rdfHandler);
-            assertEquals(1, agents.size());
-        };
-
-        LOG.debug("Preparing indexable objects.");
-        Stream<IndexDTO> dtos = prepareIndexableDtos("/data/discos/rmd18mddcw", assertions);
-
-        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discoRepository.index(dto));
-
-        // 5 documents should have been added
-        // - one document per DiSCO, Event tuple
-        assertEquals(5, discoRepository.count());
-
-        // 1 document should be active
-        Set<DiscoSolrDocument> docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(ACTIVE.toString());
-        assertEquals(1, docs.size());
-
-        // assert it is the uri we expect
-        DiscoSolrDocument active = docs.iterator().next();
-        assertTrue(active.getDiscoUri().endsWith("rmd18mddcw"));
-
-        // the other four should be inactive
-        docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(INACTIVE.toString());
-        assertEquals(4, docs.size());
-
-        // assert they have the uris we expect
-        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mdd8b")).count());
-        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18m7mr7")).count());
-    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -486,49 +433,6 @@ public class SimpleSolrTest extends AbstractSpringIndexingTest {
             NamedList<Object> response = (NamedList) new JavaBinCodec().unmarshal(in);
             assertNotNull(response);
         }
-    }
-
-    private Stream<IndexDTO> prepareIndexableDtos(String resourcePath, Consumer<Map<RMapObjectType, Set<TestUtils.RDFResource>>> assertions) {
-        Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
-        TestUtils.getRmapResources(resourcePath, rdfHandler, RDFFormat.NQUADS, rmapObjects);
-
-        assertions.accept(rmapObjects);
-
-        List<RMapDiSCO> discos = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.DISCO, rdfHandler);
-        List<RMapEvent> events = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
-        List<RMapAgent> agents = TestUtils.getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
-
-        return events.stream()
-                .sorted(Comparator.comparing(RMapEvent::getStartTime))
-                .map(event -> {
-                    RMapAgent agent = agents.stream()
-                            .filter(a -> a.getId().getStringValue().equals(event.getAssociatedAgent().getStringValue()))
-                            .findAny()
-                            .orElseThrow(() ->
-                                    new RuntimeException("Missing expected agent " +
-                                            event.getAssociatedAgent().getStringValue()));
-
-                    Optional<RMapIri> source = IndexUtils.findEventIri(event, IndexUtils.EventDirection.SOURCE);
-                    Optional<RMapIri> target = IndexUtils.findEventIri(event, IndexUtils.EventDirection.TARGET);
-                    RMapDiSCO sourceDisco = null;
-                    RMapDiSCO targetDisco = null;
-
-                    if (source.isPresent()) {
-                        sourceDisco = discos.stream()
-                                .filter(disco -> disco.getId().getStringValue().equals(source.get().getStringValue()))
-                                .findAny().get();
-                    }
-
-                    if (target.isPresent()) {
-                        targetDisco = discos.stream()
-                                .filter(disco -> disco.getId().getStringValue().equals(target.get().getStringValue()))
-                                .findAny().get();
-                    }
-
-                    IndexDTO indexDto = new IndexDTO(event, agent, sourceDisco, targetDisco);
-
-                    return indexDto;
-                });
     }
 
     private static void registerUriConverter(SolrTemplate solrTemplate) {
@@ -573,17 +477,6 @@ public class SimpleSolrTest extends AbstractSpringIndexingTest {
             }
         });
         return doc;
-    }
-
-    /**
-     * Encapsulates an indexable unit.
-     */
-    private class IndexableThing {
-        private RMapEvent event;
-        private RMapDiSCO disco;
-        private RMapAgent agent;
-        private RMapIri eventSource;
-        private RMapIri eventTarget;
     }
 
 }

@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice"})
+@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "http-solr"})
 @ContextConfiguration({"classpath:/rmap-indexing-solr.xml", "classpath:/spring-rmapcore-context.xml"})
 public abstract class AbstractSpringIndexingTest {
 
