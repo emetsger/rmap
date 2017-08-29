@@ -47,6 +47,7 @@ import java.util.stream.StreamSupport;
 
 import static info.rmapproject.core.model.RMapStatus.ACTIVE;
 import static info.rmapproject.core.model.RMapStatus.INACTIVE;
+import static info.rmapproject.core.model.RMapStatus.TOMBSTONED;
 import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
 import static java.lang.Long.parseLong;
 import static org.junit.Assert.assertEquals;
@@ -123,7 +124,64 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18m7mr7")).count());
     }
 
+    /**
+     * Tests the {@link DiscoRepository#index(IndexDTO)} method by supplying three {@code IndexDTO}s for indexing from
+     * the {@code /data/discos/rmd18mddcw} directory:
+     * <ul>
+     *     <li>a creation event</li>
+     *     <li>followed by an update event</li>
+     *     <li>followed by another update event</li>
+     * </ul>
+     * This test insures that the {@link DiscoSolrDocument}s in the index have the correct
+     * {@link DiscoSolrDocument#DISCO_STATUS} after the three events have been processed.
+     *
+     * @see <a href="src/test/resources/data/discos/rmd18mddcw/README.md">README.MD</a>
+     */
+    @Test
+    public void testIndexingDiscoStatusCreateAndUpdateAndUpdateAndTombstone() {
+        LOG.debug("Deleting everything in the index.");
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
 
+        Consumer<Map<RMapObjectType, Set<TestUtils.RDFResource>>> assertions = (resources) -> {
+            List<RMapDiSCO> discos = TestUtils.getRmapObjects(resources, RMapObjectType.DISCO, rdfHandler);
+            assertEquals(3, discos.size());
+
+            List<RMapEvent> events = TestUtils.getRmapObjects(resources, RMapObjectType.EVENT, rdfHandler);
+            assertEquals(4, events.size());
+
+            List<RMapAgent> agents = TestUtils.getRmapObjects(resources, RMapObjectType.AGENT, rdfHandler);
+            assertEquals(1, agents.size());
+        };
+
+        LOG.debug("Preparing indexable objects.");
+        Stream<IndexDTO> dtos = prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw-with-tombstone", assertions);
+
+        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discoRepository.index(dto));
+
+        // 6 documents should have been added
+        // - one document per DiSCO, Event tuple
+        assertEquals(6, discoRepository.count());
+
+        // No documents should be active
+        Set<DiscoSolrDocument> docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(ACTIVE.toString());
+        assertEquals(0, docs.size());
+
+        // 4 documents should be inactive
+        docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(INACTIVE.toString());
+        assertEquals(4, docs.size());
+
+        // assert they have the uris we expect
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mdd8b")).count());
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18m7mr7")).count());
+
+        // 2 documents should be tombstoned
+        docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(TOMBSTONED.toString());
+
+        // assert it is the uri we expect
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mddcw")).count());
+    }
+    
     /**
      * Fails: can't specify a core name to ping
      */
