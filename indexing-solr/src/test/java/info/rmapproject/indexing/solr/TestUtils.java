@@ -195,7 +195,8 @@ public class TestUtils {
     }
 
     /**
-     * Creates an {@link IndexDTO} for each {@link RMapEvent} found at the specified {@code resourcePath}.
+     * Creates an {@link IndexDTO} for each {@link RMapEvent} found at the specified {@code resourcePath}.  The stream
+     * is ordered, with the earliest event at the head of the stream and the most recent event at the tail.
      * <h3>Assumptions:</h3>
      * <ul>
      *     <li>{@code resourcePath} names a classpath resource that resolves to a directory on the filesystem.  The
@@ -217,7 +218,7 @@ public class TestUtils {
      *                     of RMap objects in N-Quad format.  One RMap object per file.
      * @param assertions caller-supplied assertions that are run on the de-serialized RDF prior to assembling
      *                   {@code IndexDTO} objects
-     * @return a stream of {@code IndexDTO} objects
+     * @return a stream of {@code IndexDTO} objects, with the earliest event at the head of the stream
      */
     public static Stream<IndexDTO> prepareIndexableDtos(RDFHandler rdfHandler, String resourcePath,
                                                         Consumer<Map<RMapObjectType, Set<RDFResource>>> assertions) {
