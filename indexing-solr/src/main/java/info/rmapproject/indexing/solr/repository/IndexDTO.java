@@ -132,21 +132,6 @@ public class IndexDTO {
         return eventTargetIri;
     }
 
-    IndexableThing getSourceIndexableThing() {
-        return mapper.apply(this)
-                .filter(it -> it.eventSource != null && IndexUtils.irisEqual(it.eventSource, it.disco.getId()))
-                .findAny()
-                .orElseThrow(IndexUtils.ise("Missing source of event."));
-    }
-
-    IndexableThing getTargetIndexableThing() {
-        return mapper.apply(this)
-                .filter(it -> it.eventTarget != null && IndexUtils.irisEqual(it.eventTarget, it.disco.getId()))
-                .findAny()
-                .orElseThrow(IndexUtils.ise("Missing target of event."));
-    }
-
-
     @Override
     public String toString() {
         return "IndexDTO{" +
