@@ -225,7 +225,9 @@ public class TestUtils {
         Map<RMapObjectType, Set<RDFResource>> rmapObjects = new HashMap<>();
         getRmapResources(resourcePath, rdfHandler, RDFFormat.NQUADS, rmapObjects);
 
-        assertions.accept(rmapObjects);
+        if (assertions != null) {
+            assertions.accept(rmapObjects);
+        }
 
         List<RMapDiSCO> discos = getRmapObjects(rmapObjects, RMapObjectType.DISCO, rdfHandler);
         List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
