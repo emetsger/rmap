@@ -5,6 +5,8 @@ import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.indexing.solr.IndexUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -33,14 +35,16 @@ import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
  */
 public class IndexDTO {
 
-    private final RMapEvent event;
-    private final RMapAgent agent;
-    private final RMapDiSCO sourceDisco;
-    private final RMapDiSCO targetDisco;
-    private final RMapIri eventSourceIri;
-    private final RMapIri eventTargetIri;
+    private static final Logger LOG = LoggerFactory.getLogger(IndexDTO.class);
 
-    private IndexDTOMapper mapper;
+    // Fields are non-final to enable (de)serialization
+
+    private RMapEvent event;
+    private RMapAgent agent;
+    private RMapDiSCO sourceDisco;
+    private RMapDiSCO targetDisco;
+    private RMapIri eventSourceIri;
+    private RMapIri eventTargetIri;
 
     /**
      * Constructs a connected graph of objects to be indexed.
@@ -142,5 +146,11 @@ public class IndexDTO {
                 ", eventSourceIri=" + ((eventSourceIri != null) ? eventSourceIri.getIri() : "null") +
                 ", eventTargetIri=" + ((eventTargetIri != null) ? eventTargetIri.getIri() : "null") +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        LOG.debug("Invoking equals: this {}, that {}", this, obj);
+        return super.equals(obj);
     }
 }
