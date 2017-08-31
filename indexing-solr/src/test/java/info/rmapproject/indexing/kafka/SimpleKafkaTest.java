@@ -32,11 +32,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -58,9 +64,18 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
     public void testSendIndexDTO() throws Exception {
         LOG.info("Start auto");
         ContainerProperties containerProps = new ContainerProperties("topic1", "topic2");
+        List<IndexDTO> dtos = prepareIndexableDtos(rdfHandler, "/data/discos/rmd18mddcw", null)
+                .collect(Collectors.toList());
+        Queue<IndexDTO> expectedDtos = new ArrayDeque<>(dtos);
         final CountDownLatch latch = new CountDownLatch(3);
-        containerProps.setMessageListener((MessageListener<Integer, String>) message -> {
+        containerProps.setMessageListener((MessageListener<Integer, IndexDTO>) message -> {
             LOG.info("received: " + message);
+            IndexDTO expected = expectedDtos.remove();
+            LOG.debug("expected: " + expected);
+            IndexDTO actual = message.value();
+            LOG.debug("actual: " + actual);
+            assertEquals(expected, actual);
+            LOG.debug("Decrementing latch.");
             latch.countDown();
         });
         KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps, IntegerDeserializer.class, ObjectDeserializer.class);
@@ -78,7 +93,7 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
 
         template.flush();
 
-        assertTrue(latch.await(60, TimeUnit.SECONDS));
+        assertTrue(latch.await(120, TimeUnit.SECONDS));
         container.stop();
 
         LOG.info("Stop auto");
