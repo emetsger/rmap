@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @DirtiesContext
-@EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2"})
+@EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2", "topic3", "topic4"})
 public class SimpleKafkaTest extends AbstractSpringIndexingTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleKafkaTest.class);
@@ -62,7 +62,7 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
 
     @Test
     public void testSendIndexDTO() throws Exception {
-        LOG.info("Start auto");
+        LOG.info("Start testSendIndexDTO");
         ContainerProperties containerProps = new ContainerProperties("topic1", "topic2");
 
         List<IndexDTO> dtos = prepareIndexableDtos(rdfHandler, "/data/discos/rmd18mddcw", null)
@@ -84,8 +84,8 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
             latch.countDown();
         });
 
-        KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps, IntegerDeserializer.class, ObjectDeserializer.class);
-        container.setBeanName("testAuto");
+        KafkaMessageListenerContainer<Integer, IndexDTO> container = createContainerForDto(containerProps, IntegerDeserializer.class, ObjectDeserializer.class);
+        container.setBeanName("testSendIndexDTO");
         container.start();
         Thread.sleep(5000); // wait a bit for the container to start
         KafkaTemplate<Integer, IndexDTO> template = createTemplate(IntegerSerializer.class, ObjectSerializer.class);
@@ -102,15 +102,15 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         assertTrue(latch.await(120, TimeUnit.SECONDS));
         container.stop();
 
-        LOG.info("Stop auto");
+        LOG.info("Stop testSendIndexDTO");
 
         receivedDtos.forEach(pair -> assertEquals(pair.expected, pair.actual));
     }
 
     @Test
     public void testAutoCommit() throws Exception {
-        LOG.info("Start auto");
-        ContainerProperties containerProps = new ContainerProperties("topic1", "topic2");
+        LOG.info("Start testAutoCommit");
+        ContainerProperties containerProps = new ContainerProperties("topic3", "topic4");
         final CountDownLatch latch = new CountDownLatch(4);
         containerProps.setMessageListener((MessageListener<Integer, String>) message -> {
             LOG.info("received: " + message);
@@ -118,11 +118,11 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         });
         KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps,
                 IntegerDeserializer.class, StringDeserializer.class);
-        container.setBeanName("testAuto");
+        container.setBeanName("testAutoCommit");
         container.start();
         Thread.sleep(5000); // wait a bit for the container to start
         KafkaTemplate<Integer, String> template = createTemplate(IntegerSerializer.class, StringSerializer.class);
-        template.setDefaultTopic("topic1");
+        template.setDefaultTopic("topic3");
         template.sendDefault(0, "foo");
         template.sendDefault(2, "bar");
         template.sendDefault(0, "baz");
@@ -130,7 +130,17 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         template.flush();
         assertTrue(latch.await(60, TimeUnit.SECONDS));
         container.stop();
-        LOG.info("Stop auto");
+        LOG.info("Stop testAutoCommit");
+    }
+
+    private KafkaMessageListenerContainer<Integer, IndexDTO> createContainerForDto(
+            ContainerProperties containerProps, Object keyDeser, Object valDeser) {
+        Map<String, Object> props = consumerProps(keyDeser, valDeser);
+        DefaultKafkaConsumerFactory<Integer, IndexDTO> cf =
+                new DefaultKafkaConsumerFactory<>(props);
+        KafkaMessageListenerContainer<Integer, IndexDTO> container =
+                new KafkaMessageListenerContainer<>(cf, containerProps);
+        return container;
     }
 
     private KafkaMessageListenerContainer<Integer, String> createContainer(
@@ -191,7 +201,7 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
                  ObjectInputStream ois = new ObjectInputStream(bais)) {
                 return (IndexDTO) ois.readObject();
             } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException("Error deserializing an IndexDTO object: " + e.getMessage(), e);
+                throw new RuntimeException("Error deserializing an IndexDTO object from topic " + topic + ": " + e.getMessage(), e);
             }
         }
 
