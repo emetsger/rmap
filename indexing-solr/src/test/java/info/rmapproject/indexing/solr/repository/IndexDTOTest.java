@@ -1,5 +1,6 @@
 package info.rmapproject.indexing.solr.repository;
 
+import info.rmapproject.core.SerializationAssertions;
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
@@ -11,6 +12,7 @@ import org.openrdf.rio.RDFFormat;
 
 import java.net.URI;
 
+import static info.rmapproject.core.SerializationAssertions.serializeTest;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -93,5 +95,21 @@ public class IndexDTOTest extends AbstractSpringIndexingTest {
                 rm.getAgent("rmap:rmd18m7mj4"),
                 rm.getDisco("rmap:rmd18m7mr7"),
                 rm.getDisco("rmap:rmd18mdd8b"));
+    }
+
+    /**
+     * Insures the IndexDTO object graph is serializable.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void indexDtoSerialization() throws Exception {
+        // rmap:rmd18mdd9v is an UPDATE event with a source and target
+        IndexDTO dto = new IndexDTO(rm.getEvent("rmap:rmd18mdd9v"),
+                rm.getAgent("rmap:rmd18m7mj4"),
+                rm.getDisco("rmap:rmd18m7mr7"),
+                rm.getDisco("rmap:rmd18mdd8b"));
+
+        serializeTest(dto);
     }
 }
