@@ -50,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  */
 @DirtiesContext
 @EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2"})
-@Ignore("To allow ITS to run")
 public class SimpleKafkaTest extends AbstractSpringIndexingTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleKafkaTest.class);
