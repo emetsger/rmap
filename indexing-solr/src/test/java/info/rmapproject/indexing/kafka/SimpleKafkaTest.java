@@ -11,7 +11,6 @@ import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,7 +40,6 @@ import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
 import static org.junit.Assert.assertEquals;
@@ -67,20 +65,26 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
     public void testSendIndexDTO() throws Exception {
         LOG.info("Start auto");
         ContainerProperties containerProps = new ContainerProperties("topic1", "topic2");
+
         List<IndexDTO> dtos = prepareIndexableDtos(rdfHandler, "/data/discos/rmd18mddcw", null)
                 .collect(Collectors.toList());
+
         Queue<IndexDTO> expectedDtos = new ArrayDeque<>(dtos);
+        Queue<ExpectedActualDTOPair> receivedDtos = new ArrayDeque<>();
+
         final CountDownLatch latch = new CountDownLatch(3);
+
         containerProps.setMessageListener((MessageListener<Integer, IndexDTO>) message -> {
             LOG.info("received: " + message);
             IndexDTO expected = expectedDtos.remove();
             LOG.debug("expected: " + expected);
             IndexDTO actual = message.value();
             LOG.debug("actual: " + actual);
-            assertEquals(expected, actual);
+            receivedDtos.add(new ExpectedActualDTOPair(expected, actual));
             LOG.debug("Decrementing latch.");
             latch.countDown();
         });
+
         KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps, IntegerDeserializer.class, ObjectDeserializer.class);
         container.setBeanName("testAuto");
         container.start();
@@ -100,6 +104,8 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         container.stop();
 
         LOG.info("Stop auto");
+
+        receivedDtos.forEach(pair -> assertEquals(pair.expected, pair.actual));
     }
 
     @Test
@@ -183,9 +189,9 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         @Override
         public IndexDTO deserialize(String topic, byte[] data) {
             try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-                     ObjectInputStream ois = new ObjectInputStream(bais)) {
+                 ObjectInputStream ois = new ObjectInputStream(bais)) {
                 return (IndexDTO) ois.readObject();
-            } catch (IOException|ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException("Error deserializing an IndexDTO object: " + e.getMessage(), e);
             }
         }
@@ -209,7 +215,7 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         @Override
         public byte[] serialize(String topic, IndexDTO data) {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                try(ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+                try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
                     oos.writeObject(data);
                 }
                 return baos.toByteArray();
@@ -224,4 +230,13 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
         }
     }
 
+    private class ExpectedActualDTOPair {
+        IndexDTO expected;
+        IndexDTO actual;
+
+        private ExpectedActualDTOPair(IndexDTO expected, IndexDTO actual) {
+            this.expected = expected;
+            this.actual = actual;
+        }
+    }
 }
