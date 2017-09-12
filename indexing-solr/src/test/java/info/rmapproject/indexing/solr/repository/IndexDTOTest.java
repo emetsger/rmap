@@ -1,18 +1,17 @@
 package info.rmapproject.indexing.solr.repository;
 
-import info.rmapproject.core.SerializationAssertions;
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestResourceManager;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import java.net.URI;
 
 import static info.rmapproject.core.SerializationAssertions.serializeTest;
+import static info.rmapproject.core.SerializationAssertions.serializeWithCompression;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -111,5 +110,7 @@ public class IndexDTOTest extends AbstractSpringIndexingTest {
                 rm.getDisco("rmap:rmd18mdd8b"));
 
         serializeTest(dto);
+
+        serializeWithCompression(dto);
     }
 }
