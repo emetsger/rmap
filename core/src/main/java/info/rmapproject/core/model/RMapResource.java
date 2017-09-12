@@ -31,7 +31,7 @@ import java.io.Serializable;
  *
  * @author smorrissey
  */
-public abstract class RMapResource implements RMapValue, Serializable {
+public abstract class 	RMapResource implements RMapValue, Serializable {
 
 	private static final long serialVersionUID = 1L;
 

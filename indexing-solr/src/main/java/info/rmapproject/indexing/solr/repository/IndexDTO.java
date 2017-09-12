@@ -8,6 +8,7 @@ import info.rmapproject.indexing.solr.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
@@ -33,7 +34,9 @@ import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public class IndexDTO {
+public class IndexDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexDTO.class);
 
@@ -137,6 +140,35 @@ public class IndexDTO {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IndexDTO indexDTO = (IndexDTO) o;
+
+        if (event != null ? !event.equals(indexDTO.event) : indexDTO.event != null) return false;
+        if (agent != null ? !agent.equals(indexDTO.agent) : indexDTO.agent != null) return false;
+        if (sourceDisco != null ? !sourceDisco.equals(indexDTO.sourceDisco) : indexDTO.sourceDisco != null)
+            return false;
+        if (targetDisco != null ? !targetDisco.equals(indexDTO.targetDisco) : indexDTO.targetDisco != null)
+            return false;
+        if (eventSourceIri != null ? !eventSourceIri.equals(indexDTO.eventSourceIri) : indexDTO.eventSourceIri != null)
+            return false;
+        return eventTargetIri != null ? eventTargetIri.equals(indexDTO.eventTargetIri) : indexDTO.eventTargetIri == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = event != null ? event.hashCode() : 0;
+        result = 31 * result + (agent != null ? agent.hashCode() : 0);
+        result = 31 * result + (sourceDisco != null ? sourceDisco.hashCode() : 0);
+        result = 31 * result + (targetDisco != null ? targetDisco.hashCode() : 0);
+        result = 31 * result + (eventSourceIri != null ? eventSourceIri.hashCode() : 0);
+        result = 31 * result + (eventTargetIri != null ? eventTargetIri.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "IndexDTO{" +
                 "event=" + ((event != null) ? event.getId() : "null") +
@@ -148,9 +180,4 @@ public class IndexDTO {
                 '}';
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        LOG.debug("Invoking equals: this {}, that {}", this, obj);
-        return super.equals(obj);
-    }
 }
