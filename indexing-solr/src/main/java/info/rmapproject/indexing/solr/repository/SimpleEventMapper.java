@@ -9,6 +9,8 @@ import static info.rmapproject.indexing.solr.IndexUtils.dateToString;
 import static info.rmapproject.indexing.solr.IndexUtils.notNull;
 
 /**
+ * Maps the properties of an {@code RMapEvent} object to fields in a Solr {@code DiscoSolrDocument}.
+ *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @Component

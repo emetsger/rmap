@@ -12,6 +12,8 @@ import static info.rmapproject.indexing.solr.IndexUtils.notNull;
 import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToString;
 
 /**
+ * Maps the properties of an {@code RMapDiSCO} object to fields in a Solr {@code DiscoSolrDocument}.
+ *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @Component
