@@ -299,7 +299,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
     }
 
     private DiscoSolrDocument mockRepositoryResponse(Mocks mocks, RMapStatus status) {
-        IndexableThing it = new IndexableThing();
+        EventDiscoTuple it = new EventDiscoTuple();
         it.disco = rm.getDisco("rmap:rmd18mddcw");
         it.agent = rm.getAgent("rmap:rmd18m7mj4");
         it.event = rm.getEvent("rmap:rmd18m7msr");
@@ -307,11 +307,11 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         it.status = status;
         it.eventTarget = it.disco.getId();
 
-        return mocks.getIndexableThingMapper().apply(it);
+        return mocks.getEventDiscoTupleMapper().apply(it);
     }
 
-    private DiscoSolrDocument mockRepositoryResponse2(IndexableThing it, RMapStatus status, Mocks mocks) {
-        DiscoSolrDocument doc = mocks.getIndexableThingMapper().apply(it);
+    private DiscoSolrDocument mockRepositoryResponse2(EventDiscoTuple it, RMapStatus status, Mocks mocks) {
+        DiscoSolrDocument doc = mocks.getEventDiscoTupleMapper().apply(it);
         doc.setDiscoStatus(status.toString());
         return doc;
     }
@@ -346,7 +346,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
     private class Mocks {
         private DiscoRepository mockRepository;
         private SolrTemplate mockTemplate;
-        private IndexableThingMapper indexableThingMapper;
+        private EventDiscoTupleMapper eventDiscoTupleMapper;
         private IndexDTOMapper indexDTOMapper;
 
         /**
@@ -368,16 +368,16 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         }
 
         /**
-         * A concrete mapper which maps instances of {@link IndexableThing} to {@link DiscoSolrDocument} instances.
+         * A concrete mapper which maps instances of {@link EventDiscoTuple} to {@link DiscoSolrDocument} instances.
          *
          * @return
          */
-        public IndexableThingMapper getIndexableThingMapper() {
-            return indexableThingMapper;
+        public EventDiscoTupleMapper getEventDiscoTupleMapper() {
+            return eventDiscoTupleMapper;
         }
 
         /**
-         * A concrete mapper which maps instances of {@link IndexDTO} to {@link IndexableThing} instances.
+         * A concrete mapper which maps instances of {@link IndexDTO} to {@link EventDiscoTuple} instances.
          *
          * @return
          */
@@ -394,22 +394,22 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         public Mocks build() {
             mockRepository = mock(DiscoRepository.class);
             mockTemplate = mock(SolrTemplate.class);
-            indexableThingMapper = assembleConcreteITMapper();
+            eventDiscoTupleMapper = assembleConcreteITMapper();
             indexDTOMapper = assembleConcreteDTOMapper();
 
             underTest.setDelegate(mockRepository);
             underTest.setTemplate(mockTemplate);
-            underTest.setIndexableThingMapper(indexableThingMapper);
+            underTest.setEventDiscoTupleMapper(eventDiscoTupleMapper);
             underTest.setDtoMapper(indexDTOMapper);
             return this;
         }
 
-        private IndexableThingMapper assembleConcreteITMapper() {
+        private EventDiscoTupleMapper assembleConcreteITMapper() {
             AgentMapper agentMapper = new SimpleAgentMapper();
             EventMapper eventMapper = new SimpleEventMapper();
             DiscoMapper discoMapper = new SimpleDiscoMapper();
 
-            return new SimpleIndexableThingMapper(discoMapper, agentMapper, eventMapper);
+            return new SimpleEventDiscoTupleMapper(discoMapper, agentMapper, eventMapper);
         }
 
         private IndexDTOMapper assembleConcreteDTOMapper() {
@@ -495,16 +495,16 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
             }
         }
 
-        void add(IndexableThing indexableThing) {
-            docs.add(mocks.getIndexableThingMapper().apply(indexableThing));
+        void add(EventDiscoTuple eventDiscoTuple) {
+            docs.add(mocks.getEventDiscoTupleMapper().apply(eventDiscoTuple));
         }
 
-        void addWithStatus(IndexableThing indexableThing, RMapStatus status) {
-            addWithStatus(indexableThing, status.toString());
+        void addWithStatus(EventDiscoTuple eventDiscoTuple, RMapStatus status) {
+            addWithStatus(eventDiscoTuple, status.toString());
         }
 
-        void addWithStatus(IndexableThing indexableThing, String status) {
-            DiscoSolrDocument doc = mocks.getIndexableThingMapper().apply(indexableThing);
+        void addWithStatus(EventDiscoTuple eventDiscoTuple, String status) {
+            DiscoSolrDocument doc = mocks.getEventDiscoTupleMapper().apply(eventDiscoTuple);
             doc.setDiscoStatus(status);
             docs.add(doc);
         }

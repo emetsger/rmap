@@ -131,9 +131,10 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
      *     <li>a creation event</li>
      *     <li>followed by an update event</li>
      *     <li>followed by another update event</li>
+     *     <li>followed by a tombstone</li>
      * </ul>
      * This test insures that the {@link DiscoSolrDocument}s in the index have the correct
-     * {@link DiscoSolrDocument#DISCO_STATUS} after the three events have been processed.
+     * {@link DiscoSolrDocument#DISCO_STATUS} after the four events have been processed.
      *
      * @see <a href="src/test/resources/data/discos/rmd18mddcw/README.md">README.MD</a>
      */
@@ -420,10 +421,10 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                             throw new RuntimeException("Unhandled event type " + event);
                     }
 
-                    IndexableThing forSource = null;
+                    EventDiscoTuple forSource = null;
                     // The source IRI will be null in the case of a creation event
                     if (source != null) {
-                        forSource = new IndexableThing();
+                        forSource = new EventDiscoTuple();
 
                         forSource.eventSource = source;
                         forSource.eventTarget = target;
@@ -437,7 +438,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                     }
 
                     // The target IRI should never be null
-                    IndexableThing forTarget = new IndexableThing();
+                    EventDiscoTuple forTarget = new EventDiscoTuple();
 
                     forTarget.eventSource = source;
                     forTarget.eventTarget = target;

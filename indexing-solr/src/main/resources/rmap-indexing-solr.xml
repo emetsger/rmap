@@ -19,7 +19,7 @@
     <beans>
         <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
 
-        <bean id="indexableThingMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexableThingMapper"/>
+        <bean id="eventTupleMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventDiscoTupleMapper"/>
         <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
         <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
         <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>

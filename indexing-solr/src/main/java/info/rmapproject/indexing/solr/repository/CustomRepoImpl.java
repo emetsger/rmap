@@ -41,7 +41,7 @@ public class CustomRepoImpl implements CustomRepo {
     private SolrTemplate template;
 
     @Autowired
-    private IndexableThingMapper indexableThingMapper;
+    private EventDiscoTupleMapper eventDiscoTupleMapper;
 
     @Autowired
     private IndexDTOMapper dtoMapper;
@@ -64,12 +64,12 @@ public class CustomRepoImpl implements CustomRepo {
         this.template = template;
     }
 
-    IndexableThingMapper getIndexableThingMapper() {
-        return indexableThingMapper;
+    EventDiscoTupleMapper getEventDiscoTupleMapper() {
+        return eventDiscoTupleMapper;
     }
 
-    void setIndexableThingMapper(IndexableThingMapper indexableThingMapper) {
-        this.indexableThingMapper = indexableThingMapper;
+    void setEventDiscoTupleMapper(EventDiscoTupleMapper eventDiscoTupleMapper) {
+        this.eventDiscoTupleMapper = eventDiscoTupleMapper;
     }
 
     IndexDTOMapper getDtoMapper() {
@@ -113,7 +113,7 @@ public class CustomRepoImpl implements CustomRepo {
 
 
         dtoMapper.apply(toIndex)
-                .map(it -> indexableThingMapper.apply(it))
+                .map(it -> eventDiscoTupleMapper.apply(it))
                 .forEach(doc -> delegate.save(doc));
 
         /*
