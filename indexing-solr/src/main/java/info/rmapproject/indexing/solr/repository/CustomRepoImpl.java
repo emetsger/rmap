@@ -93,9 +93,9 @@ public class CustomRepoImpl implements CustomRepo {
      * </h3>
      * A single {@code IndexDTO} passed to this method may result in the creation and/or update of multiple Solr
      * documents in the index.  For example, a Solr document will be created for each &lt;Event, Disco&gt; tuple found
-     * in the DTO: one for the source &lt;Event, Disco&gt; and one for the target &lt;Event, Disco&gt;.  Furthermore, side
-     * affects of most indexing operations include updating <em>existing</em> Solr documents that have been previously
-     * indexed (e.g. the {@link DiscoSolrDocument#DISCO_STATUS} of existing Solr documents).
+     * in the DTO: one for the source &lt;Event, Disco&gt; and one for the target &lt;Event, Disco&gt;.  Furthermore,
+     * side affects of most indexing operations include updating <em>existing</em> Solr documents that have been
+     * previously indexed (e.g. the {@link DiscoSolrDocument#DISCO_STATUS} of existing Solr documents).
      *
      * @param toIndex the DTO containing the information to be indexed
      */
