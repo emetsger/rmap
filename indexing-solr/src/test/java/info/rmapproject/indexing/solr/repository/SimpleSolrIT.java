@@ -125,6 +125,42 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     }
 
     /**
+     * Documents what happens when the same DTOs are indexed twice, in order.
+     */
+    @Test
+    public void testIndexDuplicateDTOs() {
+          discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+
+        // index the same DTOs twice.
+        prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw", null)
+                .forEach(dto -> discoRepository.index(dto));
+
+        prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw", null)
+                .forEach(dto -> discoRepository.index(dto));
+
+        // 10 documents should have been added
+        // - one document per DiSCO, Event tuple
+        assertEquals(10, discoRepository.count());
+
+        // 2 documents should be active - should be the same, so there'd normally just be one object in the set, except
+        // they differ by their last updated time
+        Set<DiscoSolrDocument> docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(ACTIVE.toString());
+        assertEquals(2, docs.size());
+
+        // assert it is the uri we expect
+        assertEquals(2, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mddcw")).count());
+
+        // the other four should be inactive
+        docs = discoRepository.findDiscoSolrDocumentsByDiscoStatus(INACTIVE.toString());
+        assertEquals(8, docs.size());
+
+        // assert they have the uris we expect
+        assertEquals(4, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18mdd8b")).count());
+        assertEquals(4, docs.stream().filter(doc -> doc.getDiscoUri().endsWith("rmd18m7mr7")).count());
+    }
+
+    /**
      * Tests the {@link DiscoRepository#index(IndexDTO)} method by supplying three {@code IndexDTO}s for indexing from
      * the {@code /data/discos/rmd18mddcw} directory:
      * <ul>
