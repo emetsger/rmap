@@ -54,6 +54,8 @@ import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplest
 import info.rmapproject.core.utils.DateUtils;
 import info.rmapproject.core.vocabulary.impl.openrdf.PROV;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 
 /**
  * A concrete class for managing RMap Events, implemented using openrdf
@@ -61,6 +63,11 @@ import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
  * @author khanson, smorrissey
  */
 public class ORMapEventMgr extends ORMapObjectMgr {
+
+//	private String topic;
+//
+//	@Autowired
+//	private KafkaTemplate<String, ORMapEvent> kafkaTemplate;
 	
 	/**
 	 * Creates triples that comprise the Event object, and puts into triplesotre.
@@ -161,6 +168,9 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 		else {
 			throw new RMapException ("Unrecognized event type");
 		}
+
+//		kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+
 		return eventId;
 	}
 	
