@@ -52,13 +52,14 @@ import info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr;
 //import info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 
 /**
  * @author smorrissey
  * @author khanson
  *
  */
-
+@EmbeddedKafka
 public class ORMapEventCreationTest extends CoreTestAbstract {
 	@Autowired
 	private SesameTriplestore triplestore;

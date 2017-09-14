@@ -8,10 +8,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +27,8 @@ import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
@@ -202,34 +198,6 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
                 return (IndexDTO) ois.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException("Error deserializing an IndexDTO object from topic " + topic + ": " + e.getMessage(), e);
-            }
-        }
-
-        @Override
-        public void close() {
-            // no-op
-        }
-    }
-
-    public static class ObjectSerializer implements Serializer<IndexDTO> {
-
-        public ObjectSerializer() {
-        }
-
-        @Override
-        public void configure(Map<String, ?> configs, boolean isKey) {
-            // no-op
-        }
-
-        @Override
-        public byte[] serialize(String topic, IndexDTO data) {
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-                    oos.writeObject(data);
-                }
-                return baos.toByteArray();
-            } catch (IOException e) {
-                throw new RuntimeException("Error serializing an IndexDTO object: " + e.getMessage(), e);
             }
         }
 

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:property-placeholder location="classpath:/rmapcore.properties" ignore-unresolvable="true"/>
 	<context:component-scan base-package="info.rmapproject.core"/>
@@ -16,8 +17,13 @@
  	<bean id="resourcemgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapResourceMgr" scope="prototype" parent="abstractManager"/>
  	<bean id="discomgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapDiSCOMgr" scope="prototype" parent="abstractManager"/>
  	<bean id="statementmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr" scope="prototype" parent="abstractManager"/>
- 	<bean id="eventmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr" scope="prototype" parent="abstractManager"/>
- 	<bean id="agentmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapAgentMgr" scope="prototype" parent="abstractManager"/>
+ 	<bean id="eventmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr" scope="prototype" parent="abstractManager">
+		<constructor-arg value="${rmapcore.producer.topic}"/>
+		<constructor-arg ref="producer"/>
+	</bean>
+ 	<bean id="agentmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapAgentMgr" scope="prototype" parent="abstractManager">
+		<constructor-arg ref="eventmgr"/>
+	</bean>
 	<bean id="rmapSearchParams" class="info.rmapproject.core.model.request.RMapSearchParams" scope="prototype" parent="abstractManager"/>
 
 	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
@@ -28,6 +34,61 @@
 			</set>
 		</property>
 	</bean>
+
+	<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>
+
+	<bean id="producer" class="org.springframework.kafka.core.KafkaTemplate">
+		<constructor-arg>
+			<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
+				<constructor-arg ref="producerProperties"/>
+				<constructor-arg>
+					<bean class="org.apache.kafka.common.serialization.StringSerializer"/>
+				</constructor-arg>
+				<constructor-arg>
+					<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
+				</constructor-arg>
+			</bean>
+		</constructor-arg>
+		<property name="defaultTopic" value="${rmapcore.producer.topic}"/>
+	</bean>
+
+	<!--<beans profile="production-kafka">-->
+		<!--<util:properties id="productionProducerProperties" location="classpath:/kafka-producer.properties"/>-->
+
+		<!--<bean id="productionProducer" class="org.springframework.kafka.core.KafkaTemplate">-->
+			<!--<constructor-arg>-->
+				<!--<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">-->
+					<!--<constructor-arg ref="productionProducerProperties"/>-->
+					<!--<constructor-arg>-->
+						<!--<bean class="org.apache.kafka.common.serialization.StringSerializer"/>-->
+					<!--</constructor-arg>-->
+					<!--<constructor-arg>-->
+						<!--<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>-->
+					<!--</constructor-arg>-->
+				<!--</bean>-->
+			<!--</constructor-arg>-->
+			<!--<property name="defaultTopic" value="${rmapcore.producer.topic}"/>-->
+		<!--</bean>-->
+	<!--</beans>-->
+
+	<!--<beans profile="embedded-kafka">-->
+		<!--<util:properties id="embeddedProducerProperties" location="classpath:/kafka-producer.properties"/>-->
+
+		<!--<bean id="embeddedProducer" class="org.springframework.kafka.core.KafkaTemplate">-->
+			<!--<constructor-arg>-->
+				<!--<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">-->
+					<!--<constructor-arg ref="embeddedProducerProperties"/>-->
+					<!--<constructor-arg>-->
+						<!--<bean class="org.apache.kafka.common.serialization.StringSerializer"/>-->
+					<!--</constructor-arg>-->
+					<!--<constructor-arg>-->
+						<!--<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>-->
+					<!--</constructor-arg>-->
+				<!--</bean>-->
+			<!--</constructor-arg>-->
+			<!--<property name="defaultTopic" value="${rmapcore.producer.topic}"/>-->
+		<!--</bean>-->
+	<!--</beans>-->
 
 	<!-- production triplestore -->
 	<beans profile="http-triplestore">

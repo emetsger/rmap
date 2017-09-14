@@ -64,11 +64,21 @@ import org.springframework.kafka.core.KafkaTemplate;
  */
 public class ORMapEventMgr extends ORMapObjectMgr {
 
-//	private String topic;
-//
-//	@Autowired
-//	private KafkaTemplate<String, ORMapEvent> kafkaTemplate;
-	
+	private String topic;
+
+	private KafkaTemplate<String, ORMapEvent> kafkaTemplate;
+
+	public ORMapEventMgr(String topic, KafkaTemplate<String, ORMapEvent> kafkaTemplate) {
+		if (topic == null || topic.trim().length() == 0) {
+			throw new IllegalArgumentException("Topic must not be null.");
+		}
+		if (kafkaTemplate == null) {
+			throw new IllegalArgumentException("KafkaTemplate must not be null.");
+		}
+		this.topic = topic;
+		this.kafkaTemplate = kafkaTemplate;
+	}
+
 	/**
 	 * Creates triples that comprise the Event object, and puts into triplesotre.
 	 *
@@ -169,7 +179,7 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 			throw new RMapException ("Unrecognized event type");
 		}
 
-//		kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+		kafkaTemplate.send(topic, event.getId().getStringValue(), event);
 
 		return eventId;
 	}

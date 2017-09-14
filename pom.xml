@@ -21,6 +21,7 @@
         <module>spring-util</module>
         <module>integration-util</module>
         <module>indexing-solr</module>
+        <module>kafka-shared</module>
     </modules>
 
     <properties>
