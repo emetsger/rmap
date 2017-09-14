@@ -68,6 +68,16 @@ import static info.rmapproject.core.model.impl.openrdf.ORAdapter.uri2OpenRdfIri;
  */
 public class ORMapAgentMgr extends ORMapObjectMgr {
 
+	private ORMapEventMgr eventMgr;
+
+	public ORMapAgentMgr(ORMapEventMgr eventMgr) {
+		if (eventMgr == null) {
+			throw new IllegalArgumentException("ORMapEventMgr must not be null.");
+		}
+
+		this.eventMgr = eventMgr;
+	}
+
 	/**
 	 * Get an Agent using Agent IRI and a specific triplestore instance
 	 *
@@ -219,8 +229,8 @@ public class ORMapAgentMgr extends ORMapObjectMgr {
 		event.setCreatedObjectIdsFromIRI(created);		
 		// end the event, write the event triples, and commit everything
 		event.setEndTime(new Date());
-		ORMapEventMgr eventmgr = new ORMapEventMgr();
-		eventmgr.createEvent(event, ts);
+
+		eventMgr.createEvent(event, ts);
 
 		if (doCommitTransaction){
 			try {
@@ -331,8 +341,7 @@ public class ORMapAgentMgr extends ORMapObjectMgr {
 			// end the event, write the event triples, and commit everything
 			event.setDescription(new RMapLiteral("Updates: "+ sEventDescrip));
 			event.setEndTime(new Date());
-			ORMapEventMgr eventmgr = new ORMapEventMgr();
-			eventmgr.createEvent(event, ts);
+			eventMgr.createEvent(event, ts);
 		}
 		else {
 			throw new RMapException("The Agent (" + agentId + " ) did not change and therefore does not need to be updated ");
