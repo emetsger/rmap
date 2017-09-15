@@ -1,5 +1,7 @@
 package info.rmapproject.kafka.shared;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,10 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
 
     private static final Object NULL_VALUE = new Object();
 
+    private final Serializer<K> keySerializer;
+
+    private final Serializer<V> valueSerializer;
+
     private String prefix;
 
     private boolean strip = true;
@@ -42,6 +48,8 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
     public JustInTimeConfiguredProducerFactory(Map<String, Object> configs, Serializer<K> keySerializer,
                                                Serializer<V> valueSerializer) {
         super(configs, keySerializer, valueSerializer);
+        this.keySerializer = keySerializer;
+        this.valueSerializer = valueSerializer;
         sources.addFirst(new MapPropertySource("producer-construction-config", mapNullValues(configs)));
     }
 
@@ -85,6 +93,11 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
                 });
 
         return props;
+    }
+
+    @Override
+    protected Producer<K, V> createKafkaProducer() {
+        return new KafkaProducer<>(getConfigurationProperties(), this.keySerializer, this.valueSerializer);
     }
 
     @Override
