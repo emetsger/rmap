@@ -3,6 +3,8 @@ package info.rmapproject.indexing.kafka;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
+import info.rmapproject.kafka.shared.GenericJvmObjectDeserializer;
+import info.rmapproject.kafka.shared.GenericJvmObjectSerializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -80,11 +82,11 @@ public class SimpleKafkaTest extends AbstractSpringIndexingTest {
             latch.countDown();
         });
 
-        KafkaMessageListenerContainer<Integer, IndexDTO> container = createContainerForDto(containerProps, IntegerDeserializer.class, ObjectDeserializer.class);
+        KafkaMessageListenerContainer<Integer, IndexDTO> container = createContainerForDto(containerProps, IntegerDeserializer.class, GenericJvmObjectDeserializer.class);
         container.setBeanName("testSendIndexDTO");
         container.start();
         Thread.sleep(5000); // wait a bit for the container to start
-        KafkaTemplate<Integer, IndexDTO> template = createTemplate(IntegerSerializer.class, ObjectSerializer.class);
+        KafkaTemplate<Integer, IndexDTO> template = createTemplate(IntegerSerializer.class, GenericJvmObjectSerializer.class);
         template.setDefaultTopic("topic1");
 
         prepareIndexableDtos(rdfHandler, "/data/discos/rmd18mddcw", null)
