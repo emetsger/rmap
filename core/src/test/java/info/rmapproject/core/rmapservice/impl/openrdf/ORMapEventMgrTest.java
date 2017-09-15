@@ -22,24 +22,6 @@
  */
 package info.rmapproject.core.rmapservice.impl.openrdf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openrdf.model.IRI;
-import org.openrdf.model.impl.SimpleValueFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.event.RMapEvent;
@@ -63,6 +45,23 @@ import info.rmapproject.core.model.impl.openrdf.ORMapEventUpdate;
 import info.rmapproject.core.model.impl.openrdf.ORMapEventUpdateWithReplace;
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestFile;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.openrdf.model.IRI;
+import org.openrdf.model.impl.SimpleValueFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for ORMapEventMgr. Includes creation and readback of each event type.

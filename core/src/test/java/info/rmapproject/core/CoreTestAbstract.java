@@ -35,6 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith( SpringJUnit4ClassRunner.class )
 @ComponentScan("info.rmapproject.core")
+@ComponentScan("info.rmapproject.kafka")
 @ContextConfiguration("classpath:/spring-rmapcore-context.xml")
 public abstract class CoreTestAbstract {
 

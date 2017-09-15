@@ -59,6 +59,7 @@
         <solr.version>6.6.0</solr.version>
         <spring-data.version>3.0.0.RC2</spring-data.version>
         <spring-data-kafka.version>2.0.0.RC1</spring-data-kafka.version>
+        <kafka.version>0.11.0.0</kafka.version>
         <joda-time.version>2.9.9</joda-time.version>
         <javax-el.version>3.0.1-b08</javax-el.version>
     </properties>
@@ -280,6 +281,12 @@
                 <groupId>org.springframework.kafka</groupId>
                 <artifactId>spring-kafka-test</artifactId>
                 <version>${spring-data-kafka.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.version}</version>
             </dependency>
 
             <!-- testing -->
