@@ -18,7 +18,7 @@ public class SpringKafkaProducerConfiguration {
 
     @Bean
     public <T> ProducerFactory producerFactory() {
-        return new DefaultKafkaProducerFactory<>(producerConfig(), stringSerializer(), jvmSerializer());
+        return new JustInTimeConfiguredProducerFactory(producerConfig(), stringSerializer(), jvmSerializer());
     }
 
     @Bean
