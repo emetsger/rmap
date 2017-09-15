@@ -309,7 +309,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "serial"})
     public void testCaseInsensitiveUriSearch() throws Exception {
         registerUriConverter(solrTemplate);
         discoRepository.deleteAll();
@@ -337,7 +337,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
 
         doc = new DiscoSolrDocument();
         doc.setDocId("301");
-        doc.setDiscoAggregatedResourceUris(new ArrayList() {
+        doc.setDiscoAggregatedResourceUris(new ArrayList<String>() {
             {
                 add("http://DOI.ORG/10.1109/disco.test");
             }
@@ -561,20 +561,21 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
      * @param testDescription
      * @return
      */
+    @SuppressWarnings("serial")
     private static DiscoSolrDocument discoDocument(String id, String testDescription) {
         DiscoSolrDocument doc = new DiscoSolrDocument();
         doc.setDiscoDescription(testDescription);
         doc.setDocId(id);
         doc.setDiscoUri("http://rmapproject.org/disco/5678f");
         doc.setDiscoCreatorUri("http://foaf.org/Elliot_Metsger");
-        doc.setDiscoAggregatedResourceUris(new ArrayList() {
+        doc.setDiscoAggregatedResourceUris(new ArrayList<String>() {
             {
                 add("http://doi.org/10.1109/disco.test");
                 add("http://ieeexplore.ieee.org/example/000000-mm.zip");
             }
         });
         doc.setDiscoProvenanceUri("http://rmapproject.org/prov/5678");
-        doc.setDiscoRelatedStatements(new ArrayList() {
+        doc.setDiscoRelatedStatements(new ArrayList<String>() {
             {
                 add("TODO n3 triples");
             }

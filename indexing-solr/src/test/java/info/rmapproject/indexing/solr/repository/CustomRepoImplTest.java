@@ -272,6 +272,7 @@ public class CustomRepoImplTest extends AbstractSpringIndexingTest {
         verify(mockTemplate).commit(CORE_NAME);
     }
 
+    @SuppressWarnings("unchecked")
     private void whenSolrTemplateSavesBeansAssertStatus(SolrTemplate mockTemplate, String discoIri, RMapStatus expectedStatus) {
         when(mockTemplate.saveBeans(eq(CORE_NAME), anySetOf(DiscoPartialUpdate.class)))
                 .then((inv) -> {

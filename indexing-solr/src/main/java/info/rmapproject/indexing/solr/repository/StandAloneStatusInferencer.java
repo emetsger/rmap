@@ -9,7 +9,6 @@ import info.rmapproject.core.model.event.RMapEventType;
 import info.rmapproject.indexing.solr.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.management.resources.agent;
 
 import java.util.Optional;
 
