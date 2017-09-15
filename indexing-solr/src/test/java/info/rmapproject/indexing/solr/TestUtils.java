@@ -290,6 +290,8 @@ public class TestUtils {
 
     public static class RdfTypeIRI implements IRI {
 
+        private static final long serialVersionUID = 1L;
+
         static RdfTypeIRI INSTANCE = new RdfTypeIRI();
 
         private RdfTypeIRI() {
