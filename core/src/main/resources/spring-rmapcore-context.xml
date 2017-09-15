@@ -8,6 +8,7 @@
 
 	<context:property-placeholder location="classpath:/rmapcore.properties" ignore-unresolvable="true"/>
 	<context:component-scan base-package="info.rmapproject.core"/>
+	<context:component-scan base-package="info.rmapproject.kafka"/>
 
 	<bean id="idSupplier" class="info.rmapproject.core.idservice.IdServiceSupplier"/>
     <bean id="rdfHandler" class="info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler"/>
@@ -21,7 +22,7 @@
 		<constructor-arg value="${rmapcore.producer.topic}"/>
 		<constructor-arg ref="producer"/>
 	</bean>
- 	<bean id="agentmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapAgentMgr" scope="prototype" parent="abstractManager">
+ 	<bean id="agentmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapAgentMgr" parent="abstractManager">
 		<constructor-arg ref="eventmgr"/>
 	</bean>
 	<bean id="rmapSearchParams" class="info.rmapproject.core.model.request.RMapSearchParams" scope="prototype" parent="abstractManager"/>
@@ -35,20 +36,10 @@
 		</property>
 	</bean>
 
-	<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>
+	<!--<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>-->
 
 	<bean id="producer" class="org.springframework.kafka.core.KafkaTemplate">
-		<constructor-arg>
-			<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
-				<constructor-arg ref="producerProperties"/>
-				<constructor-arg>
-					<bean class="org.apache.kafka.common.serialization.StringSerializer"/>
-				</constructor-arg>
-				<constructor-arg>
-					<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
-				</constructor-arg>
-			</bean>
-		</constructor-arg>
+		<constructor-arg ref="producerFactory"/>
 		<property name="defaultTopic" value="${rmapcore.producer.topic}"/>
 	</bean>
 
