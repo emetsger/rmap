@@ -36,14 +36,32 @@
 		</property>
 	</bean>
 
-	<!--<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>-->
+	<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>
 
 	<bean id="producer" class="org.springframework.kafka.core.KafkaTemplate">
-		<constructor-arg ref="producerFactory"/>
+		<!--<constructor-arg ref="producerFactory"/>-->
+		<constructor-arg>
+			<bean class="info.rmapproject.kafka.shared.JustInTimeConfiguredProducerFactory">
+				<constructor-arg ref="producerProperties"/>
+				<constructor-arg>
+					<bean class="org.apache.kafka.common.serialization.StringSerializer"/>
+				</constructor-arg>
+				<constructor-arg>
+					<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
+				</constructor-arg>
+				<property name="properties">
+					<list>
+						<map>
+							<entry key="bootstrap.servers" value="${spring.embedded.kafka.brokers}"/>
+						</map>
+					</list>
+				</property>
+			</bean>
+		</constructor-arg>
 		<property name="defaultTopic" value="${rmapcore.producer.topic}"/>
 	</bean>
 
-	<!--<beans profile="production-kafka">-->
+<!--<beans profile="production-kafka">-->
 		<!--<util:properties id="productionProducerProperties" location="classpath:/kafka-producer.properties"/>-->
 
 		<!--<bean id="productionProducer" class="org.springframework.kafka.core.KafkaTemplate">-->

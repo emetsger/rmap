@@ -52,12 +52,13 @@ import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplest
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 
 /**
  * @author khanson
  *
  */
-
+@EmbeddedKafka
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
