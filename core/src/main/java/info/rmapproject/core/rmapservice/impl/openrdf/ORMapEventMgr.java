@@ -68,6 +68,10 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 
 	private KafkaTemplate<String, ORMapEvent> kafkaTemplate;
 
+	public ORMapEventMgr() {
+
+	}
+
 	public ORMapEventMgr(String topic, KafkaTemplate<String, ORMapEvent> kafkaTemplate) {
 		if (topic == null || topic.trim().length() == 0) {
 			throw new IllegalArgumentException("Topic must not be null.");
@@ -179,7 +183,9 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 			throw new RMapException ("Unrecognized event type");
 		}
 
-		kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+		if (kafkaTemplate != null) {
+			kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+		}
 
 		return eventId;
 	}

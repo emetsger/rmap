@@ -58,7 +58,8 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
  * @author khanson
  *
  */
-@EmbeddedKafka
+//@EmbeddedKafka
+@EmbeddedKafka(brokerProperties = {"logs.dir = /tmp/kafka"})
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();

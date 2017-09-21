@@ -18,6 +18,7 @@
  	<bean id="resourcemgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapResourceMgr" scope="prototype" parent="abstractManager"/>
  	<bean id="discomgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapDiSCOMgr" scope="prototype" parent="abstractManager"/>
  	<bean id="statementmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr" scope="prototype" parent="abstractManager"/>
+	<!--<bean id="eventmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr" scope="prototype" parent="abstractManager"/>-->
  	<bean id="eventmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr" scope="prototype" parent="abstractManager">
 		<constructor-arg value="${rmapcore.producer.topic}"/>
 		<constructor-arg ref="producer"/>
