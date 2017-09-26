@@ -78,6 +78,13 @@
             <artifactId>rmap-kafka-shared</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-kafka-shared</artifactId>
+            <version>${project.parent.version}</version>
+            <classifier>tests</classifier>
+        </dependency>
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>

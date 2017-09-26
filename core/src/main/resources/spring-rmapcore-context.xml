@@ -48,55 +48,10 @@
 				<constructor-arg>
 					<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
 				</constructor-arg>
-				<property name="properties">
-					<list>
-						<map>
-							<entry key="bootstrap.servers" value="${spring.embedded.kafka.brokers}"/>
-						</map>
-					</list>
-				</property>
 			</bean>
 		</constructor-arg>
 		<property name="defaultTopic" value="${rmapcore.producer.topic}"/>
 	</bean>
-
-<!--<beans profile="production-kafka">-->
-		<!--<util:properties id="productionProducerProperties" location="classpath:/kafka-producer.properties"/>-->
-
-		<!--<bean id="productionProducer" class="org.springframework.kafka.core.KafkaTemplate">-->
-			<!--<constructor-arg>-->
-				<!--<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">-->
-					<!--<constructor-arg ref="productionProducerProperties"/>-->
-					<!--<constructor-arg>-->
-						<!--<bean class="org.apache.kafka.common.serialization.StringSerializer"/>-->
-					<!--</constructor-arg>-->
-					<!--<constructor-arg>-->
-						<!--<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>-->
-					<!--</constructor-arg>-->
-				<!--</bean>-->
-			<!--</constructor-arg>-->
-			<!--<property name="defaultTopic" value="${rmapcore.producer.topic}"/>-->
-		<!--</bean>-->
-	<!--</beans>-->
-
-	<!--<beans profile="embedded-kafka">-->
-		<!--<util:properties id="embeddedProducerProperties" location="classpath:/kafka-producer.properties"/>-->
-
-		<!--<bean id="embeddedProducer" class="org.springframework.kafka.core.KafkaTemplate">-->
-			<!--<constructor-arg>-->
-				<!--<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">-->
-					<!--<constructor-arg ref="embeddedProducerProperties"/>-->
-					<!--<constructor-arg>-->
-						<!--<bean class="org.apache.kafka.common.serialization.StringSerializer"/>-->
-					<!--</constructor-arg>-->
-					<!--<constructor-arg>-->
-						<!--<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>-->
-					<!--</constructor-arg>-->
-				<!--</bean>-->
-			<!--</constructor-arg>-->
-			<!--<property name="defaultTopic" value="${rmapcore.producer.topic}"/>-->
-		<!--</bean>-->
-	<!--</beans>-->
 
 	<!-- production triplestore -->
 	<beans profile="http-triplestore">

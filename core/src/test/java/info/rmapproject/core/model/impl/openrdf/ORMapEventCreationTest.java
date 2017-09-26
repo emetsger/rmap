@@ -35,7 +35,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Model;
@@ -53,14 +58,17 @@ import info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.rule.KafkaEmbedded;
 
 /**
  * @author smorrissey
  * @author khanson
  *
  */
-@EmbeddedKafka
 public class ORMapEventCreationTest extends CoreTestAbstract {
+
+	static KafkaEmbedded kafkaBroker;
+
 	@Autowired
 	private SesameTriplestore triplestore;
 	
@@ -68,7 +76,19 @@ public class ORMapEventCreationTest extends CoreTestAbstract {
 	private ORMapEventMgr eventmgr;
 	
 	protected ValueFactory vf = null;
-	
+
+	@ClassRule
+	public static KafkaEmbedded kafkaBroker() {
+		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic");
+		return kafkaBroker;
+	}
+
+	@After
+	public void consumeTopic() throws Exception {
+		kafkaBroker.consumeFromAnEmbeddedTopic(
+				new MockConsumer<>(OffsetResetStrategy.EARLIEST), "rmap-event-topic");
+	}
+
 	/**
 	 * @throws java.lang.Exception
 	 */

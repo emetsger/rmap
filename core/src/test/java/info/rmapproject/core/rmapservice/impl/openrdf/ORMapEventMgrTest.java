@@ -127,12 +127,6 @@ public class ORMapEventMgrTest extends ORMapMgrTest{
 		agentIriSet.add(agentIri);
 	}
 
-	@After
-	public void consumeTopics() throws Exception {
-		MockConsumer<?, ?> consumer = new MockConsumer<>(OffsetResetStrategy.NONE);
-		kafkaBroker.consumeFromAnEmbeddedTopic(consumer, topic);
-	}
-
 	/**
 	 * Test creation and readback of a DiSCO creation Event in isolation using Agent with API Key
 	 */

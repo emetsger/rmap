@@ -10,22 +10,28 @@
   <root level="WARN">
     <appender-ref ref="STDERR" />
   </root>
+  <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="ERROR">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="org.apache.kafka.common.utils.AppInfoParser" additivity="false" level="ERROR">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="org.apache.zookeeper.server.ZooKeeperServer" additivity="false" level="OFF">
+    <appender-ref ref="STDERR"/>
+  </logger>
   <logger name="org.springframework" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.springframework.test" additivity="false" level="TRACE">
+  <logger name="org.springframework.test" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.springframework.kafka" additivity="false" level="DEBUG">
+  <logger name="org.springframework.kafka" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
   <logger name="info.rmapproject.core" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="info.rmapproject.spring.kafka" additivity="false" level="DEBUG">
-    <appender-ref ref="STDERR"/>
-  </logger>
-  <logger name="info.rmapproject.kafka.shared" additivity="false" level="DEBUG">
+  <logger name="info.rmapproject.kafka.shared" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
 </configuration>
