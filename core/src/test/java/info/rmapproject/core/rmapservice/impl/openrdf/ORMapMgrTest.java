@@ -26,15 +26,20 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
+import info.rmapproject.spring.kafka.PropertyResolvingEmbeddedKafka;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import info.rmapproject.core.CoreTestAbstract;
@@ -52,22 +57,38 @@ import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplest
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author khanson
  *
  */
 //@EmbeddedKafka
-@EmbeddedKafka(brokerProperties = {"logs.dir = /tmp/kafka"})
+@TestPropertySource(locations = { "classpath:/rmapcore.properties" },
+		properties = { "logs.dir = #{ systemProperties['logs.dir'] }" })
+//@ContextConfiguration()
+//@PropertyResolvingEmbeddedKafka(brokerProperties = {"logs.dir = ${logs.dir}"})
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
+
+	static Logger LOG = LoggerFactory.getLogger(ORMapMgrTest.class);
+
+	@Value("${rmapcore.producer.topic}")
+	String topic;
+
 	@Autowired
 	protected RMapService rmapService;
 	
 	@Autowired
 	SesameTriplestore triplestore;
+
+	KafkaEmbedded kafkaBroker;
 	
 	/** General use sysagent for testing **/
 	protected ORMapAgent sysagent = null;
@@ -100,7 +121,22 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 			triplestore.getConnection().clear();
 		}
 	}
-	
+
+	@Rule
+	public KafkaEmbedded kafkaBroker() {
+		LOG.debug("JUnit @Rule instantiating embedded Kafka broker [{}]", KafkaEmbedded.class.getName());
+		KafkaEmbedded embedded = new KafkaEmbedded(1, false, 2, topic);
+		LOG.debug("JUnit @Rule setting embedded Kafka broker property log.dirs: [{}]", System.getProperty("logs.dir"));
+		embedded.brokerProperties(new HashMap<String, String>() {
+			{
+				put("logs.dir", System.getProperty("logs.dir"));
+			}
+		});
+
+		LOG.debug("JUnit @Rule returning embedded Kafka broker instance [{}]", embedded);
+		this.kafkaBroker = embedded;
+		return embedded;
+	}
 	
 	
 	/**
