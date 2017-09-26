@@ -26,15 +26,17 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
 import info.rmapproject.spring.kafka.PropertyResolvingEmbeddedKafka;
+import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
@@ -58,26 +60,22 @@ import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySources;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author khanson
  *
  */
-//@EmbeddedKafka
 @TestPropertySource(locations = { "classpath:/rmapcore.properties" },
 		properties = { "logs.dir = #{ systemProperties['logs.dir'] }" })
-//@ContextConfiguration()
-//@PropertyResolvingEmbeddedKafka(brokerProperties = {"logs.dir = ${logs.dir}"})
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
 
 	static Logger LOG = LoggerFactory.getLogger(ORMapMgrTest.class);
+
+	static KafkaEmbedded kafkaBroker;
 
 	@Value("${rmapcore.producer.topic}")
 	String topic;
@@ -88,8 +86,6 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	@Autowired
 	SesameTriplestore triplestore;
 
-	KafkaEmbedded kafkaBroker;
-	
 	/** General use sysagent for testing **/
 	protected ORMapAgent sysagent = null;
 	
@@ -102,7 +98,20 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	/** Create default RequestEventDetails based on sysagent2. No key */
 	protected RequestEventDetails reqEventDetails2 = null;
 
+	@ClassRule
+	public static KafkaEmbedded kafkaBroker() {
+		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic");
+		return kafkaBroker;
+	}
 
+	@After
+	public void consumeTopic() throws Exception {
+		MockConsumer<Object, Object> consumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
+		kafkaBroker.consumeFromAnEmbeddedTopic(consumer, "rmap-event-topic");
+		long timeout = 10000;
+		LOG.debug("Kafka consumer polling with a timeout of [{}]", timeout);
+		consumer.poll(timeout).forEach(record -> LOG.debug("Consumed [{}] = [{}]", record.key(), record.value()));
+	}
 
 	@Before
 	public void setupAgents() throws Exception {
@@ -122,21 +131,24 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 		}
 	}
 
-	@Rule
-	public KafkaEmbedded kafkaBroker() {
-		LOG.debug("JUnit @Rule instantiating embedded Kafka broker [{}]", KafkaEmbedded.class.getName());
-		KafkaEmbedded embedded = new KafkaEmbedded(1, false, 2, topic);
-		LOG.debug("JUnit @Rule setting embedded Kafka broker property log.dirs: [{}]", System.getProperty("logs.dir"));
-		embedded.brokerProperties(new HashMap<String, String>() {
-			{
-				put("logs.dir", System.getProperty("logs.dir"));
-			}
-		});
-
-		LOG.debug("JUnit @Rule returning embedded Kafka broker instance [{}]", embedded);
-		this.kafkaBroker = embedded;
-		return embedded;
-	}
+//	@ClassRule
+//	@SuppressWarnings("serial")
+//	public static KafkaEmbedded kafkaBroker() {
+//		String topic = "rmap-event-topic";
+//		LOG.debug("JUnit @Rule instantiating embedded Kafka broker [{}] on topic [{}]",
+//				KafkaEmbedded.class.getName(), topic);
+//		KafkaEmbedded embedded = new KafkaEmbedded(1, false, 2, topic);
+//		LOG.debug("JUnit @Rule setting embedded Kafka broker property log.dirs: [{}]", System.getProperty("logs.dir"));
+//		embedded.brokerProperties(new HashMap<String, String>() {
+//			{
+//				put("logs.dir", System.getProperty("logs.dir"));
+//			}
+//		});
+//
+//		LOG.debug("JUnit @Rule returning embedded Kafka broker instance [{}]", embedded);
+//		kafkaBroker = embedded;
+//		return embedded;
+//	}
 	
 	
 	/**
