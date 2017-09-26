@@ -18,6 +18,7 @@ public class GenericJvmObjectDeserializer<T> implements Deserializer<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T deserialize(String topic, byte[] bytes) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
              ObjectInputStream ois = new ObjectInputStream(bais)) {

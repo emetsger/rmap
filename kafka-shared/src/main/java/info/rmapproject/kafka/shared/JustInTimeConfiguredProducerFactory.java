@@ -12,17 +12,15 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
+import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+
+import static info.rmapproject.kafka.shared.KafkaPropertyUtils.asMap;
+import static info.rmapproject.kafka.shared.KafkaPropertyUtils.resolveProperties;
 
 /**
  *
@@ -32,14 +30,6 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
         implements EnvironmentAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(JustInTimeConfiguredProducerFactory.class);
-
-    /**
-     * Represents a null property value.  If null values are present in the property maps, NPEs get thrown, for
-     * example, when hash tables are merged.  Null property values are replaced by this object so that hash table
-     * operations complete without throwing exceptions.  See also {@link #isNullValue(Object)},
-     * {@link #mapNullValues(Map)}.
-     */
-    private static final Object NULL_VALUE = new Object();
 
     /**
      * Serializer for Kafka keys
@@ -92,48 +82,15 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
         super(configs, keySerializer, valueSerializer);
         this.keySerializer = keySerializer;
         this.valueSerializer = valueSerializer;
-        sources.addFirst(new MapPropertySource("producer-construction-config", mapNullValues(configs)));
+        sources.addFirst(new MapPropertySource("producer-construction-config", KafkaPropertyUtils.mapNullValues(configs)));
     }
 
 
     @Override
     public Map<String, Object> getConfigurationProperties() {
-        List<EnumerablePropertySource<?>> enumerablePropertySources = new ArrayList<>();
-
-        sources.forEach(source -> {
-                    if (source instanceof EnumerablePropertySource) {
-                        enumerablePropertySources.add((EnumerablePropertySource) source);
-                    }
-                });
-
-        Map<String, Object> props = new HashMap<>();
-
-        enumerablePropertySources.forEach(source -> {
-            Stream.of(source.getPropertyNames())
-                    .filter(propName -> prefix == null || propName.startsWith(prefix))
-                    .peek(propName -> LOG.debug("Prefix: [{}], property name: [{}]", prefix, propName))
-                    .collect(Collectors.toMap(
-                            propName -> (prefix == null || !strip || !propName.startsWith(prefix)) ?
-                                    propName : propName.substring(prefix.length()),
-                            source::getProperty,
-                            (val1, val2) -> {
-                                LOG.debug("Merging [{}], [{}]: [{}] wins", val1, val2, val2);
-                                return val2;
-                            },
-                            () -> props
-                    ))
-                    .forEach((key, value) -> LOG.debug("Resolved property key [{}] to [{}]",
-                            key, (isNullValue(value)) ? "null" : value));
-        });
-
-        props.entrySet().stream()
-                .filter(entry -> isNullValue(entry.getValue()))
-                .forEach(entry -> {
-                    final String resolvedValue = env.getProperty(entry.getKey());
-                    LOG.debug("Resolving null value for property key [{}] from the environment: [{}]", entry.getKey(),
-                            resolvedValue);
-                    props.put(entry.getKey(), resolvedValue);
-                });
+        Map<String, Object> props = asMap(sources, prefix, strip);
+        PropertySourcesPropertyResolver propertyResolver = new PropertySourcesPropertyResolver(sources);
+        resolveProperties(props, propertyResolver, env);
 
         return props;
     }
@@ -171,48 +128,6 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
 
     public void setStrip(boolean strip) {
         this.strip = strip;
-    }
-
-    private static Stream<PropertySource<?>> asStream(PropertySources sources) {
-        Iterable<PropertySource<?>> iterable = sources::iterator;
-        return StreamSupport.stream(iterable.spliterator(), false);
-    }
-
-    /**
-     * Replaces all {@code null} values with an {@code Object} representing the {@link #NULL_VALUE null value}.
-     *
-     * @param map a map, potentially containing {@code null} values
-     * @return a new map, with {@code null} values replaced with {@link #NULL_VALUE}
-     */
-    private static Map<String, Object> mapNullValues(Map<String, Object> map) {
-        Map<String, Object> copy = new HashMap<>();
-        map.forEach((key, value) -> {
-            if (value == null) {
-                copy.put(key, NULL_VALUE);
-            } else {
-                copy.put(key, value);
-            }
-        });
-
-        return copy;
-    }
-
-    /**
-     * Returns {@code true} if the supplied {@code value} represents {@code null}.
-     *
-     * @param value a property value
-     * @return true if the value represents {@code null}
-     */
-    private static boolean isNullValue(Object value) {
-        if (value == NULL_VALUE) {
-            return true;
-        }
-
-        if (value instanceof CharSequence) {
-            return ((CharSequence)value).length() == 0;
-        }
-
-        return false;
     }
 
 }

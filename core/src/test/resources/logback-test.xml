@@ -2,7 +2,7 @@
   <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>
-        %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+        %d{HH:mm:ss.SSS} [%thread] %-5level [%30.-30C{0}] - %msg%n
       </pattern>
     </encoder>
     <target>System.err</target>
@@ -13,7 +13,19 @@
   <logger name="org.springframework" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="info.rmapproject.kafka.shared" additivity="false" level="INFO">
+  <logger name="org.springframework.test" additivity="false" level="TRACE">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="org.springframework.kafka" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="info.rmapproject.core" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="info.rmapproject.spring.kafka" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="info.rmapproject.kafka.shared" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
 </configuration>

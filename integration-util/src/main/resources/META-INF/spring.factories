@@ -1,0 +1,3 @@
+# Spring Test ContextCustomizerFactories
+org.springframework.test.context.ContextCustomizerFactory=\
+info.rmapproject.spring.kafka.PropertyResolvingKafkaContextCustomizerFactory

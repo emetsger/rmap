@@ -45,6 +45,9 @@ import info.rmapproject.core.model.impl.openrdf.ORMapEventUpdate;
 import info.rmapproject.core.model.impl.openrdf.ORMapEventUpdateWithReplace;
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestFile;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -95,19 +98,19 @@ public class ORMapEventMgrTest extends ORMapMgrTest{
 	/**Set of length one containing request agent URI, to be used in agent event tests.**/
 	private Set<IRI> agentIriSet;
 	
-	@BeforeClass
-	public static void sleepBefore() throws InterruptedException {
-		System.err.println("**** Sleeping before.");
-		Thread.sleep(10000);
-		System.err.println("**** complete ...");
-	}
-
-	@AfterClass
-	public static void sleepAfter() throws Exception {
-		System.err.println("**** Sleeping after ...");
-		Thread.sleep(10000);
-		System.err.println("**** complete ...");
-	}
+//	@BeforeClass
+//	public static void sleepBefore() throws InterruptedException {
+//		System.err.println("**** Sleeping before.");
+//		Thread.sleep(10000);
+//		System.err.println("**** complete ...");
+//	}
+//
+//	@AfterClass
+//	public static void sleepAfter() throws Exception {
+//		System.err.println("**** Sleeping after ...");
+//		Thread.sleep(10000);
+//		System.err.println("**** complete ...");
+//	}
 
 	@Before
 	public void eventTestInits() {
@@ -123,7 +126,13 @@ public class ORMapEventMgrTest extends ORMapMgrTest{
 		agentIriSet = new HashSet<IRI>();
 		agentIriSet.add(agentIri);
 	}
-		
+
+	@After
+	public void consumeTopics() throws Exception {
+		MockConsumer<?, ?> consumer = new MockConsumer<>(OffsetResetStrategy.NONE);
+		kafkaBroker.consumeFromAnEmbeddedTopic(consumer, topic);
+	}
+
 	/**
 	 * Test creation and readback of a DiSCO creation Event in isolation using Agent with API Key
 	 */
