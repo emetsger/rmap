@@ -5,9 +5,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <util:properties id="consumerProperties" location="classpath:/kafka-consumer.properties"/>
+    <util:properties id="consumerProperties" location="classpath:/kafka-shared-consumer.properties"/>
 
-    <bean id="consumer" class="org.springframework.kafka.core.DefaultKafkaConsumerFactory">
+    <bean id="consumer" class="info.rmapproject.kafka.shared.JustInTimeConfiguredConsumerFactory">
         <constructor-arg ref="consumerProperties"/>
         <constructor-arg>
             <bean class="org.apache.kafka.common.serialization.StringDeserializer"/>

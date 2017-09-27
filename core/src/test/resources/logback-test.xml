@@ -31,7 +31,7 @@
   <logger name="info.rmapproject.core" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="info.rmapproject.kafka.shared" additivity="false" level="WARN">
+  <logger name="info.rmapproject.kafka.shared" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
 </configuration>

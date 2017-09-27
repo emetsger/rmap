@@ -20,20 +20,34 @@
 package info.rmapproject.core.rmapservice.impl.openrdf;
 
 import static java.net.URI.create;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
 import info.rmapproject.spring.kafka.PropertyResolvingEmbeddedKafka;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.kafka.shared.JustInTimeConfiguredConsumerFactory;
 import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -61,6 +75,7 @@ import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
 
 /**
@@ -86,6 +101,9 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	@Autowired
 	SesameTriplestore triplestore;
 
+	@Autowired
+	JustInTimeConfiguredConsumerFactory<String, RMapEvent> consumerFactory;
+
 	/** General use sysagent for testing **/
 	protected ORMapAgent sysagent = null;
 	
@@ -106,11 +124,43 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	@After
 	public void consumeTopic() throws Exception {
-		MockConsumer<Object, Object> consumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
-		kafkaBroker.consumeFromAnEmbeddedTopic(consumer, "rmap-event-topic");
-		long timeout = 10000;
-		LOG.debug("Kafka consumer polling with a timeout of [{}]", timeout);
-		consumer.poll(timeout).forEach(record -> LOG.debug("Consumed [{}] = [{}]", record.key(), record.value()));
+		LOG.debug("Entering @After: consumeTopic(), using consumerFactory to createConsumer()");
+		try (Consumer<String, RMapEvent> consumer = consumerFactory.createConsumer()) {
+			LOG.debug("@After: invoking kafkaBroker.consumeFromAnEmbeddedTopic ...");
+//			kafkaBroker.consumeFromAnEmbeddedTopic(consumer, "rmap-event-topic");
+			final CountDownLatch consumerLatch = new CountDownLatch(1);
+			consumer.subscribe(singletonList("rmap-event-topic"), new ConsumerRebalanceListener() {
+				@Override
+				public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+					LOG.debug("Revoked partitions: [{}]", partitions
+							.stream()
+							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
+							.collect(joining(", ")));
+				}
+
+				@Override
+				public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+					LOG.debug("Assigned partitions: [{}]", partitions
+							.stream()
+							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
+							.collect(joining(", ")));
+					consumerLatch.countDown();
+				}
+			});
+
+			long timeout = 10000;
+			LOG.debug("Kafka consumer polling with a timeout of [{}]", timeout);
+			consumer.poll(timeout).forEach(record -> LOG.debug(
+					"Consumed from topic {}, partition {}, offset {}: [{}] = [{}]",
+					record.topic(), record.partition(), record.offset(), record.key(), record.value()));
+			assertThat(consumerLatch.await(30, TimeUnit.SECONDS))
+					.as("Failed to be assigned partitions from the embedded topics")
+					.isTrue();
+
+//			consumer.
+//
+//			consumer.poll(timeout).forEach(record -> LOG.debug("Consumed [{}] = [{}]", record.key(), record.value()));
+		}
 	}
 
 	@Before
