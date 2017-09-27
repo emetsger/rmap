@@ -28,7 +28,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import info.rmapproject.core.model.event.RMapEvent;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
@@ -56,6 +61,8 @@ import info.rmapproject.core.vocabulary.impl.openrdf.PROV;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.util.concurrent.ListenableFuture;
 
 /**
  * A concrete class for managing RMap Events, implemented using openrdf
@@ -184,7 +191,27 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 		}
 
 		if (kafkaTemplate != null) {
-			kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+			log.debug("Sending {} to topic {}", event.getId().getStringValue(), topic);
+			ListenableFuture<SendResult<String, ORMapEvent>> result =
+					kafkaTemplate.send(topic, event.getId().getStringValue(), event);
+			result.addCallback((r) -> {
+				RecordMetadata md = (r != null) ? r.getRecordMetadata() : null;
+				if (md != null) {
+					log.debug("Sent {} to topic/partition/offset {}/{}/{}, total size {} bytes",
+                            event.getId().getStringValue(), md.topic(), md.partition(), md.offset(),
+                            (md.serializedKeySize() + md.serializedValueSize()));
+				} else {
+					log.debug("Sent {} but record metadata was null");
+				}
+			}, (ex) -> {
+				log.info("Failed to send {}: {}", event.getId().getStringValue(), ex.getMessage(), ex);
+			});
+
+			try {
+				result.get(10000, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException|ExecutionException|TimeoutException e) {
+				log.info("Failed to send {}: {}", event.getId().getStringValue(), e.getMessage(), e);
+			}
 		}
 
 		return eventId;

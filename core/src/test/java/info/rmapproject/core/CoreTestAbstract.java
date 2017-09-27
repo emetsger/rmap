@@ -36,7 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith( SpringJUnit4ClassRunner.class )
 @ComponentScan("info.rmapproject.core")
 @ComponentScan("info.rmapproject.kafka")
-@ContextConfiguration("classpath:/spring-rmapcore-context.xml")
+@ContextConfiguration({ "classpath:/spring-rmapcore-context.xml", "classpath*:/rmap-kafka-shared.xml" })
 public abstract class CoreTestAbstract {
 
 	private static final String SPRING_ACTIVE_PROFILE_PROP = "spring.profiles.active";

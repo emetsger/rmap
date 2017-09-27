@@ -20,7 +20,7 @@
  	<bean id="statementmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr" scope="prototype" parent="abstractManager"/>
  	<bean id="eventmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr" scope="prototype" parent="abstractManager">
 		<constructor-arg value="${rmapcore.producer.topic}"/>
-		<constructor-arg ref="producer"/>
+		<constructor-arg ref="rmapEventProducer"/>
 	</bean>
  	<bean id="agentmgr" class="info.rmapproject.core.rmapservice.impl.openrdf.ORMapAgentMgr" parent="abstractManager">
 		<constructor-arg ref="eventmgr"/>
@@ -36,9 +36,9 @@
 		</property>
 	</bean>
 
-	<util:properties id="producerProperties" location="classpath:/kafka-producer.properties"/>
+	<util:properties id="producerProperties" location="classpath:/event-producer.properties"/>
 
-	<bean id="producer" class="org.springframework.kafka.core.KafkaTemplate">
+	<bean id="rmapEventProducer" class="org.springframework.kafka.core.KafkaTemplate">
 		<constructor-arg>
 			<bean class="info.rmapproject.kafka.shared.JustInTimeConfiguredProducerFactory">
 				<constructor-arg ref="producerProperties"/>

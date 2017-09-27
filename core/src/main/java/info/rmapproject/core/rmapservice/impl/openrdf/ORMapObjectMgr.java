@@ -35,6 +35,8 @@ import info.rmapproject.core.exception.RMapException;
 import info.rmapproject.core.exception.RMapObjectNotFoundException;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -43,6 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author khanson, smorrissey
  */
 public abstract class ORMapObjectMgr {
+
+	final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	IdService idService;
