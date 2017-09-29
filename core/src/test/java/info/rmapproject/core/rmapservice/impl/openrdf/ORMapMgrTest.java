@@ -117,7 +117,7 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	@ClassRule
 	public static KafkaEmbedded kafkaBroker() {
-		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic");
+		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic", true);
 		return kafkaBroker;
 	}
 
