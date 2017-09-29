@@ -64,6 +64,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import static java.lang.Integer.toHexString;
+import static java.lang.System.identityHashCode;
+
 /**
  * A concrete class for managing RMap Events, implemented using openrdf
  *
@@ -191,7 +194,8 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 		}
 
 		if (kafkaTemplate != null) {
-			log.debug("Sending {} to topic {}", event.getId().getStringValue(), topic);
+			log.debug("Sending {} to topic {} with {}@{}", event.getId().getStringValue(), topic,
+					kafkaTemplate.getClass().getSimpleName(), toHexString(identityHashCode(kafkaTemplate)));
 			ListenableFuture<SendResult<String, ORMapEvent>> result =
 					kafkaTemplate.send(topic, event.getId().getStringValue(), event);
 			result.addCallback((r) -> {
@@ -208,7 +212,7 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 			});
 
 			try {
-				result.get(10000, TimeUnit.MILLISECONDS);
+				result.get(30000, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException|ExecutionException|TimeoutException e) {
 				log.info("Failed to send {}: {}", event.getId().getStringValue(), e.getMessage(), e);
 			}

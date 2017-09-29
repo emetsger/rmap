@@ -19,6 +19,10 @@ public class KafkaJunit4Bootstrapper {
         return kafkaBroker(1, 2, false, topic);
     }
 
+    public static KafkaEmbedded kafkaBroker(String topic, boolean controlledShutdown) {
+        return kafkaBroker(1, 2, controlledShutdown, topic);
+    }
+
     @SuppressWarnings("serial")
     public static KafkaEmbedded kafkaBroker(
             int brokerCount, int partitionCount, boolean controlledShutdown, String... topics) {
