@@ -36,8 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Spring {@code Environment} when {@link #createKafkaProducer()} is invoked.
  * </p>
  * <p>
- * <em><strong>N.B.</strong></em>: {@link #createTransactionalProducer Transactional producers} created by this factory
- * do <em><strong>not</strong></em> support <em>just in time</em> property resolution described above.
+ * <em><strong>N.B.</strong></em>: This factory does <em><strong>not</strong></em> support transational producers.
  * </p>
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
@@ -45,6 +44,8 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
         implements EnvironmentAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(JustInTimeConfiguredProducerFactory.class);
+
+    private static final boolean TRANSACTION_CAPABLE = false;
 
     /**
      * Serializer for Kafka keys
@@ -86,6 +87,13 @@ public class JustInTimeConfiguredProducerFactory<K, V> extends DefaultKafkaProdu
     protected Producer<K, V> createKafkaProducer() {
         LOG.debug("Creating new Kafka Producer ...");
         return new KafkaProducer<>(state.getConfigurationProperties(), this.keySerializer, this.valueSerializer);
+    }
+
+    @Override
+    public boolean transactionCapable() {
+        LOG.debug("This Kafka Producer [{}@{}] is transaction capable: {}", this.getClass().getSimpleName(),
+                Integer.toHexString(System.identityHashCode(this)), TRANSACTION_CAPABLE);
+        return TRANSACTION_CAPABLE;
     }
 
     @Override
