@@ -29,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -78,8 +79,8 @@ public class ORMapEventCreationTest extends CoreTestAbstract {
 	protected ValueFactory vf = null;
 
 	@ClassRule
-	public static KafkaEmbedded kafkaBroker() {
-		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic", true);
+	public static KafkaEmbedded kafkaBroker() throws IOException {
+		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
 		return kafkaBroker;
 	}
 

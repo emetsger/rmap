@@ -10,6 +10,18 @@
     <artifactId>rmap-core</artifactId>
     <name>RMap Core</name>
 
+    <properties>
+        <!-- Kafka properties used to configure a broker for unit tests
+        (see also src/test/resources/kafka-broker.properties, resource plugin and surefire plugin config) -->
+        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka</kafka.broker.logs-dir>
+        <kafka.broker.host>localhost</kafka.broker.host>
+        <kafka.broker.broker-count>1</kafka.broker.broker-count>
+        <kafka.broker.partition-count>2</kafka.broker.partition-count>
+        <kafka.broker.controlled-shutdown>false</kafka.broker.controlled-shutdown>
+        <!-- separate multiple topics with a comma -->
+        <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
+    </properties>
+
     <dependencies>
     	<!-- logging-->
         <dependency>
@@ -136,6 +148,52 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-port</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <configuration>
+                            <portNames>
+                                <portName>kafka.broker.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-test-resources</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testResources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/test/resources</directory>
+                                    <filtering>true</filtering>
+                                    <includes>kafka-broker.properties</includes>
+                                </resource>
+                                <resource>
+                                    <directory>src/test/resources</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>kafka-broker.properties</excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
@@ -145,7 +203,11 @@
                 <configuration>
                     <systemProperties>
                         <spring.profiles.active>default,inmemory-idservice,inmemory-triplestore</spring.profiles.active>
-                        <logs.dir>${project.build.outputDirectory}/kafka</logs.dir>
+                        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka</kafka.broker.logs-dir>
+                        <kafka.broker.host>localhost</kafka.broker.host>
+                        <kafka.broker.broker-count>1</kafka.broker.broker-count>
+                        <kafka.broker.partition-count>2</kafka.broker.partition-count>
+                        <kafka.broker.controlled-shutdown>false</kafka.broker.controlled-shutdown>
                     </systemProperties>
                 </configuration>
             </plugin>
