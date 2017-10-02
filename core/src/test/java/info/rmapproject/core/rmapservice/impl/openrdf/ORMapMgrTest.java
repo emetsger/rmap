@@ -19,37 +19,40 @@
  *******************************************************************************/
 package info.rmapproject.core.rmapservice.impl.openrdf;
 
+import static java.lang.Integer.parseInt;
 import static java.net.URI.create;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.impl.openrdf.StatementsAdapter;
 import info.rmapproject.kafka.shared.JustInTimeConfiguredConsumerFactory;
-import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.TestRule;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
@@ -74,15 +77,13 @@ import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author khanson
  *
  */
-@TestPropertySource(locations = { "classpath:/rmapcore.properties" },
-		properties = { "logs.dir = #{ systemProperties['logs.dir'] }" })
+@TestPropertySource(locations = { "classpath:/rmapcore.properties" })
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
@@ -116,9 +117,25 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	protected RMapRequestAgent requestAgent2 = null;
 
 	@ClassRule
-	public static KafkaEmbedded kafkaBroker() {
-		kafkaBroker = KafkaJunit4Bootstrapper.kafkaBroker("rmap-event-topic", true);
+	public static KafkaEmbedded kafkaBroker() throws IOException {
+		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
 		return kafkaBroker;
+	}
+
+	@ClassRule
+	public static TestRule removeKafkaLogDir() {
+		return new ExternalResource() {
+			@Override
+			protected void after() {
+				try {
+					String logDirectory = loadKafkaBrokerProperties().getProperty("kafka.broker.logs-dir");
+					LOG.debug("Verifying Kafka broker log directory [{}] is removed", logDirectory);
+					assertFalse(new File(logDirectory).exists());
+				} catch (IOException e) {
+					fail("Error loading Kafka broker properties: " + e.getMessage());
+				}
+			}
+		};
 	}
 
 	@After

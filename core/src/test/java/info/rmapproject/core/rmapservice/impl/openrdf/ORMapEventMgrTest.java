@@ -97,20 +97,6 @@ public class ORMapEventMgrTest extends ORMapMgrTest{
 	
 	/**Set of length one containing request agent URI, to be used in agent event tests.**/
 	private Set<IRI> agentIriSet;
-	
-//	@BeforeClass
-//	public static void sleepBefore() throws InterruptedException {
-//		System.err.println("**** Sleeping before.");
-//		Thread.sleep(10000);
-//		System.err.println("**** complete ...");
-//	}
-//
-//	@AfterClass
-//	public static void sleepAfter() throws Exception {
-//		System.err.println("**** Sleeping after ...");
-//		Thread.sleep(10000);
-//		System.err.println("**** complete ...");
-//	}
 
 	@Before
 	public void eventTestInits() {
