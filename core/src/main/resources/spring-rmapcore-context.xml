@@ -40,7 +40,7 @@
 
 	<bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
 		<constructor-arg>
-			<bean class="info.rmapproject.kafka.shared.JustInTimeConfiguredProducerFactory">
+			<bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
 				<constructor-arg ref="producerProperties"/>
 				<constructor-arg>
 					<bean class="org.apache.kafka.common.serialization.StringSerializer"/>
@@ -48,6 +48,11 @@
 				<constructor-arg>
 					<bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
 				</constructor-arg>
+				<!--<property name="properties">-->
+					<!--<map>-->
+						<!--<entry key="bootstrap.servers" value="localhost:${kafka.broker.port}"/>-->
+					<!--</map>-->
+				<!--</property>-->
 			</bean>
 		</constructor-arg>
 		<property name="defaultTopic" value="${rmapcore.producer.topic}"/>

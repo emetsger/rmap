@@ -60,12 +60,15 @@ import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplest
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author smorrissey
  * @author khanson
  *
  */
+@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
+@EmbeddedKafka(topics = { "rmap-event-topic" }, brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}" })
 public class ORMapEventCreationTest extends CoreTestAbstract {
 
 	static KafkaEmbedded kafkaBroker;
@@ -78,17 +81,17 @@ public class ORMapEventCreationTest extends CoreTestAbstract {
 	
 	protected ValueFactory vf = null;
 
-	@ClassRule
-	public static KafkaEmbedded kafkaBroker() throws IOException {
-		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
-		return kafkaBroker;
-	}
-
-	@After
-	public void consumeTopic() throws Exception {
-		kafkaBroker.consumeFromAnEmbeddedTopic(
-				new MockConsumer<>(OffsetResetStrategy.EARLIEST), "rmap-event-topic");
-	}
+//	@ClassRule
+//	public static KafkaEmbedded kafkaBroker() throws IOException {
+//		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
+//		return kafkaBroker;
+//	}
+//
+//	@After
+//	public void consumeTopic() throws Exception {
+//		kafkaBroker.consumeFromAnEmbeddedTopic(
+//				new MockConsumer<>(OffsetResetStrategy.EARLIEST), "rmap-event-topic");
+//	}
 
 	/**
 	 * @throws java.lang.Exception
