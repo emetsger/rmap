@@ -77,6 +77,7 @@ import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.context.TestPropertySource;
 
@@ -84,7 +85,8 @@ import org.springframework.test.context.TestPropertySource;
  * @author khanson
  *
  */
-@TestPropertySource(locations = { "classpath:/rmapcore.properties" })
+@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
+@EmbeddedKafka(topics = { "rmap-event-topic" }, brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}" })
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
@@ -117,27 +119,27 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	/** Create default RequestEventDetails based on sysagent2. No key */
 	protected RequestEventDetails reqEventDetails2 = null;
 
-	@ClassRule
-	public static KafkaEmbedded kafkaBroker() throws IOException {
-		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
-		return kafkaBroker;
-	}
+//	@ClassRule
+//	public static KafkaEmbedded kafkaBroker() throws IOException {
+//		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
+//		return kafkaBroker;
+//	}
 
-	@ClassRule
-	public static TestRule removeKafkaLogDir() {
-		return new ExternalResource() {
-			@Override
-			protected void after() {
-				try {
-					String logDirectory = loadKafkaBrokerProperties().getProperty("kafka.broker.logs-dir");
-					LOG.debug("Verifying Kafka broker log directory [{}] is removed", logDirectory);
-					assertFalse(new File(logDirectory).exists());
-				} catch (IOException e) {
-					fail("Error loading Kafka broker properties: " + e.getMessage());
-				}
-			}
-		};
-	}
+//	@ClassRule
+//	public static TestRule removeKafkaLogDir() {
+//		return new ExternalResource() {
+//			@Override
+//			protected void after() {
+//				try {
+//					String logDirectory = loadKafkaBrokerProperties().getProperty("kafka.broker.logs-dir");
+//					LOG.debug("Verifying Kafka broker log directory [{}] is removed", logDirectory);
+//					assertFalse(new File(logDirectory).exists());
+//				} catch (IOException e) {
+//					fail("Error loading Kafka broker properties: " + e.getMessage());
+//				}
+//			}
+//		};
+//	}
 
 	@After
 	public void consumeTopic() throws Exception {
