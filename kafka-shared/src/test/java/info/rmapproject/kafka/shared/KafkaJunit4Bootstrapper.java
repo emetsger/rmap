@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.of;
+import static org.springframework.kafka.test.rule.KafkaEmbedded.TOPIC_VERIFICATION_MODE.CREATE_FALLBACK;
 
 
 public class KafkaJunit4Bootstrapper {
@@ -50,7 +51,8 @@ public class KafkaJunit4Bootstrapper {
 
         LOG.debug("JUnit @Rule instantiating embedded Kafka broker: port [{}], topic(s) [{}], brokerCount [{}], partitionCount [{}], controlledShutdown [{}], log directory [{}]",
                 port, of(topics).collect(joining(", ")), brokerCount, partitionCount, controlledShutdown, logDirectory);
-        KafkaEmbedded embedded = new KafkaEmbedded(brokerCount, controlledShutdown, partitionCount, topics);
+        KafkaEmbedded embedded = new KafkaEmbedded(brokerCount, controlledShutdown, partitionCount,
+                CREATE_FALLBACK, topics);
 
         embedded.brokerProperties(new HashMap<String, String>() {
             {
