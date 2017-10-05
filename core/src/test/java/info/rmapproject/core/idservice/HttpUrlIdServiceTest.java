@@ -57,7 +57,7 @@ import info.rmapproject.core.CoreTestAbstract;
 @PrepareForTest({HttpUrlIdService.class})
 @RunWith(PowerMockRunner.class) //overrides default
 @ActiveProfiles({"default","http-idservice","inmemory-triplestore"}) //override default
-@EmbeddedKafka(disabled = true)
+//@EmbeddedKafka(disabled = true)
 public class HttpUrlIdServiceTest extends CoreTestAbstract {
 
 	/** Contains two identifiers to simulate what you would get from the NOID service */

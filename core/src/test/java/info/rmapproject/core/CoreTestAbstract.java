@@ -54,7 +54,8 @@ import static org.junit.Assert.assertNotNull;
 @TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(topics = { "rmap-event-topic" },
-		brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
+		brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}",
+				"listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
 public abstract class CoreTestAbstract {
 
 	private static final String KAFKA_BROKER_PROPERTIES_RESOURCE = "/kafka-broker.properties";
