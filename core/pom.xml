@@ -185,12 +185,12 @@
                                 <resource>
                                     <directory>src/test/resources</directory>
                                     <filtering>true</filtering>
-                                    <includes>kafka-broker.properties</includes>
+                                    <includes>kafka-*.properties</includes>
                                 </resource>
                                 <resource>
                                     <directory>src/test/resources</directory>
                                     <filtering>false</filtering>
-                                    <excludes>kafka-broker.properties</excludes>
+                                    <excludes>kafka-*.properties</excludes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -231,6 +231,7 @@
                         <spring.profiles.active>default,inmemory-idservice,inmemory-triplestore</spring.profiles.active>
                         <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka</kafka.broker.logs-dir>
                         <kafka.broker.host>localhost</kafka.broker.host>
+                        <kafka.broker.port>${kafka.broker.port}</kafka.broker.port>
                         <kafka.broker.broker-count>1</kafka.broker.broker-count>
                         <kafka.broker.partition-count>2</kafka.broker.partition-count>
                         <kafka.broker.controlled-shutdown>false</kafka.broker.controlled-shutdown>

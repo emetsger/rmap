@@ -19,14 +19,17 @@
  *******************************************************************************/
 package info.rmapproject.core;
 
-import info.rmapproject.core.rmapservice.impl.openrdf.ORMapMgrTest;
 import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
+import info.rmapproject.kafka.shared.KafkaTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -44,10 +47,14 @@ import static org.junit.Assert.assertNotNull;
  * @author khanson
  *
  */
-@RunWith( SpringJUnit4ClassRunner.class )
+@RunWith(SpringJUnit4ClassRunner.class)
 @ComponentScan("info.rmapproject.core")
 @ComponentScan("info.rmapproject.kafka")
-@ContextConfiguration({ "classpath:/spring-rmapcore-context.xml", "classpath*:/rmap-kafka-shared.xml" })
+@ContextConfiguration({ "classpath:/spring-rmapcore-context.xml", "classpath:/spring-rmapcore-test-context.xml"})
+@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@EmbeddedKafka(topics = { "rmap-event-topic" },
+		brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
 public abstract class CoreTestAbstract {
 
 	private static final String KAFKA_BROKER_PROPERTIES_RESOURCE = "/kafka-broker.properties";

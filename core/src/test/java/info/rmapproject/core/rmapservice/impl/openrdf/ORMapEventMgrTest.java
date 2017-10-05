@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.openrdf.model.IRI;
 import org.openrdf.model.impl.SimpleValueFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.ArrayList;
 import java.util.Date;

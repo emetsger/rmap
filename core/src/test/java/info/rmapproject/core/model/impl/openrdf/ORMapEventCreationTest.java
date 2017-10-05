@@ -58,8 +58,8 @@ import info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr;
 //import info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 
 /**
@@ -67,8 +67,6 @@ import org.springframework.test.context.TestPropertySource;
  * @author khanson
  *
  */
-@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
-@EmbeddedKafka(topics = { "rmap-event-topic" }, brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}" })
 public class ORMapEventCreationTest extends CoreTestAbstract {
 
 	static KafkaEmbedded kafkaBroker;

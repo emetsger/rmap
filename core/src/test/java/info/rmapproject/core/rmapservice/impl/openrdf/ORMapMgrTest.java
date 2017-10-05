@@ -77,7 +77,7 @@ import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.context.TestPropertySource;
 
@@ -85,8 +85,7 @@ import org.springframework.test.context.TestPropertySource;
  * @author khanson
  *
  */
-@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
-@EmbeddedKafka(topics = { "rmap-event-topic" }, brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}" })
+@TestPropertySource(locations = { "classpath:/rmapcore.properties" })
 public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	private static final AtomicInteger counter = new AtomicInteger();
@@ -105,7 +104,7 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	SesameTriplestore triplestore;
 
 	@Autowired
-	JustInTimeConfiguredConsumerFactory<String, RMapEvent> consumerFactory;
+	DefaultKafkaConsumerFactory<String, RMapEvent> consumerFactory;
 
 	/** General use sysagent for testing **/
 	protected ORMapAgent sysagent = null;
