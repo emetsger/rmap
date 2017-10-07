@@ -41,13 +41,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import info.rmapproject.core.CoreTestAbstract;
 
 /**
  * Test class for {@link info.rmapproject.core.idservice.HttpUrlIdService}.
@@ -55,10 +53,13 @@ import info.rmapproject.core.CoreTestAbstract;
  */
 @PowerMockRunnerDelegate(SpringJUnit4ClassRunner.class)
 @PrepareForTest({HttpUrlIdService.class})
-@RunWith(PowerMockRunner.class) //overrides default
-@ActiveProfiles({"default","http-idservice","inmemory-triplestore"}) //override default
-//@EmbeddedKafka(disabled = true)
-public class HttpUrlIdServiceTest extends CoreTestAbstract {
+@RunWith(PowerMockRunner.class)
+@ActiveProfiles({"default","http-idservice","inmemory-triplestore"})
+@ComponentScan("info.rmapproject.core")
+@ComponentScan("info.rmapproject.kafka")
+@ContextConfiguration({ "classpath:/spring-rmapcore-context.xml" })
+@TestPropertySource(locations = { "classpath:/rmapcore.properties" })
+public class HttpUrlIdServiceTest {
 
 	/** Contains two identifiers to simulate what you would get from the NOID service */
 	static final String NOIDS_2 = "/noids/noids_2.txt"; 
