@@ -43,8 +43,11 @@ import org.junit.runner.RunWith;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -78,6 +81,11 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath*:/spring-rmapcore-context.xml")
 @ActiveProfiles({"integration-triplestore", "integration-db", "inmemory-idservice"})
+@TestPropertySource(locations = { "classpath*:/kafka-broker.properties" })
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@EmbeddedKafka(topics = { "rmap-event-topic" },
+        brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}",
+                "listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
 public class ManagerObjectSerializationIT {
 
     private static final IRI DISCO_IRI = asIri("http://example.org/disco/1");
