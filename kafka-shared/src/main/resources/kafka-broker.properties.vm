@@ -1,0 +1,2 @@
+listeners = PLAINTEXT://${project.properties["kafka.broker.host"]}:${project.properties["kafka.broker.port"]}
+log.dir = ${project.properties["kafka.broker.logs-dir"]}

@@ -80,12 +80,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath*:/spring-rmapcore-context.xml")
-@ActiveProfiles({"integration-triplestore", "integration-db", "inmemory-idservice"})
-@TestPropertySource(locations = { "classpath*:/kafka-broker.properties" })
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@EmbeddedKafka(topics = { "rmap-event-topic" },
-        brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}",
-                "listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
+@ActiveProfiles({"integration-triplestore", "integration-db", "inmemory-idservice", "prod-kafka"})
 public class ManagerObjectSerializationIT {
 
     private static final IRI DISCO_IRI = asIri("http://example.org/disco/1");

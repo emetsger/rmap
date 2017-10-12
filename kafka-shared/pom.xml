@@ -14,6 +14,35 @@
     <description>Contains support classes serializing and deserializing objects to the Kafka journal</description>
     <packaging>jar</packaging>
 
+    <build>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bundle-kafka-production-resources</id>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**.vm</include>
+                                <!--<include>src/main/resources/**.properties</include>-->
+                                <!--<include>src/test/resources/**.properties</include>-->
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+        </plugins>
+
+    </build>
+
     <dependencies>
 
         <dependency>

@@ -21,6 +21,13 @@
         <sesamehttp.repository.name>its</sesamehttp.repository.name>
         <derby.home>${project.build.testOutputDirectory}/derby</derby.home>
         <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
+
+        <!-- Kafka properties used to configure a broker for unit tests
+(see also src/test/resources/kafka-broker.properties, resource plugin and surefire plugin config) -->
+        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka-broker</kafka.broker.logs-dir>
+        <kafka.broker.host>localhost</kafka.broker.host>
+        <!-- separate multiple topics with a comma -->
+        <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
     </properties>
 
     <dependencies>
@@ -156,6 +163,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-kafka-shared</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
     </dependencies>
     
     <build>
@@ -164,10 +177,30 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <configuration>
+                    <resourceBundles>
+                        <resourceBundle>info.rmapproject:rmap-kafka-shared:${project.parent.version}</resourceBundle>
+                    </resourceBundles>
+                    <includeProjectProperties>true</includeProjectProperties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
                     <execution>
+                        <id>start-derby</id>
                         <phase>validate</phase>
                         <configuration>
                             <target>
@@ -180,12 +213,49 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>start-kafka</id>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <target>
+                                <taskdef name="startKafkaBroker"
+                                         classname="info.rmapproject.integration.util.StartKafkaBrokerTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <startKafkaBroker
+                                        brokerPropertiesLocation="${project.build.directory}/maven-shared-archive-resources/kafka-broker.properties"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-kafka</id>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <target>
+                                <taskdef name="stopKafkaBroker"
+                                         classname="info.rmapproject.integration.util.StopKafkaBrokerTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <stopKafkaBroker/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
                         <groupId>info.rmapproject</groupId>
                         <artifactId>rmap-integration-util</artifactId>
                         <version>${project.parent.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework.kafka</groupId>
+                        <artifactId>spring-kafka-test</artifactId>
+                        <version>${spring-data-kafka.version}</version>
                         <scope>runtime</scope>
                     </dependency>
                 </dependencies>
@@ -205,6 +275,7 @@
                         <configuration>
                             <portNames>
                                 <portName>rmap.webapp.test.port</portName>
+                                <portName>kafka.broker.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -242,7 +313,7 @@
                             <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                             <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                             <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
-                            <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore</spring.profiles.active>
+                            <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
                             <hibernate.hbm2ddl.auto>${hibernate.hbm2ddl.auto}</hibernate.hbm2ddl.auto>
                         </systemProperties>
@@ -326,6 +397,10 @@
                                 <file>${project.basedir}/src/main/resources/integration-triplestore.xml</file>
                                 <todir>shared/classes</todir>
                             </copy>
+                            <copy>
+                                <file>${project.build.directory}/maven-shared-archive-resources/event-producer.properties</file>
+                                <todir>shared/classes</todir>
+                            </copy>
                         </files>
                     </configuration>
 
@@ -351,7 +426,7 @@
                             <container>
                                 <systemProperties>
                                     <derby.system.home>${derby.home}</derby.system.home>
-                                    <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore</spring.profiles.active>
+                                    <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
                                     <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
                                     <logback.configurationFile>${project.basedir}/src/main/resources/logback.xml</logback.configurationFile>
                                     <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
@@ -378,7 +453,7 @@
                         <sesame.http.context>${sesame.http.context}</sesame.http.context>
                         <sesame.workbench.context>${sesame.workbench.context}</sesame.workbench.context>
                         <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
-                        <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore</spring.profiles.active>
+                        <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
                         <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                         <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                         <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>

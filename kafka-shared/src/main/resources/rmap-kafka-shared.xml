@@ -5,16 +5,35 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <util:properties id="consumerProperties" location="classpath:/kafka-shared-consumer.properties"/>
+    <!--<util:properties id="consumerProperties" location="classpath:/kafka-shared-consumer.properties"/>-->
 
-    <bean id="consumer" class="org.springframework.kafka.core.DefaultKafkaConsumerFactory">
-        <constructor-arg ref="consumerProperties"/>
-        <constructor-arg>
-            <bean class="org.apache.kafka.common.serialization.StringDeserializer"/>
-        </constructor-arg>
-        <constructor-arg>
-            <bean class="info.rmapproject.kafka.shared.GenericJvmObjectDeserializer"/>
-        </constructor-arg>
-    </bean>
+    <!--<bean id="consumer" class="org.springframework.kafka.core.DefaultKafkaConsumerFactory">-->
+        <!--<constructor-arg ref="consumerProperties"/>-->
+        <!--<constructor-arg>-->
+            <!--<bean class="org.apache.kafka.common.serialization.StringDeserializer"/>-->
+        <!--</constructor-arg>-->
+        <!--<constructor-arg>-->
+            <!--<bean class="info.rmapproject.kafka.shared.GenericJvmObjectDeserializer"/>-->
+        <!--</constructor-arg>-->
+    <!--</bean>-->
+
+    <beans profile="prod-kafka">
+        <util:properties id="producerProperties" location="classpath*:/event-producer.properties"/>
+
+        <bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
+            <constructor-arg>
+                <bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
+                    <constructor-arg ref="producerProperties"/>
+                    <constructor-arg>
+                        <bean class="org.apache.kafka.common.serialization.StringSerializer"/>
+                    </constructor-arg>
+                    <constructor-arg>
+                        <bean class="info.rmapproject.kafka.shared.GenericJvmObjectSerializer"/>
+                    </constructor-arg>
+                </bean>
+            </constructor-arg>
+            <property name="defaultTopic" value="${rmapcore.producer.topic}"/>
+        </bean>
+    </beans>
 
 </beans>

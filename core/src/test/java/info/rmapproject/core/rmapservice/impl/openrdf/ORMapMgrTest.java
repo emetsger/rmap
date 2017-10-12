@@ -19,30 +19,17 @@
  *******************************************************************************/
 package info.rmapproject.core.rmapservice.impl.openrdf;
 
-import static java.lang.Integer.parseInt;
 import static java.net.URI.create;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
-import info.rmapproject.spring.kafka.PropertyResolvingEmbeddedKafka;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.kafka.shared.JustInTimeConfiguredConsumerFactory;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -50,10 +37,6 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TestRule;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
@@ -77,8 +60,6 @@ import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.context.TestPropertySource;
 
 /**
@@ -92,8 +73,6 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 
 	static Logger LOG = LoggerFactory.getLogger(ORMapMgrTest.class);
 
-	static KafkaEmbedded kafkaBroker;
-
 	@Value("${rmapcore.producer.topic}")
 	String topic;
 
@@ -102,9 +81,6 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 	
 	@Autowired
 	SesameTriplestore triplestore;
-
-	@Autowired
-	DefaultKafkaConsumerFactory<String, RMapEvent> consumerFactory;
 
 	/** General use sysagent for testing **/
 	protected ORMapAgent sysagent = null;
@@ -140,46 +116,42 @@ public abstract class ORMapMgrTest extends CoreTestAbstract {
 //		};
 //	}
 
-	@After
-	public void consumeTopic() throws Exception {
-		LOG.debug("Entering @After: consumeTopic(), using consumerFactory to createConsumer()");
-		try (Consumer<String, RMapEvent> consumer = consumerFactory.createConsumer()) {
-			LOG.debug("@After: invoking kafkaBroker.consumeFromAnEmbeddedTopic ...");
-//			kafkaBroker.consumeFromAnEmbeddedTopic(consumer, "rmap-event-topic");
-			final CountDownLatch consumerLatch = new CountDownLatch(1);
-			consumer.subscribe(singletonList("rmap-event-topic"), new ConsumerRebalanceListener() {
-				@Override
-				public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-					LOG.debug("Revoked partitions: [{}]", partitions
-							.stream()
-							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
-							.collect(joining(", ")));
-				}
-
-				@Override
-				public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-					LOG.debug("Assigned partitions: [{}]", partitions
-							.stream()
-							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
-							.collect(joining(", ")));
-					consumerLatch.countDown();
-				}
-			});
-
-			long timeout = 10000;
-			LOG.debug("Kafka consumer polling with a timeout of [{}]", timeout);
-			consumer.poll(timeout).forEach(record -> LOG.debug(
-					"Consumed from topic {}, partition {}, offset {}: [{}] = [{}]",
-					record.topic(), record.partition(), record.offset(), record.key(), record.value()));
-			assertThat(consumerLatch.await(30, TimeUnit.SECONDS))
-					.as("Failed to be assigned partitions from the embedded topics")
-					.isTrue();
-
-//			consumer.
+//	@After
+//	public void consumeTopic() throws Exception {
+//		LOG.debug("Entering @After: consumeTopic(), using consumerFactory to createConsumer()");
+//		try (Consumer<String, RMapEvent> consumer = consumerFactory.createConsumer()) {
+//			LOG.debug("@After: invoking kafkaBroker.consumeFromAnEmbeddedTopic ...");
+//			final CountDownLatch consumerLatch = new CountDownLatch(1);
+//			consumer.subscribe(singletonList("rmap-event-topic"), new ConsumerRebalanceListener() {
+//				@Override
+//				public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+//					LOG.debug("Revoked partitions: [{}]", partitions
+//							.stream()
+//							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
+//							.collect(joining(", ")));
+//				}
 //
-//			consumer.poll(timeout).forEach(record -> LOG.debug("Consumed [{}] = [{}]", record.key(), record.value()));
-		}
-	}
+//				@Override
+//				public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+//					LOG.debug("Assigned partitions: [{}]", partitions
+//							.stream()
+//							.map(part -> String.format("topic: %s, partition: %s", part.topic(), part.partition()))
+//							.collect(joining(", ")));
+//					consumerLatch.countDown();
+//				}
+//			});
+//
+//			long timeout = 10000;
+//			LOG.debug("Kafka consumer polling with a timeout of [{}]", timeout);
+//			consumer.poll(timeout).forEach(record -> LOG.debug(
+//					"Consumed from topic {}, partition {}, offset {}: [{}] = [{}]",
+//					record.topic(), record.partition(), record.offset(), record.key(), record.value()));
+//			assertThat(consumerLatch.await(30, TimeUnit.SECONDS))
+//					.as("Failed to be assigned partitions from the embedded topics")
+//					.isTrue();
+//
+//		}
+//	}
 
 	@Before
 	public void setupAgents() throws Exception {

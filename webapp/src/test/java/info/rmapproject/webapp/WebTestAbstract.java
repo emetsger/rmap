@@ -35,7 +35,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
  */
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/servlet-context.xml")
+@ContextConfiguration({"classpath:/servlet-context.xml", "classpath*:/rmap-kafka-shared-test.xml"})
 public abstract class WebTestAbstract {
 
 	private static final String SPRING_ACTIVE_PROFILE_PROP = "spring.profiles.active";
@@ -47,7 +47,7 @@ public abstract class WebTestAbstract {
 	@BeforeClass
 	public static void setUpSpringProfiles() {
 		if (!activeProfilesPreSet) {
-			System.setProperty("spring.profiles.active", "default,inmemory-db,inmemory-idservice,inmemory-triplestore");
+			System.setProperty("spring.profiles.active", "default,inmemory-db,inmemory-idservice,inmemory-triplestore,mock-kafka");
 		}
 		if (!configPathPreSet) {
 			System.setProperty(RMAP_CONFIG_PROP, "classpath:/rmap.properties");

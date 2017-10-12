@@ -29,19 +29,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import info.rmapproject.kafka.shared.KafkaJunit4Bootstrapper;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Model;
@@ -55,12 +48,8 @@ import info.rmapproject.core.model.event.RMapEventTargetType;
 import info.rmapproject.core.model.event.RMapEventType;
 import info.rmapproject.core.model.request.RequestEventDetails;
 import info.rmapproject.core.rmapservice.impl.openrdf.ORMapEventMgr;
-//import info.rmapproject.core.rmapservice.impl.openrdf.ORMapStatementMgr;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.core.vocabulary.impl.openrdf.RMAP;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author smorrissey
@@ -69,8 +58,6 @@ import org.springframework.test.context.TestPropertySource;
  */
 public class ORMapEventCreationTest extends CoreTestAbstract {
 
-	static KafkaEmbedded kafkaBroker;
-
 	@Autowired
 	private SesameTriplestore triplestore;
 	
@@ -78,18 +65,6 @@ public class ORMapEventCreationTest extends CoreTestAbstract {
 	private ORMapEventMgr eventmgr;
 	
 	protected ValueFactory vf = null;
-
-//	@ClassRule
-//	public static KafkaEmbedded kafkaBroker() throws IOException {
-//		kafkaBroker = newKafkaBrokerRule(loadKafkaBrokerProperties());
-//		return kafkaBroker;
-//	}
-//
-//	@After
-//	public void consumeTopic() throws Exception {
-//		kafkaBroker.consumeFromAnEmbeddedTopic(
-//				new MockConsumer<>(OffsetResetStrategy.EARLIEST), "rmap-event-topic");
-//	}
 
 	/**
 	 * @throws java.lang.Exception

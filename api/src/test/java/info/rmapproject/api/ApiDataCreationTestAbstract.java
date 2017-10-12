@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import info.rmapproject.testdata.service.TestConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.openrdf.model.IRI;
@@ -40,20 +41,11 @@ import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameSailMemoryTriplestore;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
-import info.rmapproject.testdata.service.TestConstants;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * Tests for ResponseManager.
  * @author khanson
  */
-@TestPropertySource(locations = { "/kafka-broker.properties" })
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@EmbeddedKafka(topics = { "rmap-event-topic" },
-		brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}",
-				"listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
 public abstract class ApiDataCreationTestAbstract extends ApiTestAbstract {
 	
 	/** The rmap service. */

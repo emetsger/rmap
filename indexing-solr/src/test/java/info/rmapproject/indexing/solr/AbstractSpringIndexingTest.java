@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "http-solr"})
+@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "http-solr", "prod-kafka"})
 @ContextConfiguration({"classpath:/rmap-indexing-solr.xml", "classpath:/spring-rmapcore-context.xml"})
 public abstract class AbstractSpringIndexingTest {
 
@@ -29,7 +29,7 @@ public abstract class AbstractSpringIndexingTest {
     @Before
     public void setUp() throws Exception {
         if (System.getProperty("spring.profiles.active") == null) {
-            System.setProperty("spring.profiles.active", "default, inmemory-triplestore, inmemory-idservice");
+            System.setProperty("spring.profiles.active", "default, inmemory-triplestore, inmemory-idservice, prod-kafka");
             thisClassSetProfilesProperty = true;
         }
     }

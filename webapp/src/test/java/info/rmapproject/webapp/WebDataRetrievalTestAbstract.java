@@ -53,20 +53,12 @@ import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplest
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestDataHandler;
 import info.rmapproject.testdata.service.TestFile;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * Abstract class for Webapp tests that require some RMap data retrieval.
  * Initiates relevant triplestore objects and creates an RMap Agent for use in tests
  * @author khanson
  */
-@TestPropertySource(locations = { "classpath:/rmapcore.properties", "classpath:/kafka-broker.properties" })
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@EmbeddedKafka(topics = { "rmap-event-topic" },
-		brokerProperties = { "log.dir=${kafka.broker.logs-dir}", "port=${kafka.broker.port}",
-				"listeners=PLAINTEXT://localhost:${kafka.broker.port}", "auto.create.topics.enable=true" })
 public abstract class WebDataRetrievalTestAbstract extends WebTestAbstract {
 
 	private static AtomicInteger COUNTER = new AtomicInteger(0);

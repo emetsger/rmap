@@ -10,10 +10,16 @@
     <root level="WARN">
         <appender-ref ref="STDERR" />
     </root>
-    <logger name="info.rmapproject.indexing" additivity="false" level="DEBUG">
+    <logger name="info.rmapproject.indexing" additivity="false" level="WARN">
         <appender-ref ref="STDERR" />
     </logger>
     <logger name="org.springframework" additivity="false" level="WARN">
+        <appender-ref ref="STDERR"/>
+    </logger>
+    <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="ERROR">
+        <appender-ref ref="STDERR"/>
+    </logger>
+    <logger name="org.apache.kafka.common.utils.AppInfoParser" additivity="false" level="ERROR">
         <appender-ref ref="STDERR"/>
     </logger>
 </configuration>

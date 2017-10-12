@@ -120,6 +120,15 @@
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>info.rmapproject</groupId>
+			<artifactId>rmap-kafka-shared</artifactId>
+			<version>${project.parent.version}</version>
+			<classifier>tests</classifier>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
@@ -132,7 +141,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
-                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore</spring.profiles.active>
+                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore,mock-kafka</spring.profiles.active>
 						<derby.system.home>${project.build.directory}/derby</derby.system.home>
                     </systemProperties>
                 </configuration>

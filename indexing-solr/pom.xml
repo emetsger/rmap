@@ -14,7 +14,14 @@
     <description>Solr indexing implementation</description>
     <packaging>jar</packaging>
 
+    <properties>
+        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka-broker</kafka.broker.logs-dir>
+        <kafka.broker.host>localhost</kafka.broker.host>
+        <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
+    </properties>
+
     <build>
+
         <plugins>
 
             <plugin>
@@ -58,11 +65,102 @@
             </plugin>
 
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-port</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <configuration>
+                            <portNames>
+                                <portName>kafka.broker.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <configuration>
+                    <resourceBundles>
+                        <resourceBundle>info.rmapproject:rmap-kafka-shared:${project.parent.version}</resourceBundle>
+                    </resourceBundles>
+                    <includeProjectProperties>true</includeProjectProperties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>start-kafka</id>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <target>
+                                <taskdef name="startKafkaBroker"
+                                         classname="info.rmapproject.integration.util.StartKafkaBrokerTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <startKafkaBroker
+                                        brokerPropertiesLocation="${project.build.directory}/maven-shared-archive-resources/kafka-broker.properties"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-kafka</id>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <target>
+                                <taskdef name="stopKafkaBroker"
+                                         classname="info.rmapproject.integration.util.StopKafkaBrokerTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <stopKafkaBroker/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.kafka</groupId>
+                        <artifactId>spring-kafka-test</artifactId>
+                        <version>${spring-data-kafka.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>info.rmapproject</groupId>
+                        <artifactId>rmap-integration-util</artifactId>
+                        <version>${project.parent.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <systemProperties>
                         <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
+                        <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
                     </systemProperties>
                 </configuration>
                 <executions>
@@ -75,7 +173,18 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemProperties>
+                        <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+
         </plugins>
+
     </build>
 
     <dependencies>
