@@ -63,8 +63,8 @@ public class IndexDTO implements Serializable {
      * </p>
      * @param event the RMapEvent being indexed
      * @param agent the RMapAgent responsible for the event
-     * @param sourceDisco the DiSCO referenced by the event's source IRI
-     * @param targetDisco the DiSCO referenced by the event's target IRI
+     * @param sourceDisco the DiSCO referenced by the event's source IRI, may be {@code null}
+     * @param targetDisco the DiSCO referenced by the event's target IRI, may be {@code null}
      * @throws IllegalArgumentException if {@code event} or {@code agent} are {@code null}, or if a reference is missing
      */
     public IndexDTO(RMapEvent event, RMapAgent agent, RMapDiSCO sourceDisco, RMapDiSCO targetDisco) {
