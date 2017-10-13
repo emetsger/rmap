@@ -25,21 +25,6 @@ public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
     @Override
     @SuppressWarnings("unchecked")
     public void execute() throws BuildException {
-//        if (getBrokerHome() == null) {
-//            throw new IllegalStateException("Kakfa broker home must not be null.");
-//        }
-//
-//        if (getBrokerPort() < 1) {
-//            throw new IllegalStateException("Kafka broker port must be a positive integer.");
-//        }
-//
-//        if (getBrokerHost() == null || getBrokerHost().trim().length() == 0) {
-//            throw new IllegalStateException("Kafka broker host must not be empty or null.");
-//        }
-//
-//        if (getBrokerPropertiesLocation() == null) {
-//            throw new IllegalStateException("Kafka broker properties location must not be null.");
-//        }
 
         Properties brokerProperties = new Properties();
 
@@ -51,9 +36,6 @@ public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
         } catch (IOException e) {
             throw new RuntimeException("Error loading Kafka broker properties file '" + getBrokerPropertiesLocation() +
                     "': " + e.getMessage(), e);
-        } catch (NullPointerException e) {
-            throw new RuntimeException("The Kafka broker properties file produced a null input stream '" +
-                    getBrokerPropertiesLocation() + "': " + e.getMessage(), e);
         }
 
         KafkaEmbedded broker = new KafkaEmbedded(1, true, 2, "topic");
