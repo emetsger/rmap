@@ -190,18 +190,22 @@ public class IndexUtils {
      * Retrieves the source or target of the supplied event.
      * <p>
      * Most RMap events have a source and a target.  For example, an update event will have the disco <em>being
-     * updated</em> as the source and the <em>updated disco</em> as the target.  The Java method used to retrieve the
-     * source or target of the event depends on the sub-type of {@code RMapEvent}.
+     * updated</em> as the source and the <em>updated disco</em> as the target.
      * </p>
      *
      * @param event the event to examine
-     * @param direction the direction of
+     * @param direction the direction of the event: source or target
      * @return an {@code Optional} with the IRI of the referenced disco
-     * @throws IllegalArgumentException if an unknown {@code RMapEvent} is encountered
+     * @throws IllegalArgumentException if an unknown {@code RMapEvent} is encountered, or an unsupported
+     *                                  {@code EventDirection} is supplied
      * @throws NullPointerException if the source or target IRI is {@code null}
      */
     public static Optional<RMapIri> findEventIri(RMapEvent event, EventDirection direction) {
         Optional<RMapIri> iri = Optional.empty();
+
+        if (direction != EventDirection.SOURCE || direction != EventDirection.TARGET) {
+            throw new IllegalArgumentException("Direction must either be SOURCE or TARGET, was " + direction.name());
+        }
 
         if (direction == EventDirection.TARGET) {
             switch (event.getEventType()) {
