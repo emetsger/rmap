@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Optional;
 
 import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
@@ -48,6 +49,7 @@ public class IndexDTO implements Serializable {
     private RMapDiSCO targetDisco;
     private RMapIri eventSourceIri;
     private RMapIri eventTargetIri;
+    private Map<String, String> metadata;
 
     /**
      * Constructs a connected graph of objects to be indexed.
@@ -139,6 +141,14 @@ public class IndexDTO implements Serializable {
         return eventTargetIri;
     }
 
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -154,7 +164,9 @@ public class IndexDTO implements Serializable {
             return false;
         if (eventSourceIri != null ? !eventSourceIri.equals(indexDTO.eventSourceIri) : indexDTO.eventSourceIri != null)
             return false;
-        return eventTargetIri != null ? eventTargetIri.equals(indexDTO.eventTargetIri) : indexDTO.eventTargetIri == null;
+        if (eventTargetIri != null ? !eventTargetIri.equals(indexDTO.eventTargetIri) : indexDTO.eventTargetIri != null)
+            return false;
+        return metadata != null ? metadata.equals(indexDTO.metadata) : indexDTO.metadata == null;
     }
 
     @Override
@@ -165,19 +177,7 @@ public class IndexDTO implements Serializable {
         result = 31 * result + (targetDisco != null ? targetDisco.hashCode() : 0);
         result = 31 * result + (eventSourceIri != null ? eventSourceIri.hashCode() : 0);
         result = 31 * result + (eventTargetIri != null ? eventTargetIri.hashCode() : 0);
+        result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public String toString() {
-        return "IndexDTO{" +
-                "event=" + ((event != null) ? event.getId() : "null") +
-                ", agent=" + ((agent != null) ? agent.getId() : "null") +
-                ", sourceDisco=" + ((sourceDisco != null) ? sourceDisco.getId() : "null") +
-                ", targetDisco=" + ((targetDisco != null) ? targetDisco.getId() : "null") +
-                ", eventSourceIri=" + ((eventSourceIri != null) ? eventSourceIri.getIri() : "null") +
-                ", eventTargetIri=" + ((eventTargetIri != null) ? eventTargetIri.getIri() : "null") +
-                '}';
-    }
-
 }
