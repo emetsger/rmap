@@ -26,6 +26,11 @@ public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
     @SuppressWarnings("unchecked")
     public void execute() throws BuildException {
 
+        if (BROKER_IS_STARTED) {
+            LOG.warn("Kafka broker has already been started, refusing to start another instance.");
+            return;
+        }
+
         Properties brokerProperties = new Properties();
 
         try (InputStream in = new FileInputStream(getBrokerPropertiesLocation())) {
