@@ -401,6 +401,10 @@
                                 <file>${project.build.directory}/maven-shared-archive-resources/event-producer.properties</file>
                                 <todir>shared/classes</todir>
                             </copy>
+                            <copy>
+                                <file>${project.build.directory}/maven-shared-archive-resources/event-consumer.properties</file>
+                                <todir>shared/classes</todir>
+                            </copy>
                         </files>
                     </configuration>
 

@@ -16,14 +16,42 @@
         <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
     </beans>
 
+    <!-- production kafka config, from rmap-kafka-shared module -->
+    <beans profile="prod-kafka">
+        <import resource="classpath*:/rmap-kafka-shared.xml"/>
+
+        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
+            <property name="consumer" ref="eventConsumer"/>
+        </bean>
+
+        <bean id="retryHandler" class="info.rmapproject.indexing.kafka.DefaultIndexRetryHandler">
+            <constructor-arg ref="repository"/>
+            <constructor-arg value="1000"/>
+            <constructor-arg value="1.5"/>
+            <constructor-arg value="60000"/>
+        </bean>
+
+        <bean id="indexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
+            <property name="repo" ref="repository"/>
+            <property name="consumer" ref="eventConsumer"/>
+            <property name="topic" value="${rmapcore.producer.topic}"/>
+            <property name="pollTimeoutMs" value="30000"/>
+            <!--<property name="shutdownHook" ref=""/>-->
+            <property name="rebalanceListener" ref="rebalancer"/>
+            <property name="retryHandler" ref="retryHandler"/>
+        </bean>
+
+    </beans>
+
     <beans>
         <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
-
         <bean id="eventTupleMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventDiscoTupleMapper"/>
         <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
         <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
         <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
         <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
+
+        <bean id="repository" class="info.rmapproject.indexing.solr.repository.CustomRepoImpl"/>
     </beans>
 
 </beans>

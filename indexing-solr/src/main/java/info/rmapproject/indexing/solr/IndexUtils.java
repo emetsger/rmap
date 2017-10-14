@@ -333,4 +333,26 @@ public class IndexUtils {
         assertNotNull(cause, "Exception cause must not be null.");
         return () -> new IllegalStateException(message, cause);
     }
+
+    public static int assertPositive(int candidate) {
+        return assertPositive(candidate, iae("Argument must be a positive integer."));
+    }
+
+    public static int assertPositive(int candidate, Supplier<? extends RuntimeException> toThrow) {
+        if (candidate < 1) {
+            throw toThrow.get();
+        }
+        return candidate;
+    }
+
+    public static float assertPositive(float candidate) {
+        return assertPositive(candidate, iae("Argument must be a positive float."));
+    }
+
+    public static float assertPositive(float candidate, Supplier<? extends RuntimeException> toThrow) {
+        if (candidate < 1) {
+            throw toThrow.get();
+        }
+        return candidate;
+    }
 }
