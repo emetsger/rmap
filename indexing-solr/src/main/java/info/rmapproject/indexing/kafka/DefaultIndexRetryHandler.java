@@ -48,7 +48,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
         int attempt = 1;
         long timeout = indexRetryTimeoutMs;
         boolean success = false;
-        Exception cause = null;
+        Exception retryFailure = null;
 
         do {
 
@@ -58,7 +58,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
                 repository.index(dto);
                 success = true;
             } catch (Exception e) {
-                cause = e;
+                retryFailure = e;
                 LOG.debug("Retry attempt {} failed: {}", e.getMessage(), e);
             }
 
@@ -76,9 +76,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
 
         if (!success) {
             String fmt = "Timeout after %s attempts, %s ms: failed to index %s: %s";
-            String msg = String.format(fmt, attempt, (currentTimeMillis() - start), dto, cause.getMessage());
+            String msg = String.format(fmt, attempt, (currentTimeMillis() - start), dto, retryFailure.getMessage());
             LOG.error(msg);
-            throw new IndexingTimeoutException(msg, cause);
+            throw new IndexingTimeoutException(msg, retryFailure);
         }
     }
 
