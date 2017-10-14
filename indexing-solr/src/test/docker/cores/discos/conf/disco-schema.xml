@@ -96,6 +96,9 @@
     -->
     <field name="event_target_object_uris" type="uris"/>
 
+    <!-- Dynamic field indexing for Kafka metadata -->
+    <dynamicField name="md_*" type="string" indexed="true"  stored="true"/>
+
     <!--
       Agent that is responsible for the event and state of the DiSCO
     -->

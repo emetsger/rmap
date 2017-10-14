@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
 import java.util.List;
+import java.util.Map;
 
 import static info.rmapproject.indexing.IndexUtils.assertValidUri;
 
@@ -104,6 +105,10 @@ public class DiscoSolrDocument {
 
     @Field("agent_description")
     private String agentDescription;
+
+
+    @Field("md_*")
+    private Map<String, String> metadata;
 
     public DiscoSolrDocument() {
 
@@ -327,7 +332,9 @@ public class DiscoSolrDocument {
         if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
         if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
             return false;
-        return agentDescription != null ? agentDescription.equals(that.agentDescription) : that.agentDescription == null;
+        if (agentDescription != null ? !agentDescription.equals(that.agentDescription) : that.agentDescription != null)
+            return false;
+        return metadata != null ? metadata.equals(that.metadata) : that.metadata == null;
     }
 
     @Override
@@ -353,6 +360,7 @@ public class DiscoSolrDocument {
         result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
         result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
+        result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
         return result;
     }
 }
