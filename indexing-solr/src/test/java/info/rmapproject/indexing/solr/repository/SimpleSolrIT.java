@@ -556,6 +556,58 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     }
 
     /**
+     * Create a DiscoSolrDocument with metadata, then update it.  Verify the updated document can be retrieved from the
+     * index.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void writeAndUpdateVersionUsingRepo() throws Exception {
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+
+        // Document metadata
+        Map<String, String> expectedMd = new HashMap<String, String>() {
+            {
+                put("md_foo", "bar");
+                put("md_baz", "biz");
+            }
+        };
+
+        // Create a document and store it in the index.
+
+        DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
+                .docId("1")
+                .discoUri("http://doi.org/10.1109/disco/2")
+                .discoStatus("ACTIVE")
+                .metadata(expectedMd)
+                .build();
+
+        DiscoSolrDocument saved = discoRepository.save(doc);
+        assertNotNull(saved);
+        assertEquals(doc, saved);
+
+        assertEquals(1, discoRepository.count());
+
+        // Update the document metadata and save it in the index.
+
+        expectedMd.put("md_baz", "blah");
+        DiscoSolrDocument docWithUpdate = new DiscoSolrDocument.Builder(doc)
+                .metadata(expectedMd)
+                .build();
+
+        DiscoSolrDocument updateResponse = discoRepository.save(docWithUpdate);
+        assertNotNull(updateResponse);
+
+        // Verify that the updated document can be retrieved
+
+        final DiscoSolrDocument actual = discoRepository.findById(Long.parseLong(docWithUpdate.getDocId()))
+                .orElseThrow(() -> new RuntimeException("DiscoSolrDocument " + docWithUpdate.getDocId() + " not found in index."));
+
+        assertEquals(updateResponse, actual);
+    }
+
+    /**
      * Domain instance document
      * @param id
      * @param testDescription
