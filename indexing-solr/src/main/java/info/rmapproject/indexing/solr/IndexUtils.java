@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
 import java.net.URI;
-import java.rmi.server.RMIClassLoader;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -21,8 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
 
 /**
  * Provides common utility methods used by model classes.
