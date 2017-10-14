@@ -4,6 +4,7 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -291,6 +292,179 @@ public class DiscoSolrDocument {
 
     public void setAgentDescription(String agentDescription) {
         this.agentDescription = agentDescription;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+
+    public static class Builder {
+        private boolean lastUpdatedInvoked = false;
+        private DiscoSolrDocument instance;
+
+        public Builder() {
+
+        }
+
+        public Builder(DiscoSolrDocument doc) {
+            instance = doc;
+        }
+
+        public Builder docId(String docId) {
+            instantiateIfNull();
+            instance.setDocId(docId);
+            return this;
+        }
+
+        public Builder docLastUpdated(long docLastUpdated) {
+            instantiateIfNull();
+            instance.setDocLastUpdated(docLastUpdated);
+            lastUpdatedInvoked = true;
+            return this;
+        }
+
+        public Builder discoUri(String discoUri) {
+            instantiateIfNull();
+            instance.setDiscoUri(discoUri);
+            return this;
+        }
+
+        public Builder discoCreatorUri(String discoCreatorUri) {
+            instantiateIfNull();
+            instance.setDiscoCreatorUri(discoCreatorUri);
+            return this;
+        }
+
+        public Builder discoDescription(String discoDescription) {
+            instantiateIfNull();
+            instance.setDiscoDescription(discoDescription);
+            return this;
+        }
+
+        public Builder discoProviderid(String discoProviderid) {
+            instantiateIfNull();
+            instance.setDiscoProviderid(discoProviderid);
+            return this;
+        }
+
+        public Builder discoAggregatedResourceUris(List<String> discoAggregatedResourceUris) {
+            instantiateIfNull();
+            instance.setDiscoAggregatedResourceUris(discoAggregatedResourceUris);
+            return this;
+        }
+
+        public Builder discoProvenanceUri(String discoProvenanceUri) {
+            instantiateIfNull();
+            instance.setDiscoProvenanceUri(discoProvenanceUri);
+            return this;
+        }
+
+        public Builder discoRelatedStatements(List<String> discoRelatedStatements) {
+            instantiateIfNull();
+            instance.setDiscoRelatedStatements(discoRelatedStatements);
+            return this;
+        }
+
+        public Builder discoStatus(String discoStatus) {
+            instantiateIfNull();
+            instance.setDiscoStatus(discoStatus);
+            return this;
+        }
+
+        public Builder eventUri(String eventUri) {
+            instantiateIfNull();
+            instance.setEventUri(eventUri);
+            return this;
+        }
+
+        public Builder eventAgentUri(String eventAgentUri) {
+            instantiateIfNull();
+            instance.setEventAgentUri(eventAgentUri);
+            return this;
+        }
+
+        public Builder eventStartTime(String eventStartTime) {
+            instantiateIfNull();
+            instance.setEventStartTime(eventStartTime);
+            return this;
+        }
+
+        public Builder eventEndTime(String eventEndTime) {
+            instantiateIfNull();
+            instance.setEventEndTime(eventEndTime);
+            return this;
+        }
+
+        public Builder eventDescription(String eventDescription) {
+            instantiateIfNull();
+            instance.setEventDescription(eventDescription);
+            return this;
+        }
+
+        public Builder eventType(String eventType) {
+            instantiateIfNull();
+            instance.setEventType(eventType);
+            return this;
+        }
+
+        public Builder eventSourceObjectUris(List<String> eventSourceObjectUris) {
+            instantiateIfNull();
+            instance.setEventSourceObjectUris(eventSourceObjectUris);
+            return this;
+        }
+
+        public Builder eventTargetObjectUris(List<String> eventTargetObjectUris) {
+            instantiateIfNull();
+            instance.setEventTargetObjectUris(eventTargetObjectUris);
+            return this;
+        }
+
+        public Builder agentUri(String agentUri) {
+            instantiateIfNull();
+            instance.setAgentUri(agentUri);
+            return this;
+        }
+
+        public Builder agentProviderUri(String agentProviderUri) {
+            instantiateIfNull();
+            instance.setAgentProviderUri(agentProviderUri);
+            return this;
+        }
+
+        public Builder agentDescription(String agentDescription) {
+            instantiateIfNull();
+            instance.setAgentDescription(agentDescription);
+            return this;
+        }
+
+        public Builder metadata(Map<String, String> metadata) {
+            instantiateIfNull();
+            instance.setMetadata(metadata);
+            return this;
+        }
+
+        public DiscoSolrDocument build() {
+            instantiateIfNull();
+            if (!lastUpdatedInvoked) {
+                this.docLastUpdated(Calendar.getInstance().getTimeInMillis());
+            }
+            return instance;
+        }
+
+        private void instantiateIfNull() {
+            if (instance == null) {
+                instance = new DiscoSolrDocument();
+            }
+        }
+
+        private void reset() {
+            instance = null;
+            lastUpdatedInvoked = false;
+        }
     }
 
     @Override
