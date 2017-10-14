@@ -6,7 +6,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 
 import java.util.List;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertValidUri;
+import static info.rmapproject.indexing.IndexUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)

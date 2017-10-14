@@ -10,7 +10,7 @@ import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;

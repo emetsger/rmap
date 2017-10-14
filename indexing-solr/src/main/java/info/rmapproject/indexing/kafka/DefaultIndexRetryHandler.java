@@ -6,9 +6,9 @@ import info.rmapproject.indexing.solr.repository.IndexDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
-import static info.rmapproject.indexing.solr.IndexUtils.assertPositive;
-import static info.rmapproject.indexing.solr.IndexUtils.iae;
+import static info.rmapproject.indexing.IndexUtils.assertNotNull;
+import static info.rmapproject.indexing.IndexUtils.assertPositive;
+import static info.rmapproject.indexing.IndexUtils.iae;
 import static java.lang.System.currentTimeMillis;
 
 /**

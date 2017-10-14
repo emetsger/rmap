@@ -1,4 +1,4 @@
-package info.rmapproject.indexing.solr;
+package info.rmapproject.indexing;
 
 import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.event.RMapEvent;

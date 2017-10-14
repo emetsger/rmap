@@ -1,11 +1,11 @@
 package info.rmapproject.indexing.solr.repository;
 
 import info.rmapproject.core.model.agent.RMapAgent;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.springframework.stereotype.Component;
 
-import static info.rmapproject.indexing.solr.IndexUtils.notNull;
+import static info.rmapproject.indexing.IndexUtils.notNull;
 
 /**
  * Maps the properties of an {@code RMapAgent} object to fields in a Solr {@code DiscoSolrDocument}.

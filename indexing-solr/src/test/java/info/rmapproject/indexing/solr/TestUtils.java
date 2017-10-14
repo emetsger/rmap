@@ -9,6 +9,7 @@ import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
 import info.rmapproject.indexing.solr.repository.SimpleSolrTest;
 import org.openrdf.model.IRI;
@@ -37,8 +38,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
-import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

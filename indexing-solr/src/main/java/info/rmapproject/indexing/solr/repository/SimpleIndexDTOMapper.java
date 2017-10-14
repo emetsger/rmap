@@ -4,15 +4,13 @@ import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.event.RMapEventType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.stream.Stream;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
-import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
-import static info.rmapproject.indexing.solr.IndexUtils.ise;
+import static info.rmapproject.indexing.IndexUtils.assertNotNull;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.ise;
 
 /**
  * Decomposes a {@link IndexDTO} object to a stream of {@link EventDiscoTuple}s, in preparation for indexing.

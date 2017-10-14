@@ -3,7 +3,7 @@ package info.rmapproject.indexing.solr.repository;
 import org.springframework.data.solr.core.query.Field;
 import org.springframework.data.solr.core.query.PartialUpdate;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNullOrEmpty;
+import static info.rmapproject.indexing.IndexUtils.assertNotNullOrEmpty;
 
 /**
  * Wraps a Solr {@link PartialUpdate} for the purpose of carrying additional metadata, such as the URI of the

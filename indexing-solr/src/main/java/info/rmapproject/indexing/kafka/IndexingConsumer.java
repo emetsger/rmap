@@ -23,10 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static info.rmapproject.indexing.solr.IndexUtils.EventDirection.SOURCE;
-import static info.rmapproject.indexing.solr.IndexUtils.EventDirection.TARGET;
-import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
-import static info.rmapproject.indexing.solr.IndexUtils.ise;
+import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
+import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
+import static info.rmapproject.indexing.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.IndexUtils.ise;
 import static java.util.Collections.singleton;
 
 /**

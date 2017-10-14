@@ -1,14 +1,14 @@
 package info.rmapproject.indexing.solr.repository;
 
 import info.rmapproject.core.model.disco.RMapDiSCO;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.stream.Collectors;
 
-import static info.rmapproject.indexing.solr.IndexUtils.notNull;
+import static info.rmapproject.indexing.IndexUtils.notNull;
 import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToString;
 
 /**

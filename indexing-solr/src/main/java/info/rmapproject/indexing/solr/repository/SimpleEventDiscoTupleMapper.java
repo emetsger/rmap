@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
-import static info.rmapproject.indexing.solr.IndexUtils.ise;
-import static info.rmapproject.indexing.solr.IndexUtils.notNull;
+import static info.rmapproject.indexing.IndexUtils.assertNotNull;
+import static info.rmapproject.indexing.IndexUtils.ise;
+import static info.rmapproject.indexing.IndexUtils.notNull;
 
 /**
  * Maps {@link EventDiscoTuple} instances to {@link info.rmapproject.indexing.solr.model.DiscoSolrDocument}s.
