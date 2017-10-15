@@ -115,17 +115,12 @@ public class IndexingConsumer {
     }
 
     private void processEventRecord(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) {
-        // Store offsets in the index
-        Map<String, String> md = new HashMap<String, String>() {
-            {
-                put("md_kafka_topic", recordTopic);
-                put("md_kafka_partition", String.valueOf(recordPartition));
-                put("md_kafka_offset", String.valueOf(recordOffset));
-            }
-        };
+        KafkaDTO dto = composeDTO(event, rmapService);
 
-        IndexDTO dto = composeDTO(event, rmapService);
-        dto.setMetadata(md);
+        // Store offsets in the index
+        dto.setTopic(recordTopic);
+        dto.setPartition(recordPartition);
+        dto.setOffset(recordOffset);
 
         try {
             repo.index(dto);
@@ -161,12 +156,12 @@ public class IndexingConsumer {
                 .collect(Collectors.joining(", "));
     }
 
-    private IndexDTO composeDTO(RMapEvent event, RMapService rmapService) {
+    private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
         RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE).get(), rmapService);
         RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET).get(), rmapService);
         RMapAgent agent = getAgent(event.getAssociatedAgent().getIri(), rmapService);
 
-        return new IndexDTO(event, agent, sourceDisco, targetDisco);
+        return new KafkaDTO(event, agent, sourceDisco, targetDisco);
     }
 
     private static RMapDiSCO getDisco(RMapIri optionalIri, RMapService rmapService) {

@@ -111,6 +111,15 @@ public class DiscoSolrDocument {
     @Field("md_*")
     private Map<String, String> metadata;
 
+    @Field("kafka_topic")
+    private String kafkaTopic;
+
+    @Field("kafka_partition")
+    private int kafkaPartition;
+
+    @Field("kafka_offset")
+    private long kafkaOffset;
+
     public DiscoSolrDocument() {
 
     }
@@ -302,6 +311,30 @@ public class DiscoSolrDocument {
         this.metadata = metadata;
     }
 
+    public String getKafkaTopic() {
+        return kafkaTopic;
+    }
+
+    public void setKafkaTopic(String kafkaTopic) {
+        this.kafkaTopic = kafkaTopic;
+    }
+
+    public int getKafkaPartition() {
+        return kafkaPartition;
+    }
+
+    public void setKafkaPartition(int kafkaPartition) {
+        this.kafkaPartition = kafkaPartition;
+    }
+
+    public long getKafkaOffset() {
+        return kafkaOffset;
+    }
+
+    public void setKafkaOffset(long kafkaOffset) {
+        this.kafkaOffset = kafkaOffset;
+    }
+
     public static class Builder {
         private boolean lastUpdatedInvoked = false;
         private DiscoSolrDocument instance;
@@ -447,6 +480,24 @@ public class DiscoSolrDocument {
             return this;
         }
 
+        public Builder kafkaTopic(String topic) {
+            instantiateIfNull();
+            instance.setKafkaTopic(topic);
+            return this;
+        }
+
+        public Builder kafkaPartition(int partition) {
+            instantiateIfNull();
+            instance.setKafkaPartition(partition);
+            return this;
+        }
+
+        public Builder kafkaOffset(long offset) {
+            instantiateIfNull();
+            instance.setKafkaOffset(offset);
+            return this;
+        }
+
         public DiscoSolrDocument build() {
             instantiateIfNull();
             if (!lastUpdatedInvoked) {
@@ -475,6 +526,8 @@ public class DiscoSolrDocument {
         DiscoSolrDocument that = (DiscoSolrDocument) o;
 
         if (docLastUpdated != that.docLastUpdated) return false;
+        if (kafkaPartition != that.kafkaPartition) return false;
+        if (kafkaOffset != that.kafkaOffset) return false;
         if (docId != null ? !docId.equals(that.docId) : that.docId != null) return false;
         if (discoUri != null ? !discoUri.equals(that.discoUri) : that.discoUri != null) return false;
         if (discoCreatorUri != null ? !discoCreatorUri.equals(that.discoCreatorUri) : that.discoCreatorUri != null)
@@ -508,7 +561,8 @@ public class DiscoSolrDocument {
             return false;
         if (agentDescription != null ? !agentDescription.equals(that.agentDescription) : that.agentDescription != null)
             return false;
-        return metadata != null ? metadata.equals(that.metadata) : that.metadata == null;
+        if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
+        return kafkaTopic != null ? kafkaTopic.equals(that.kafkaTopic) : that.kafkaTopic == null;
     }
 
     @Override
@@ -535,6 +589,9 @@ public class DiscoSolrDocument {
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
         result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
         result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
+        result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
+        result = 31 * result + kafkaPartition;
+        result = 31 * result + (int) (kafkaOffset ^ (kafkaOffset >>> 32));
         return result;
     }
 }

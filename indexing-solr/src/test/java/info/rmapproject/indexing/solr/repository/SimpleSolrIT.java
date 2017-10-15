@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.solr.core.DefaultQueryParser;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -555,56 +557,36 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         solrTemplate.registerQueryParser(Query.class, queryParser);
     }
 
-    /**
-     * Create a DiscoSolrDocument with metadata, then update it.  Verify the updated document can be retrieved from the
-     * index.
-     *
-     * @throws Exception
-     */
     @Test
-    public void writeAndUpdateVersionUsingRepo() throws Exception {
+    public void testKafkaOffsetSort() throws Exception {
         discoRepository.deleteAll();
         assertEquals(0, discoRepository.count());
 
-        // Document metadata
-        Map<String, String> expectedMd = new HashMap<String, String>() {
-            {
-                put("md_foo", "bar");
-                put("md_baz", "biz");
-            }
-        };
+        // Create 20 documents, increasing the offset, and storing them in the index
 
-        // Create a document and store it in the index.
+        Set<DiscoSolrDocument> toStore = new HashSet<>();
 
-        DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
-                .docId("1")
-                .discoUri("http://doi.org/10.1109/disco/2")
-                .discoStatus("ACTIVE")
-                .metadata(expectedMd)
-                .build();
+        for (int i = 0; i < 20; i++) {
+            DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
+                    .docId(String.valueOf(i))
+                    .kafkaOffset(i)
+                    .kafkaTopic("topic")
+                    .kafkaPartition(2)
+                    .build();
+            toStore.add(doc);
+        }
 
-        DiscoSolrDocument saved = discoRepository.save(doc);
-        assertNotNull(saved);
-        assertEquals(doc, saved);
+        discoRepository.saveAll(toStore);
 
-        assertEquals(1, discoRepository.count());
+        List<DiscoSolrDocument> results = discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("topic", 2, new Sort(Sort.Direction.DESC, "kafka_offset"));
 
-        // Update the document metadata and save it in the index.
+        assertNotNull(results);
+        assertEquals(1, results.size());
 
-        expectedMd.put("md_baz", "blah");
-        DiscoSolrDocument docWithUpdate = new DiscoSolrDocument.Builder(doc)
-                .metadata(expectedMd)
-                .build();
+        assertEquals(19, results.get(0).getKafkaOffset());
 
-        DiscoSolrDocument updateResponse = discoRepository.save(docWithUpdate);
-        assertNotNull(updateResponse);
-
-        // Verify that the updated document can be retrieved
-
-        final DiscoSolrDocument actual = discoRepository.findById(Long.parseLong(docWithUpdate.getDocId()))
-                .orElseThrow(() -> new RuntimeException("DiscoSolrDocument " + docWithUpdate.getDocId() + " not found in index."));
-
-        assertEquals(updateResponse, actual);
+        assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("topic", 0, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
+        assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("foo", 2, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
     }
 
     /**
