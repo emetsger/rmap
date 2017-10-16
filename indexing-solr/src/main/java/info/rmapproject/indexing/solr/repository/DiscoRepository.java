@@ -13,7 +13,8 @@ import java.util.Set;
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public interface DiscoRepository extends SolrCrudRepository<DiscoSolrDocument, Long>, CustomRepo {
+public interface DiscoRepository extends SolrCrudRepository<DiscoSolrDocument, Long>, CustomRepo,
+        KafkaMetadataRepository<DiscoSolrDocument> {
 
     Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoAggregatedResourceUris(URI discoAggregatedResourceUri);
 
@@ -24,7 +25,5 @@ public interface DiscoRepository extends SolrCrudRepository<DiscoSolrDocument, L
     Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoUri(String discoUri);
 
     Set<DiscoSolrDocument> findDiscoSolrDocumentsByDiscoUriAndDiscoStatus(String discoUri, String discoStatus);
-
-    List<DiscoSolrDocument> findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(String topic, int partition, Sort sort);
 
 }

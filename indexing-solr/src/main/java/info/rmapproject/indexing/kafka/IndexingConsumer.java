@@ -5,9 +5,10 @@ import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.rmapservice.RMapService;
+import info.rmapproject.indexing.IndexUtils;
+import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.repository.CustomRepo;
-import info.rmapproject.indexing.solr.repository.IndexDTO;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -21,12 +22,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
 import static info.rmapproject.indexing.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.IndexUtils.iae;
 import static info.rmapproject.indexing.IndexUtils.ise;
+import static info.rmapproject.indexing.kafka.KafkaUtils.commitOffsets;
 import static java.util.Collections.singleton;
 
 /**
@@ -43,8 +45,6 @@ public class IndexingConsumer {
 
     private Consumer<String, RMapEvent> consumer;
 
-    private String topic;
-
     private int pollTimeoutMs;
 
     private Thread shutdownHook;
@@ -53,20 +53,38 @@ public class IndexingConsumer {
 
     private IndexingRetryHandler retryHandler;
 
-    void consume() {
-        consume(topic,
-                consumer.assignment().stream().filter(tp -> tp.topic().equals(topic)).findAny()
-                        .orElseThrow(ise("Missing expected TopicPartition for topic " + topic)).partition(),
-                Integer.MIN_VALUE); // TODO: look up current offset from index
+    private OffsetLookup offsetLookup;
+
+    void consumeLatest(String consumeFromTopic, int consumeFromPartition, OffsetLookup offsetLookup) throws UnknownOffsetException {
+        consume(consumeFromTopic, consumeFromPartition,
+                offsetLookup.lookupOffset(consumeFromTopic, consumeFromPartition, Seek.LATEST));
     }
 
-    void consume(String consumeFromTopic, int consumeFromPartition, long startingFromOffset) {
+    void consumeEarliest(String consumeFromTopic, int consumeFromPartition, OffsetLookup offsetLookup) throws UnknownOffsetException {
+        consume(consumeFromTopic, consumeFromPartition,
+                offsetLookup.lookupOffset(consumeFromTopic, consumeFromPartition, Seek.EARLIEST));
+    }
+
+    void consume(String consumeFromTopic, int consumeFromPartition, long startingFromOffset) throws UnknownOffsetException {
+        IndexUtils.assertNotNull(consumer, ise("Consumer must not be null."));
+        IndexUtils.assertNotNullOrEmpty(consumeFromTopic, iae("Topic must not be null or empty."));
+        IndexUtils.assertZeroOrPositive(consumeFromPartition, iae("Partition must be greater than -1."));
+        IndexUtils.assertZeroOrPositive(startingFromOffset, iae("Offset must be greater than -1."));
+
 
         rebalanceListener.setConsumer(consumer);
         consumer.subscribe(singleton(consumeFromTopic), rebalanceListener);
 
         consumer.poll(0); // join consumer group, and get partitions
-        consumer.seek(new TopicPartition(consumeFromTopic, consumeFromPartition), startingFromOffset);
+        if (startingFromOffset > -1) {
+            consumer.seek(new TopicPartition(consumeFromTopic, consumeFromPartition), startingFromOffset);
+            LOG.debug("Seeking to offset {} for topic/partition {}/{}",
+                    startingFromOffset, consumeFromTopic, consumeFromPartition);
+        } else {
+            throw new UnknownOffsetException(String.format(
+                    "Unable to determine starting offset for topic/partition %s/%s",
+                    consumeFromTopic, consumeFromPartition));
+        }
 
         Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>(1);
 
@@ -95,23 +113,9 @@ public class IndexingConsumer {
                         new OffsetAndMetadata(recordOffset));
             });
 
-            commitOffsets(offsetsToCommit);
+            commitOffsets(consumer, offsetsToCommit, true);
 
         }
-    }
-
-    private void commitOffsets(Map<TopicPartition, OffsetAndMetadata> offsetsToCommit) {
-        consumer.commitAsync(offsetsToCommit, (offsets, exception) -> {
-            if (exception != null) {
-                LOG.warn("Unable to commit offsets {}: {}",
-                        offsetsAsString(offsets),
-                        exception.getMessage(),
-                        exception);
-            } else {
-                LOG.debug("Successfully committed offsets {}",
-                        offsetsAsString(offsets));
-            }
-        });
     }
 
     private void processEventRecord(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) {
@@ -141,19 +145,11 @@ public class IndexingConsumer {
             // in this case we don't want to commit the offset to Kafka until we've successfully retried
             try {
                 retryHandler.retry(dto);
-            } catch (IndexingTimeoutException timeoutEx) {
+            } catch (IndexingTimeoutException|IndexingInterruptedException ex) {
                 throw new RuntimeException(
-                        "Failed to index event " + event.getId().getStringValue(), timeoutEx);
+                        "Failed to index event " + event.getId().getStringValue(), ex);
             }
         }
-    }
-
-    private static String offsetsAsString(Map<TopicPartition, OffsetAndMetadata> offsets) {
-        return offsets
-                .entrySet()
-                .stream()
-                .map((entry) -> entry.getKey().toString() + ": " + String.valueOf(entry.getValue().offset()))
-                .collect(Collectors.joining(", "));
     }
 
     private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
@@ -201,14 +197,6 @@ public class IndexingConsumer {
         this.consumer = consumer;
     }
 
-    public String getTopic() {
-        return topic;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
     public int getPollTimeoutMs() {
         return pollTimeoutMs;
     }
@@ -240,5 +228,13 @@ public class IndexingConsumer {
 
     public void setRetryHandler(IndexingRetryHandler retryHandler) {
         this.retryHandler = retryHandler;
+    }
+
+    public OffsetLookup getOffsetLookup() {
+        return offsetLookup;
+    }
+
+    public void setOffsetLookup(OffsetLookup offsetLookup) {
+        this.offsetLookup = offsetLookup;
     }
 }

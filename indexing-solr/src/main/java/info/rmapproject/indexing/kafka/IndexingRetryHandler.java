@@ -1,5 +1,6 @@
 package info.rmapproject.indexing.kafka;
 
+import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
 
@@ -9,6 +10,6 @@ import info.rmapproject.indexing.solr.repository.IndexDTO;
 @FunctionalInterface
 public interface IndexingRetryHandler {
 
-    void retry(IndexDTO dto) throws IndexingTimeoutException;
+    void retry(IndexDTO dto) throws IndexingTimeoutException, IndexingInterruptedException;
 
 }

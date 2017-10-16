@@ -352,4 +352,15 @@ public class IndexUtils {
         }
         return candidate;
     }
+
+    public static long assertZeroOrPositive(long candidate) {
+        return assertZeroOrPositive(candidate, iae("Argument must be greater than -1."));
+    }
+
+    public static long assertZeroOrPositive(long candidate, Supplier<? extends RuntimeException> toThrow) {
+        if (candidate < 0) {
+            throw toThrow.get();
+        }
+        return candidate;
+    }
 }

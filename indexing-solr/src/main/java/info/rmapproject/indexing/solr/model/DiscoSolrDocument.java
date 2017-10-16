@@ -14,7 +14,7 @@ import static info.rmapproject.indexing.IndexUtils.assertValidUri;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @SolrDocument(solrCoreName = "discos")
-public class DiscoSolrDocument {
+public class DiscoSolrDocument implements KafkaMetadata {
 
     /**
      * Name of the Solr core which stores instances of this document
@@ -111,13 +111,24 @@ public class DiscoSolrDocument {
     @Field("md_*")
     private Map<String, String> metadata;
 
-    @Field("kafka_topic")
+
+    /**
+     * Kafka metadata field representing the Kafka topic that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_TOPIC)
     private String kafkaTopic;
 
-    @Field("kafka_partition")
+    /**
+     * Kafka metadata field representing the Kafka partition that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_PARTITION)
     private int kafkaPartition;
 
-    @Field("kafka_offset")
+    /**
+     * Kafka metadata field representing the offset of the Kafka record in the {@link #KAFKA_TOPIC topic} and
+     * {@link #KAFKA_PARTITION partition} that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_OFFSET)
     private long kafkaOffset;
 
     public DiscoSolrDocument() {

@@ -10,6 +10,8 @@ import info.rmapproject.indexing.solr.repository.IndexDTO;
  */
 public class KafkaDTO extends IndexDTO {
 
+    private final static long serialVersionUID = 1;
+
     private String topic;
 
     private int partition;

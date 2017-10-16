@@ -562,11 +562,11 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         discoRepository.deleteAll();
         assertEquals(0, discoRepository.count());
 
-        // Create 20 documents, increasing the offset, and storing them in the index
+        // Create 100 documents, increasing the offset, and storing them in the index
 
         Set<DiscoSolrDocument> toStore = new HashSet<>();
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 100; i++) {
             DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
                     .docId(String.valueOf(i))
                     .kafkaOffset(i)
@@ -583,7 +583,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         assertNotNull(results);
         assertEquals(1, results.size());
 
-        assertEquals(19, results.get(0).getKafkaOffset());
+        assertEquals(99, results.get(0).getKafkaOffset());
 
         assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("topic", 0, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
         assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("foo", 2, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
