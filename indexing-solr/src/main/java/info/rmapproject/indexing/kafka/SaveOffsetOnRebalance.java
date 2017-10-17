@@ -1,7 +1,6 @@
 package info.rmapproject.indexing.kafka;
 
 import info.rmapproject.indexing.IndexUtils;
-import info.rmapproject.indexing.solr.repository.KafkaMetadataRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
