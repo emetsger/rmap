@@ -22,7 +22,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
     /**
      * The default seek behavior if the requested offset for a topic and partition cannot be found.
      */
-    public final Seek DEFAULT_SEEK_BEHAVIOR = Seek.EARLIEST;
+    public static final Seek DEFAULT_SEEK_BEHAVIOR = Seek.EARLIEST;
 
     /**
      * Logging.
@@ -56,8 +56,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
     }
 
     /**
-     * Constructs a new rebalancer which uses the supplied {@link OffsetLookup} for looking up offsets and seeks to the
-     * offset for the supplied {@link Consumer}.
+     * Constructs a new rebalancer which uses the supplied {@link OffsetLookup} for looking up offsets.
      *
      * @param offsetLookup responsible for looking up offsets for a topic/partition pair, must not be {@code null}
      * @param consumer the target of seek operations, must not be {@code null}
@@ -135,9 +134,11 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
 
             // seek to offset
             if (off > -1) {
-                LOG.debug("Seeking to offset {} for topic/partition {}/{}", off, tp.topic(), tp.partition());
                 consumer.seek(tp, off);
             } else {
+                LOG.debug("OffsetLookup could not determine offset, seeking to the {} offset for topic/partition {}/{}",
+                        (seekBehavior == Seek.LATEST) ? "latest" : "earliest", off, tp.topic(), tp.partition());
+
                 Set<TopicPartition> tpCollection = Collections.singleton(tp);
                 switch (seekBehavior) {
                     case LATEST:
@@ -156,10 +157,9 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
                     }
                 }
 
-                off = consumer.position(tp);
-                LOG.debug("Unable to look up offset; seeking to {} offset {} for topic/partition {}/{}",
-                        (seekBehavior == Seek.LATEST) ? "latest" : "earliest", off, tp.topic(), tp.partition());
-
+                long pos = consumer.position(tp);
+                LOG.info("Requested offset {}, performed seek to actual offset {} for topic/partiton {}/{}",
+                        off, pos, tp.topic(), tp.partition());
             }
         });
     }
