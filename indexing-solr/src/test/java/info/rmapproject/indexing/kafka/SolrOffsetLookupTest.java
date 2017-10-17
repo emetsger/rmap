@@ -14,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class SolrOffsetLookupTest {
 
     @Test(expected = IllegalArgumentException.class)

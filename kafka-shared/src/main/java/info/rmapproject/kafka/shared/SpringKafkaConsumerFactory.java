@@ -21,4 +21,8 @@ public class SpringKafkaConsumerFactory {
     public static Consumer newConsumer() {
         return factory.createConsumer();
     }
+
+    public static Consumer newConsumer(String clientIdSuffix) {
+        return factory.createConsumer(clientIdSuffix);
+    }
 }

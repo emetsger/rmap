@@ -1,5 +1,6 @@
 package info.rmapproject.indexing.solr.model;
 
+import info.rmapproject.indexing.kafka.IndexingConsumer;
 import info.rmapproject.indexing.kafka.Seek;
 import org.apache.kafka.common.TopicPartition;
 
@@ -10,7 +11,7 @@ import org.apache.kafka.common.TopicPartition;
  * already exist in Solr.
  *
  * @see org.apache.kafka.clients.consumer.Consumer#seek(TopicPartition, long)
- * @see info.rmapproject.indexing.kafka.IndexingConsumer#consume(String, int, long)
+ * @see IndexingConsumer#consume(String, int, long)
  * @see info.rmapproject.indexing.kafka.OffsetLookup#lookupOffset(String, int, Seek)
  * @see info.rmapproject.indexing.solr.repository.KafkaMetadataRepository
  */

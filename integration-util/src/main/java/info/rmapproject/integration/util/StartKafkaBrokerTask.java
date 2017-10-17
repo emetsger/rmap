@@ -40,7 +40,8 @@ public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
                     "': " + e.getMessage(), e);
         }
 
-        KafkaEmbedded broker = new KafkaEmbedded(1, true, 2, "topic");
+        // TODO parameterize these things in the ant task
+        KafkaEmbedded broker = new KafkaEmbedded(1, true, 2, "rmap-event-topic");
         broker.brokerProperties((Map<String,String>) (Map<?,?>) brokerProperties);
         broker.setKafkaPorts(Arrays.stream(brokerProperties.getProperty("listeners").split(","))
                 .map(URI::create)

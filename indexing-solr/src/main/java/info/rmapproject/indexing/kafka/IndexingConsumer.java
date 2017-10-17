@@ -14,12 +14,14 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.InterruptException;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +40,9 @@ public class IndexingConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexingConsumer.class);
 
+    private static final ConsumerRecords<String, RMapEvent> EMPTY_RECORDS =
+            new ConsumerRecords<>(Collections.emptyMap());
+
     @Autowired
     private RMapService rmapService;
 
@@ -55,36 +60,22 @@ public class IndexingConsumer {
 
     private OffsetLookup offsetLookup;
 
-    void consumeLatest(String consumeFromTopic, int consumeFromPartition, OffsetLookup offsetLookup) throws UnknownOffsetException {
-        consume(consumeFromTopic, consumeFromPartition,
-                offsetLookup.lookupOffset(consumeFromTopic, consumeFromPartition, Seek.LATEST));
+    void consumeLatest(String topic) throws UnknownOffsetException {
+        consume(topic, Seek.LATEST);
     }
 
-    void consumeEarliest(String consumeFromTopic, int consumeFromPartition, OffsetLookup offsetLookup) throws UnknownOffsetException {
-        consume(consumeFromTopic, consumeFromPartition,
-                offsetLookup.lookupOffset(consumeFromTopic, consumeFromPartition, Seek.EARLIEST));
+    void consumeEarliest(String topic) throws UnknownOffsetException {
+        consume(topic, Seek.EARLIEST);
     }
 
-    void consume(String consumeFromTopic, int consumeFromPartition, long startingFromOffset) throws UnknownOffsetException {
+    void consume(String topic, Seek seek) throws UnknownOffsetException {
         IndexUtils.assertNotNull(consumer, ise("Consumer must not be null."));
-        IndexUtils.assertNotNullOrEmpty(consumeFromTopic, iae("Topic must not be null or empty."));
-        IndexUtils.assertZeroOrPositive(consumeFromPartition, iae("Partition must be greater than -1."));
-        IndexUtils.assertZeroOrPositive(startingFromOffset, iae("Offset must be greater than -1."));
-
+        IndexUtils.assertNotNullOrEmpty(topic, "Topic must not be null or empty");
+        IndexUtils.assertNotNull(seek, ise("Seek must not be null."));
 
         rebalanceListener.setConsumer(consumer);
-        consumer.subscribe(singleton(consumeFromTopic), rebalanceListener);
-
-        consumer.poll(0); // join consumer group, and get partitions
-        if (startingFromOffset > -1) {
-            consumer.seek(new TopicPartition(consumeFromTopic, consumeFromPartition), startingFromOffset);
-            LOG.debug("Seeking to offset {} for topic/partition {}/{}",
-                    startingFromOffset, consumeFromTopic, consumeFromPartition);
-        } else {
-            throw new UnknownOffsetException(String.format(
-                    "Unable to determine starting offset for topic/partition %s/%s",
-                    consumeFromTopic, consumeFromPartition));
-        }
+        consumer.subscribe(singleton(topic), rebalanceListener);
+        consumer.poll(0); // join consumer group, get partitions, seek to correct offset
 
         Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>(1);
 
@@ -94,25 +85,34 @@ public class IndexingConsumer {
             ConsumerRecords<String, RMapEvent> records = null;
 
             try {
+                LOG.trace("Entering poll for {} ms", pollTimeoutMs);
                 records = consumer.poll(pollTimeoutMs);
             } catch (WakeupException e) {
                 LOG.info("WakeupException encountered, closing consumer.");
                 consumer.close();
                 break;
+            } catch (InterruptException e) {
+                LOG.info("InterruptException encountered, exiting consumer.poll({}) early.", pollTimeoutMs);
+                Thread.interrupted();
+                // guard against null records
+                records = EMPTY_RECORDS;
             }
 
+            LOG.trace("Processing {} records", records.count());
             records.forEach(record -> {
                 RMapEvent event = record.value();
                 String recordTopic = record.topic();
                 long recordOffset = record.offset();
                 int recordPartition = record.partition();
 
+                LOG.trace("Processing record {}/{}/{} for event: ", recordTopic, recordPartition, recordOffset, event);
                 processEventRecord(recordTopic, recordPartition, recordOffset, event);
 
                 offsetsToCommit.put(new TopicPartition(recordTopic, recordPartition),
                         new OffsetAndMetadata(recordOffset));
             });
 
+            LOG.trace("Committing offsets {}", KafkaUtils.offsetsAsString(offsetsToCommit));
             commitOffsets(consumer, offsetsToCommit, true);
 
         }

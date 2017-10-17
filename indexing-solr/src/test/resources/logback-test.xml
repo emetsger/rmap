@@ -10,7 +10,7 @@
     <root level="WARN">
         <appender-ref ref="STDERR" />
     </root>
-    <logger name="info.rmapproject.indexing" additivity="false" level="DEBUG">
+    <logger name="info.rmapproject.indexing" additivity="false" level="TRACE">
         <appender-ref ref="STDERR" />
     </logger>
     <logger name="org.springframework" additivity="false" level="WARN">

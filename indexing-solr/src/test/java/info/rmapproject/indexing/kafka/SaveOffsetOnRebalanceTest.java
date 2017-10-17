@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class SaveOffsetOnRebalanceTest {
 
     @Test(expected = IllegalArgumentException.class)
@@ -21,27 +22,23 @@ public class SaveOffsetOnRebalanceTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    @SuppressWarnings("unchecked")
     public void testNullConsumerOnConstruction() throws Exception {
         new SaveOffsetOnRebalance(mock(OffsetLookup.class), null);
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testNonNullConstructors() throws Exception {
         new SaveOffsetOnRebalance(mock(OffsetLookup.class));
         new SaveOffsetOnRebalance(mock(OffsetLookup.class), mock(Consumer.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    @SuppressWarnings("unchecked")
     public void testSetNullConsumer() throws Exception {
         SaveOffsetOnRebalance underTest = new SaveOffsetOnRebalance(mock(OffsetLookup.class), mock(Consumer.class));
         underTest.setConsumer(null);
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testSetNonNullConsumer() throws Exception {
         SaveOffsetOnRebalance underTest = new SaveOffsetOnRebalance(mock(OffsetLookup.class), mock(Consumer.class));
         underTest.setConsumer(mock(Consumer.class));
@@ -65,7 +62,6 @@ public class SaveOffsetOnRebalanceTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testOnPartitionsRevoked() throws Exception {
         String topic = "topic";
         int partition = 0;
@@ -89,21 +85,18 @@ public class SaveOffsetOnRebalanceTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testOnPartitionsAssignedZeroOffsetLookup() throws Exception {
         long offset = 0;
         performOffsetLookupTest(offset);
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testOnPartitionsAssignedPositiveOffsetLookup() throws Exception {
         long offset = 43;
         performOffsetLookupTest(offset);
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testOnPartitionsAssignedNegativeOffsetLookup() throws Exception {
         long offset = -1;
         String topic = "topic";

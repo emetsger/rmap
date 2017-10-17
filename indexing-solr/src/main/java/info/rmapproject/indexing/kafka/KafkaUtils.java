@@ -7,6 +7,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -46,5 +47,12 @@ class KafkaUtils {
                 .stream()
                 .map((entry) -> entry.getKey().toString() + ": " + String.valueOf(entry.getValue().offset()))
                 .collect(Collectors.joining(", "));
+    }
+
+    static String topicPartitionsAsString(Collection<TopicPartition> tps) {
+        return tps
+                .stream()
+                .map(TopicPartition::toString)
+                .collect(Collectors.joining(","));
     }
 }

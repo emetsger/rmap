@@ -1,0 +1,5 @@
+bootstrap.servers = ${project.properties["kafka.broker.host"]}:${project.properties["kafka.broker.port"]}
+group.id = shared-consumer-group-1
+#client.id = shared-consumer-1
+auto.offset.reset = earliest
+enable.auto.commit = false

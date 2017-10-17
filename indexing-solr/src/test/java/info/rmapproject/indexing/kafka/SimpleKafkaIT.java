@@ -48,9 +48,9 @@ import static org.junit.Assert.assertTrue;
  */
 @DirtiesContext
 @EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2", "topic3", "topic4"})
-public class SimpleKafkaTest extends AbstractSpringIndexingTest {
+public class SimpleKafkaIT extends AbstractSpringIndexingTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleKafkaTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleKafkaIT.class);
 
     @Autowired
     private KafkaEmbedded kafkaEmbedded;
