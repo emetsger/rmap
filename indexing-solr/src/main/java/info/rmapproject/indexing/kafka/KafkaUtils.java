@@ -16,6 +16,11 @@ class KafkaUtils {
 
     static void commitOffsets(Consumer consumer, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
                               boolean async) {
+
+        if (offsetsToCommit == null || offsetsToCommit.isEmpty()) {
+            return;
+        }
+
         OffsetCommitCallback callback = (offsets, exception) -> {
             if (exception != null) {
                 LOG.warn("Unable to commit offsets {}: {}",
