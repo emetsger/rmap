@@ -1,6 +1,5 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.indexing.solr.repository.KafkaMetadataRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
