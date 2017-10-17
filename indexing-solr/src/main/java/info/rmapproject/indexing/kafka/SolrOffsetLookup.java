@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_ASC_BY_KAFKA_OFFSET;
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_DESC_BY_KAFKA_OFFSET;
@@ -47,8 +48,14 @@ public class SolrOffsetLookup<T extends KafkaMetadata> implements OffsetLookup {
         KafkaMetadataRepository<T> repo = repositories.get(topic);
 
         if (repo == null) {
-            LOG.warn("Unable to determine latest offset for topic {}, mapping to KafkaMetadataRepository is missing." +
-                    "  (Hint: look at the wiring for {}" + this.getClass().getSimpleName());
+            String existingMappings = repositories
+                    .entrySet()
+                    .stream()
+                    .map(entry -> "Topic: " + entry.getKey() + " Repository: " + entry.getValue().getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(entry.getValue())))
+                    .collect(Collectors.joining(",", "[", "]"));
+            LOG.warn("Unable to determine latest offset for topic {}.  Missing a mapping from topic {} to a " +
+                    "KafkaMetadataRepository (Hint: look at the wiring for {}, existing mappings are {})",
+                    topic, topic, this.getClass().getSimpleName(), existingMappings);
             return -1;
         }
 

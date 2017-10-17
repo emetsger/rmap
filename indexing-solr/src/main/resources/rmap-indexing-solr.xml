@@ -20,16 +20,16 @@
     <beans profile="prod-kafka">
         <import resource="classpath*:/rmap-kafka-shared.xml"/>
 
-        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
+        <bean id="offsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
             <constructor-arg>
-                <bean class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
-                    <constructor-arg>
-                        <map>
-                            <entry key="${rmapcore.producer.topic}" value-ref="discoRepository"/>
-                        </map>
-                    </constructor-arg>
-                </bean>
+                <map>
+                    <entry key="${rmapcore.producer.topic}" value-ref="discoRepository"/>
+                </map>
             </constructor-arg>
+        </bean>
+
+        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
+            <constructor-arg ref="offsetLookup"/>
             <property name="consumer" ref="eventConsumer"/>
         </bean>
 
