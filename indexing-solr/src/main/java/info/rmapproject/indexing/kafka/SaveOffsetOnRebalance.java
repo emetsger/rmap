@@ -137,7 +137,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
                 consumer.seek(tp, off);
             } else {
                 LOG.debug("OffsetLookup could not determine offset, seeking to the {} offset for topic/partition {}/{}",
-                        (seekBehavior == Seek.LATEST) ? "latest" : "earliest", off, tp.topic(), tp.partition());
+                        (seekBehavior == Seek.LATEST) ? "latest" : "earliest", tp.topic(), tp.partition());
 
                 Set<TopicPartition> tpCollection = Collections.singleton(tp);
                 switch (seekBehavior) {
@@ -156,11 +156,11 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
                         throw new IllegalArgumentException("Unknown seek behavior value " + seekBehavior);
                     }
                 }
-
-                long pos = consumer.position(tp);
-                LOG.info("Requested offset {}, performed seek to actual offset {} for topic/partiton {}/{}",
-                        off, pos, tp.topic(), tp.partition());
             }
+
+            long pos = consumer.position(tp);
+            LOG.debug("Requested offset {}, performed seek to actual offset {} for topic/partiton {}/{}",
+                    off, pos, tp.topic(), tp.partition());
         });
     }
 

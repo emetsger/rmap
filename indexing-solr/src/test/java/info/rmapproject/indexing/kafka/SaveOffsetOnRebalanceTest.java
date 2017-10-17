@@ -1,5 +1,6 @@
 package info.rmapproject.indexing.kafka;
 
+import info.rmapproject.indexing.solr.repository.KafkaMetadataRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -89,7 +90,59 @@ public class SaveOffsetOnRebalanceTest {
     }
 
     @Test
-    public void testOnPartitionsAssigned() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void testOnPartitionsAssignedZeroOffsetLookup() throws Exception {
+        long offset = 0;
+        performOffsetLookupTest(offset);
+    }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testOnPartitionsAssignedPositiveOffsetLookup() throws Exception {
+        long offset = 43;
+        performOffsetLookupTest(offset);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testOnPartitionsAssignedNegativeOffsetLookup() throws Exception {
+        long offset = -1;
+        String topic = "topic";
+        int partition = 0;
+        TopicPartition tp = new TopicPartition(topic, partition);
+
+        Consumer consumer = mock(Consumer.class);
+        OffsetLookup lookup = mock(OffsetLookup.class);
+        SaveOffsetOnRebalance underTest = new SaveOffsetOnRebalance(lookup, consumer);
+
+        when(lookup.lookupOffset(topic, partition, Seek.LATEST)).thenReturn(offset);
+
+        underTest.onPartitionsAssigned(Collections.singleton(tp));
+
+        verify(lookup).lookupOffset(topic, partition, Seek.LATEST);
+        if (SaveOffsetOnRebalance.DEFAULT_SEEK_BEHAVIOR == Seek.EARLIEST) {
+            verify(consumer).seekToBeginning(Collections.singleton(tp));
+        } else {
+            verify(consumer).seekToEnd(Collections.singleton(tp));
+        }
+        verify(consumer).position(tp);
+    }
+
+    private static void performOffsetLookupTest(long offset) {
+        String topic = "topic";
+        int partition = 0;
+        TopicPartition tp = new TopicPartition(topic, partition);
+
+        Consumer consumer = mock(Consumer.class);
+        OffsetLookup lookup = mock(OffsetLookup.class);
+        SaveOffsetOnRebalance underTest = new SaveOffsetOnRebalance(lookup, consumer);
+
+        when(lookup.lookupOffset(topic, partition, Seek.LATEST)).thenReturn(offset);
+
+        underTest.onPartitionsAssigned(Collections.singleton(tp));
+
+        verify(lookup).lookupOffset(topic, partition, Seek.LATEST);
+        verify(consumer).seek(tp, offset);
+        verify(consumer).position(tp);
     }
 }
