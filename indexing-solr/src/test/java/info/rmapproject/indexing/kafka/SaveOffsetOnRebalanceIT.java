@@ -1,31 +1,80 @@
 package info.rmapproject.indexing.kafka;
 
+import info.rmapproject.auth.model.User;
+import info.rmapproject.auth.service.RMapAuthService;
+import info.rmapproject.core.model.RMapObjectType;
+import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.rmapservice.RMapService;
+import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.TestUtils;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
+import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ContextConfiguration("classpath:/spring-rmapauth-context.xml")
 public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     @Autowired
+    private ApplicationContext ctx;
+
+    @Autowired
     private IndexingConsumer indexer;
+
+    @Autowired
+    private OffsetLookup lookup;
+
+    @Autowired
+    private ConsumerAwareRebalanceListener<String, RMapEvent> underTest;
+
+    @Autowired
+    private KafkaTemplate<String, RMapEvent> producer;
+
+    @Autowired
+    private DiscoRepository discoRepository;
+
+    @Autowired
+    private RMapService rMapService;
+
+    @Autowired
+    private RMapAuthService authService;
+
+    @Autowired
+    private SesameTriplestore triplestore;
 
     @Value("${rmapcore.producer.topic}")
     private String topic;
@@ -129,7 +178,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         t.join();
 
         verify(underTest).onPartitionsRevoked(Collections.emptySet());
-        verify(underTest).onPartitionsAssigned(new HashSet(){
+        verify(underTest).onPartitionsAssigned(new HashSet() {
             {
                 add(new TopicPartition(topic, 0));
                 add(new TopicPartition(topic, 1));
@@ -139,7 +188,56 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     }
 
+    @Test
+    public void testRebalance() throws Exception {
+        // Clear out the index
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+
+        // Get some Rmap objects from the filesystem, and put them in the triplestore
+        Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
+        getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
+        assertFalse(rmapObjects.isEmpty());
+
+        rmapObjects.values().stream().flatMap(Set::stream).forEach(source -> {
+            try (InputStream in = source.getInputStream();
+                 RepositoryConnection c = triplestore.getConnection();
+                 ) {
+                assertTrue(c.isOpen());
+                c.add(in, "http://foo/bar", source.getRdfFormat());
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                fail("Unexpected IOException");
+            }
+        });
+
+        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
+        agents.forEach(agent -> {
+            User u = new User(agent.getName().getStringValue());
+            int userId = authService.addUser(u);
+            authService.createOrUpdateAgentFromUser(userId);
+                });
+
+        // Produce some events, so they're waiting for the consumer when it starts.
+        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
+        events.forEach(event -> producer.send(topic, event));
+        producer.flush();
+
+        // Boot up the first indexing consumer, and consume some events.
+        Thread initialIndexerThread = new Thread(newConsumerRunnable(), "Initial Indexer");
+        initialIndexerThread.start();
+        Thread.sleep(30000);
+
+        // clean up
+        indexer.getConsumer().wakeup();
+        initialIndexerThread.join();
+    }
+
     private Runnable newConsumerRunnable() {
+        return newConsumerRunnable(this.indexer);
+    }
+
+    private Runnable newConsumerRunnable(IndexingConsumer indexer) {
         return () -> {
             try {
                 indexer.consumeEarliest(topic);
@@ -148,6 +246,8 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
             } catch (RuntimeException e) {
                 if (e.getCause() instanceof IndexingInterruptedException) {
                     LOG.info("Caught {}", e.getMessage(), e);
+                } else {
+                    throw e;
                 }
             }
         };

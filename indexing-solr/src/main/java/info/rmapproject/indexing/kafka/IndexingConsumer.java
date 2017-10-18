@@ -105,7 +105,7 @@ public class IndexingConsumer {
                 long recordOffset = record.offset();
                 int recordPartition = record.partition();
 
-                LOG.trace("Processing record {}/{}/{} for event: ", recordTopic, recordPartition, recordOffset, event);
+                LOG.trace("Processing record {}/{}/{} for event: {}", recordTopic, recordPartition, recordOffset, event);
                 processEventRecord(recordTopic, recordPartition, recordOffset, event);
 
                 offsetsToCommit.put(new TopicPartition(recordTopic, recordPartition),

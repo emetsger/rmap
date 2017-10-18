@@ -44,7 +44,7 @@
         </bean>
 
         <bean id="eventConsumer" class="info.rmapproject.kafka.shared.SpringKafkaConsumerFactory"
-              factory-method="newConsumer"/>
+              factory-method="newConsumer" scope="prototype"/>
 
     </beans>
 
