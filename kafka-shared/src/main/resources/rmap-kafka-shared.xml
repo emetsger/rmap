@@ -7,7 +7,7 @@
 
     <beans profile="prod-kafka">
 
-        <util:properties id="producerProperties" location="classpath*:/event-producer.properties"/>
+        <util:properties id="producerProperties" location="classpath:/event-producer.properties"/>
 
         <bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
             <constructor-arg>
