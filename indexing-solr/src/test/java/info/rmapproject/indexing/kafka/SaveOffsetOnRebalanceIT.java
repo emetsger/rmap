@@ -63,6 +63,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         Thread t = new Thread(newConsumerRunnable(), "testPartitionsRevokedAndAssignedOnConsumerJoin-consumer");
         t.start();
 
+        // rebalancer should be called when the consumer starts.
         assertTrue(initialLatch2.await(60000, TimeUnit.MILLISECONDS));
 
         CountDownLatch secondaryLatch2 = new CountDownLatch(2);
@@ -86,15 +87,23 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
             }
         });
 
+        // Fire up a second consumer, and invoke poll so it gets its partitions assigned.  the rebalancer should be
+        // invoked for both consumers
         secondaryConsumer.poll(0);
-        t.interrupt();
+        t.interrupt();  // short-circuit any polling in the initial consumer, speed things up.
+
+        // the initial rebalancer should have its methods invoked a total of four times
         assertTrue(initialLatch4.await(60000, TimeUnit.MILLISECONDS));
+
+        // the second rebalancer should have its methods invoked a total of two times
         assertTrue(secondaryLatch2.await(60000, TimeUnit.MILLISECONDS));
 
+        // cleanup.  wakeup causes the initial indexer close its consumer and exit
+        LOG.debug("Waking up initial consumer.");
         indexer.getConsumer().wakeup();
+        LOG.debug("Thread joining.");
         t.join();
-
-        secondaryConsumer.wakeup();
+        LOG.debug("Closing secondary consumer.");
         secondaryConsumer.close();
     }
 
@@ -113,8 +122,10 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         // allow thread to run a bit
         Thread.sleep(5000);
 
+        LOG.debug("Waking up consumer.");
         indexer.getConsumer().wakeup();
 
+        LOG.debug("Thread joining.");
         t.join();
 
         verify(underTest).onPartitionsRevoked(Collections.emptySet());
