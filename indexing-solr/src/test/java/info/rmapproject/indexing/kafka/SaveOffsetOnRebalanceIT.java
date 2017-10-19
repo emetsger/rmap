@@ -8,7 +8,7 @@ import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.impl.openrdf.ORAdapter;
 import info.rmapproject.core.model.impl.openrdf.ORMapAgent;
-import info.rmapproject.core.model.impl.openrdf.StatementsAdapter;
+import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
 import info.rmapproject.core.model.request.RMapRequestAgent;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
