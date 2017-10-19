@@ -3,13 +3,15 @@ package info.rmapproject.indexing.kafka;
 import info.rmapproject.auth.model.User;
 import info.rmapproject.auth.model.UserIdentityProvider;
 import info.rmapproject.auth.service.RMapAuthService;
+import info.rmapproject.core.exception.RMapDefectiveArgumentException;
+import info.rmapproject.core.exception.RMapException;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.impl.openrdf.ORAdapter;
 import info.rmapproject.core.model.impl.openrdf.ORMapAgent;
 import info.rmapproject.core.model.impl.openrdf.OStatementsAdapter;
-import info.rmapproject.core.model.request.RMapRequestAgent;
+import info.rmapproject.core.model.request.RequestEventDetails;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.IndexingInterruptedException;
@@ -36,6 +38,7 @@ import sun.management.resources.agent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -222,16 +225,13 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
             }
         });
 
-        IRI AGENT_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID);
-        IRI ID_PROVIDER_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID_PROVIDER);
-        IRI AUTH_ID_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_AUTH_ID);
-        Literal NAME = ORAdapter.getValueFactory().createLiteral(TestConstants.SYSAGENT_NAME);
-        ORMapAgent sysagent = new ORMapAgent(AGENT_IRI, ID_PROVIDER_IRI, AUTH_ID_IRI, NAME);
-
-
-        RMapRequestAgent reqEventDetails = new RMapRequestAgent(new URI(TestConstants.SYSAGENT_ID),new URI(TestConstants.SYSAGENT_KEY));
+        RMapAgent systemAgent = createSystemAgent(rMapService);
+        RequestEventDetails requestEventDetails = new RequestEventDetails(systemAgent.getId().getIri());
 
         List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
+        assertNotNull(agents);
+        assertTrue(agents.size() > 0);
+        LOG.debug("Creating {} agents", agents.size());
         agents.forEach(agent -> {
 //            User u = new User(agent.getName().getStringValue(), "foo@bar.baz");
 //            u.setRmapAgentUri(agent.getId().getStringValue());
@@ -245,14 +245,29 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 //            } catch (Exception e) {
 //                LOG.error("Error adding user {} id {}: {}", agent.getName().getStringValue(), userId, e.getMessage(), e);
 //            }
-            rMapService.createAgent(agent, reqEventDetails);
+
+//            LOG.debug("Looking up agent {}", agent.getId().getIri());
+//            if (rMapService.readAgent(agent.getId().getIri()) == null) {
+//                LOG.debug("Creating RMap Agent {}", agent.getId().getIri());
+//                rMapService.createAgent(agent, requestEventDetails);
+//            } else {
+//                LOG.debug("RMap Agent {} already existed", agent.getId().getIri());
+//            }
+
+            try {
+                rMapService.createAgent(agent, requestEventDetails);
+            } catch (Exception e) {
+                LOG.debug("Error creating agent {}: {}", agent.getId().getStringValue(), e.getMessage(), e);
+            }
         });
 
+        LOG.debug("Producing events.");
         // Produce some events, so they're waiting for the consumer when it starts.
         List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
         events.forEach(event -> producer.send(topic, event));
         producer.flush();
 
+        LOG.debug("Starting indexer.");
         // Boot up the first indexing consumer, and consume some events.
         Thread initialIndexerThread = new Thread(newConsumerRunnable(), "Initial Indexer");
         initialIndexerThread.start();
@@ -283,4 +298,31 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         };
     }
 
+    /**
+     * Create generic sysagent and RequestAgent for general use using TestConstants.
+     *
+     * @throws RMapException
+     * @throws RMapDefectiveArgumentException
+     * @throws URISyntaxException
+     */
+    private RMapAgent createSystemAgent(RMapService rmapService) throws RMapException, RMapDefectiveArgumentException, URISyntaxException {
+        IRI AGENT_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID);
+        IRI ID_PROVIDER_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID_PROVIDER);
+        IRI AUTH_ID_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_AUTH_ID);
+        Literal NAME = ORAdapter.getValueFactory().createLiteral(TestConstants.SYSAGENT_NAME);
+        RMapAgent sysagent = new ORMapAgent(AGENT_IRI, ID_PROVIDER_IRI, AUTH_ID_IRI, NAME);
+
+        RequestEventDetails requestEventDetails = new RequestEventDetails(new URI(TestConstants.SYSAGENT_ID), new URI(TestConstants.SYSAGENT_KEY));
+
+        //create new test agent
+        URI agentId = sysagent.getId().getIri();
+        if (!rmapService.isAgentId(agentId)) {
+            rmapService.createAgent(sysagent, requestEventDetails);
+        }
+
+        // Check the agent was created
+        assertTrue(rmapService.isAgentId(agentId));
+
+        return sysagent;
+    }
 }
