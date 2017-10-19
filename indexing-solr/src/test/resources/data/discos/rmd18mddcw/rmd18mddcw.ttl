@@ -1,5 +1,5 @@
 
-<rmap:rmd18mddcw> a <http://rmap-project.org/rmap/terms/DiSCO> ;
+<rmap:rmd18mddcw> a <http://purl.org/ontology/rmap#DiSCO> ;
 	<http://purl.org/dc/terms/creator> <http://portico.org> ;
 	<http://purl.org/dc/terms/description> "Details of the files preserved for an article in the Portico digital archive." ;
 	<http://www.openarchives.org/ore/terms/aggregates> <ark:/27927/pgg3r5df1cp> .

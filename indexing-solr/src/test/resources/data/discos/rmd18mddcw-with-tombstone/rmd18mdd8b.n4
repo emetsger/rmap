@@ -1,4 +1,4 @@
-<rmap:rmd18mdd8b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/DiSCO> <rmap:rmd18mdd8b> .
+<rmap:rmd18mdd8b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/rmap#DiSCO> <rmap:rmd18mdd8b> .
 <rmap:rmd18mdd8b> <http://purl.org/dc/terms/creator> <http://portico.org> <rmap:rmd18mdd8b> .
 <rmap:rmd18mdd8b> <http://purl.org/dc/terms/description> "Details of the files preserved for an article in the Portico digital archive." <rmap:rmd18mdd8b> .
 <rmap:rmd18mdd8b> <http://www.openarchives.org/ore/terms/aggregates> <ark:/27927/pgg3r5df1cp> <rmap:rmd18mdd8b> .

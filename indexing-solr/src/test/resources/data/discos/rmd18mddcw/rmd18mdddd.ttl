@@ -1,10 +1,10 @@
 
-<rmap:rmd18mdddd> a <http://rmap-project.org/rmap/terms/Event> ;
+<rmap:rmd18mdddd> a <http://purl.org/ontology/rmap#Event> ;
 	<http://www.w3.org/ns/prov#wasAssociatedWith> <rmap:rmd18m7mj4> ;
-	<http://rmap-project.org/rmap/terms/eventType> <http://rmap-project.org/rmap/terms/update> ;
-	<http://rmap-project.org/rmap/terms/eventTargetType> <http://rmap-project.org/rmap/terms/DiSCO> ;
+	<http://purl.org/ontology/rmap#eventType> <http://purl.org/ontology/rmap#update> ;
+	<http://purl.org/ontology/rmap#eventTargetType> <http://purl.org/ontology/rmap#DiSCO> ;
 	<http://www.w3.org/ns/prov#startedAtTime> "2015-07-29T17:47:18Z" ;
 	<http://www.w3.org/ns/prov#endedAtTime> "2015-07-29T17:47:18Z" ;
 	<http://www.w3.org/ns/prov#generated> <rmap:rmd18mddcw> ;
-	<http://rmap-project.org/rmap/terms/inactivatedObject> <rmap:rmd18mdd8b> ;
-	<http://rmap-project.org/rmap/terms/derivedObject> <rmap:rmd18mddcw> .
+	<http://purl.org/ontology/rmap#inactivatedObject> <rmap:rmd18mdd8b> ;
+	<http://purl.org/ontology/rmap#derivedObject> <rmap:rmd18mddcw> .

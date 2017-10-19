@@ -1,4 +1,4 @@
-<rmap:rmp1835x5x> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/DiSCO> <rmap:rmp1835x5x> .
+<rmap:rmp1835x5x> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/rmap#DiSCO> <rmap:rmp1835x5x> .
 <rmap:rmp1835x5x> <http://purl.org/dc/terms/creator> <http://rmap-project.org/rmap/agents/RMap-OSF-Harvester-0.1> <rmap:rmp1835x5x> .
 <rmap:rmp1835x5x> <http://purl.org/dc/terms/description> "Record harvested from SHARE API" <rmap:rmp1835x5x> .
 <rmap:rmp1835x5x> <http://www.openarchives.org/ore/terms/aggregates> <http://www.osti.gov/scitech/biblio/7297681> <rmap:rmp1835x5x> .

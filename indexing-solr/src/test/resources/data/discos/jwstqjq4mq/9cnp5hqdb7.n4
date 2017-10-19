@@ -1,4 +1,4 @@
-<rmap:9cnp5hqdb7> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rmap-project.org/rmap/terms/DiSCO> <rmap:9cnp5hqdb7> .
+<rmap:9cnp5hqdb7> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/ontology/rmap#DiSCO> <rmap:9cnp5hqdb7> .
 <rmap:9cnp5hqdb7> <http://purl.org/dc/terms/creator> <http://isni.org/isni/0000000122976723> <rmap:9cnp5hqdb7> .
 <rmap:9cnp5hqdb7> <http://www.openarchives.org/ore/terms/aggregates> <http://dx.doi.org/10.1109/InPar.2012.6339604> <rmap:9cnp5hqdb7> .
 <http://dx.doi.org/10.1109/InPar.2012.6339604> <http://prismstandard.org/namespaces/basic/2.0/keyword> "parallel architectures" <rmap:9cnp5hqdb7> .
