@@ -203,7 +203,7 @@ public class IndexUtils {
     public static Optional<RMapIri> findEventIri(RMapEvent event, EventDirection direction) {
         Optional<RMapIri> iri = Optional.empty();
 
-        if (direction != EventDirection.SOURCE || direction != EventDirection.TARGET) {
+        if (direction != EventDirection.SOURCE && direction != EventDirection.TARGET) {
             throw new IllegalArgumentException("Direction must either be SOURCE or TARGET, was " + direction.name());
         }
 
