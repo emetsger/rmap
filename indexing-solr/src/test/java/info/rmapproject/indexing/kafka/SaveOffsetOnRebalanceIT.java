@@ -1,10 +1,15 @@
 package info.rmapproject.indexing.kafka;
 
 import info.rmapproject.auth.model.User;
+import info.rmapproject.auth.model.UserIdentityProvider;
 import info.rmapproject.auth.service.RMapAuthService;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.impl.openrdf.ORAdapter;
+import info.rmapproject.core.model.impl.openrdf.ORMapAgent;
+import info.rmapproject.core.model.impl.openrdf.StatementsAdapter;
+import info.rmapproject.core.model.request.RMapRequestAgent;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.IndexingInterruptedException;
@@ -12,9 +17,12 @@ import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
+import info.rmapproject.testdata.service.TestConstants;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
+import org.openrdf.model.IRI;
+import org.openrdf.model.Literal;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +31,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+import sun.management.resources.agent;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +50,7 @@ import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
 import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -202,7 +213,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         rmapObjects.values().stream().flatMap(Set::stream).forEach(source -> {
             try (InputStream in = source.getInputStream();
                  RepositoryConnection c = triplestore.getConnection();
-                 ) {
+            ) {
                 assertTrue(c.isOpen());
                 c.add(in, "http://foo/bar", source.getRdfFormat());
             } catch (IOException e) {
@@ -211,12 +222,31 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
             }
         });
 
+        IRI AGENT_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID);
+        IRI ID_PROVIDER_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID_PROVIDER);
+        IRI AUTH_ID_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_AUTH_ID);
+        Literal NAME = ORAdapter.getValueFactory().createLiteral(TestConstants.SYSAGENT_NAME);
+        ORMapAgent sysagent = new ORMapAgent(AGENT_IRI, ID_PROVIDER_IRI, AUTH_ID_IRI, NAME);
+
+
+        RMapRequestAgent reqEventDetails = new RMapRequestAgent(new URI(TestConstants.SYSAGENT_ID),new URI(TestConstants.SYSAGENT_KEY));
+
         List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
         agents.forEach(agent -> {
-            User u = new User(agent.getName().getStringValue());
-            int userId = authService.addUser(u);
-            authService.createOrUpdateAgentFromUser(userId);
-                });
+//            User u = new User(agent.getName().getStringValue(), "foo@bar.baz");
+//            u.setRmapAgentUri(agent.getId().getStringValue());
+//            u.setUserIdentityProviders(Collections.singleton(new UserIdentityProvider(agent.getIdProvider()));
+//            int userId = 0;
+//            try (RepositoryConnection c = triplestore.getConnection()) {
+//                userId = authService.addUser(u);
+//                RMapEvent created = authService.createOrUpdateAgentFromUser(userId);
+//                assertNotNull("Expected a creation event when creating an agent with uri " + ((agent.getIdProvider() != null) ? agent.getIdProvider().getStringValue() : "null") + " for user id " + userId, created);
+//                LOG.debug("Created Agent {}", created);
+//            } catch (Exception e) {
+//                LOG.error("Error adding user {} id {}: {}", agent.getName().getStringValue(), userId, e.getMessage(), e);
+//            }
+            rMapService.createAgent(agent, reqEventDetails);
+        });
 
         // Produce some events, so they're waiting for the consumer when it starts.
         List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);

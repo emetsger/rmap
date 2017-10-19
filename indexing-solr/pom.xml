@@ -317,6 +317,11 @@
             <artifactId>derbyclient</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-testdata</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

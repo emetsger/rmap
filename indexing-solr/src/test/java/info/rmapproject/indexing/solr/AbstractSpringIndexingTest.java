@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "integration-db", "http-solr", "prod-kafka"})
 @ContextConfiguration({"classpath:/rmap-indexing-solr.xml", "classpath:/spring-rmapcore-context.xml"})
+@TestPropertySource(properties = {"integration.db.rmap-agent-sql = classpath:/create-rmap-agent.sql"})
 public abstract class AbstractSpringIndexingTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractSpringIndexingTest.class);

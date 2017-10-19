@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
@@ -153,17 +154,17 @@ public class IndexingConsumer {
     }
 
     private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
-        RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE).get(), rmapService);
-        RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET).get(), rmapService);
+        RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE), rmapService);
+        RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET), rmapService);
         RMapAgent agent = getAgent(event.getAssociatedAgent().getIri(), rmapService);
 
         return new KafkaDTO(event, agent, sourceDisco, targetDisco);
     }
 
-    private static RMapDiSCO getDisco(RMapIri optionalIri, RMapService rmapService) {
+    private static RMapDiSCO getDisco(Optional<RMapIri> optionalIri, RMapService rmapService) {
         RMapDiSCO disco = null;
-        if (optionalIri != null) {
-            disco = rmapService.readDiSCO(optionalIri.getIri());
+        if (optionalIri.isPresent()) {
+            disco = rmapService.readDiSCO(optionalIri.get().getIri());
         }
 
         return disco;
