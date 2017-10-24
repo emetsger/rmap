@@ -113,7 +113,7 @@ public class CustomRepoImpl implements CustomRepo {
 
 
         dtoMapper.apply(toIndex)
-                .map(it -> eventDiscoTupleMapper.apply(it))
+                .map(tuple -> eventDiscoTupleMapper.apply(tuple))
                 .forEach(doc -> delegate.save(doc));
 
         /*
