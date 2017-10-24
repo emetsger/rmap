@@ -235,21 +235,6 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
         assertFalse(rmapObjects.isEmpty());
 
-        rmapObjects.values().stream().flatMap(Set::stream).forEach(source -> {
-            try (InputStream in = source.getInputStream();
-                 RepositoryConnection c = triplestore.getConnection();
-            ) {
-                assertTrue(c.isOpen());
-                c.add(in, "http://foo/bar", source.getRdfFormat());
-            } catch (IOException e) {
-                e.printStackTrace(System.err);
-                fail("Unexpected IOException");
-            }
-        });
-
-        // Print out the triplestore contents to stderr
-        dumpTriplestore(new PrintStream(System.err, true));
-
         RMapAgent systemAgent = createSystemAgent(rMapService);
         RequestEventDetails requestEventDetails = new RequestEventDetails(systemAgent.getId().getIri());
 
@@ -285,6 +270,26 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
                 LOG.debug("Error creating agent {}: {}", agent.getId().getStringValue(), e.getMessage(), e);
             }
         });
+
+        // Print out the triplestore contents to stderr
+        System.err.println("Dump one:");
+        dumpTriplestore(new PrintStream(System.err, true));
+
+        rmapObjects.values().stream().flatMap(Set::stream)
+                .forEach(source -> {
+            try (InputStream in = source.getInputStream();
+                 RepositoryConnection c = triplestore.getConnection();
+            ) {
+                assertTrue(c.isOpen());
+                c.add(in, "http://foo/bar", source.getRdfFormat());
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                fail("Unexpected IOException");
+            }
+        });
+
+        System.err.println("Dump two:");
+        dumpTriplestore(new PrintStream(System.err, true));
 
         LOG.debug("Producing events.");
         // Produce some events, so they're waiting for the consumer when it starts.

@@ -4,6 +4,7 @@ import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.event.RMapEventTargetType;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.IndexingInterruptedException;
@@ -102,6 +103,14 @@ public class IndexingConsumer {
             LOG.trace("Processing {} records", records.count());
             records.forEach(record -> {
                 RMapEvent event = record.value();
+
+                if (event.getEventTargetType() != null &&
+                        !event.getEventTargetType().equals(RMapEventTargetType.DISCO)) {
+                    LOG.debug("Skipping event {} because it does not target a DISCO (was {} instead)",
+                            event, event.getEventTargetType());
+                    return;
+                }
+
                 String recordTopic = record.topic();
                 long recordOffset = record.offset();
                 int recordPartition = record.partition();
