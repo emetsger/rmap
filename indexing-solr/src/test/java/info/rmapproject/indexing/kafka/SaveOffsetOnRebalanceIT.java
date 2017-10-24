@@ -32,11 +32,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import sun.management.resources.agent;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -48,6 +52,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
 import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
@@ -61,6 +67,7 @@ import static org.mockito.Mockito.verify;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration("classpath:/spring-rmapauth-context.xml")
+@ActiveProfiles(value = {"default", "inmemory-triplestore", "inmemory-idservice", "inmemory-db", "http-solr", "prod-kafka"}, inheritProfiles = false)
 public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     @Autowired
@@ -123,7 +130,16 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
             }
         });
 
-        Thread t = new Thread(newConsumerRunnable(), "testPartitionsRevokedAndAssignedOnConsumerJoin-consumer");
+        Thread t = new Thread(newConsumerRunnable((ex) -> {
+            if (ex instanceof IndexingInterruptedException) {
+                return;
+            }
+
+            ByteArrayOutputStream trace = new ByteArrayOutputStream();
+            ex.printStackTrace(new PrintStream(trace, true));
+            fail("Encountered " + ex.getClass().getName() + ": " + ex.getCause() + "\n" + new String(trace.toByteArray()));
+        }), "testPartitionsRevokedAndAssignedOnConsumerJoin-consumer");
+
         t.start();
 
         // rebalancer should be called when the consumer starts.
@@ -179,7 +195,15 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         ConsumerAwareRebalanceListener underTest = mock(ConsumerAwareRebalanceListener.class);
         indexer.setRebalanceListener(underTest);
 
-        Thread t = new Thread(newConsumerRunnable(), "testPartitionsRevokedAndAssignedOnStart-consumer");
+        Thread t = new Thread(newConsumerRunnable((ex) -> {
+            if (ex instanceof IndexingInterruptedException) {
+                return;
+            }
+
+            ByteArrayOutputStream trace = new ByteArrayOutputStream();
+            ex.printStackTrace(new PrintStream(trace, true));
+            fail("Encountered " + ex.getClass().getName() + ": " + ex.getCause() + "\n" + new String(trace.toByteArray()));
+        }), "testPartitionsRevokedAndAssignedOnStart-consumer");
         t.start();
 
         // allow thread to run a bit
@@ -269,7 +293,15 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
         LOG.debug("Starting indexer.");
         // Boot up the first indexing consumer, and consume some events.
-        Thread initialIndexerThread = new Thread(newConsumerRunnable(), "Initial Indexer");
+        Thread initialIndexerThread = new Thread(newConsumerRunnable((ex) -> {
+            if (ex instanceof IndexingInterruptedException) {
+                return;
+            }
+
+            ByteArrayOutputStream trace = new ByteArrayOutputStream();
+            ex.printStackTrace(new PrintStream(trace, true));
+            fail("Encountered " + ex.getClass().getName() + ": " + ex.getCause() + "\n" + new String(trace.toByteArray()));
+        }), "Initial Indexer");
         initialIndexerThread.start();
         Thread.sleep(30000);
 
@@ -278,22 +310,16 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         initialIndexerThread.join();
     }
 
-    private Runnable newConsumerRunnable() {
-        return newConsumerRunnable(this.indexer);
+    private Runnable newConsumerRunnable(java.util.function.Consumer<Exception> exceptionHandler) {
+        return newConsumerRunnable(this.indexer, exceptionHandler);
     }
 
-    private Runnable newConsumerRunnable(IndexingConsumer indexer) {
+    private Runnable newConsumerRunnable(IndexingConsumer indexer, java.util.function.Consumer<Exception> exceptionHandler) {
         return () -> {
             try {
                 indexer.consumeEarliest(topic);
-            } catch (UnknownOffsetException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            } catch (RuntimeException e) {
-                if (e.getCause() instanceof IndexingInterruptedException) {
-                    LOG.info("Caught {}", e.getMessage(), e);
-                } else {
-                    throw e;
-                }
+            } catch (Exception e) {
+                exceptionHandler.accept(e);
             }
         };
     }
