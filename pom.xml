@@ -323,6 +323,7 @@
                 <artifactId>rmap-testdata</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
+            <!-- FIXME: powermock not compatible with latest version mockito -->
             <dependency>
                 <groupId>org.powermock</groupId>
                 <artifactId>powermock-api-mockito</artifactId>
