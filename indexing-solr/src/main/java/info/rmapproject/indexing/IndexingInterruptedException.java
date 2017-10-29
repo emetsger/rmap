@@ -2,6 +2,8 @@ package info.rmapproject.indexing;
 
 public class IndexingInterruptedException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     public IndexingInterruptedException(String message) {
         super(message);
     }

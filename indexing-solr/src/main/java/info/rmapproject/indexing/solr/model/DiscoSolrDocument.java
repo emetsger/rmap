@@ -4,7 +4,11 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,6 +76,9 @@ public class DiscoSolrDocument implements KafkaMetadata {
     @Field(DISCO_STATUS)
     private String discoStatus;
 
+    @Field("disco_event_direction")
+    private String discoEventDirection;
+
 
     @Field("event_uri")
     private String eventUri;
@@ -133,6 +140,40 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
     public DiscoSolrDocument() {
 
+    }
+
+    public DiscoSolrDocument(DiscoSolrDocument prototype) {
+        this.docId = prototype.docId;
+        this.docLastUpdated = prototype.docLastUpdated;
+
+        this.discoUri = prototype.discoUri;
+        this.discoCreatorUri = prototype.discoCreatorUri;
+        this.discoDescription = prototype.discoDescription;
+        this.discoProviderid = prototype.discoProviderid;
+        this.discoAggregatedResourceUris = (prototype.discoAggregatedResourceUris != null) ? new ArrayList<>(prototype.discoAggregatedResourceUris) : null;
+        this.discoProvenanceUri = prototype.discoProvenanceUri;
+        this.discoRelatedStatements = (prototype.discoRelatedStatements != null) ? new ArrayList<>(prototype.discoRelatedStatements) : null;
+        this.discoStatus = prototype.discoStatus;
+        this.discoEventDirection = prototype.discoEventDirection;
+
+        this.eventUri = prototype.eventUri;
+        this.eventAgentUri = prototype.eventAgentUri;
+        this.eventStartTime = prototype.eventStartTime;
+        this.eventEndTime = prototype.eventEndTime;
+        this.eventDescription = prototype.eventDescription;
+        this.eventType = prototype.eventType;
+        this.eventSourceObjectUris = (prototype.eventSourceObjectUris != null) ? new ArrayList<>(prototype.eventSourceObjectUris) : null;
+        this.eventTargetObjectUris = (prototype.eventTargetObjectUris != null) ? new ArrayList<>(prototype.eventTargetObjectUris) : null;
+
+        this.agentUri = prototype.agentUri;
+        this.agentProviderUri = prototype.agentProviderUri;
+        this.agentDescription = prototype.agentDescription;
+
+        this.metadata = (prototype.metadata != null) ? new HashMap<>(prototype.metadata) : null;
+
+        this.kafkaTopic = prototype.kafkaTopic;
+        this.kafkaPartition = prototype.kafkaPartition;
+        this.kafkaOffset = prototype.kafkaOffset;
     }
 
     public String getDocId() {
@@ -288,6 +329,14 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.eventTargetObjectUris = eventTargetObjectUris;
     }
 
+    public String getDiscoEventDirection() {
+        return discoEventDirection;
+    }
+
+    public void setDiscoEventDirection(String discoEventDirection) {
+        this.discoEventDirection = discoEventDirection;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -347,7 +396,6 @@ public class DiscoSolrDocument implements KafkaMetadata {
     }
 
     public static class Builder {
-        private boolean lastUpdatedInvoked = false;
         private DiscoSolrDocument instance;
 
         public Builder() {
@@ -355,7 +403,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         }
 
         public Builder(DiscoSolrDocument doc) {
-            instance = doc;
+            instance = new DiscoSolrDocument(doc);
         }
 
         public Builder docId(String docId) {
@@ -367,7 +415,6 @@ public class DiscoSolrDocument implements KafkaMetadata {
         public Builder docLastUpdated(long docLastUpdated) {
             instantiateIfNull();
             instance.setDocLastUpdated(docLastUpdated);
-            lastUpdatedInvoked = true;
             return this;
         }
 
@@ -410,6 +457,12 @@ public class DiscoSolrDocument implements KafkaMetadata {
         public Builder discoRelatedStatements(List<String> discoRelatedStatements) {
             instantiateIfNull();
             instance.setDiscoRelatedStatements(discoRelatedStatements);
+            return this;
+        }
+
+        public Builder discoEventDirection(String discoEventDirection) {
+            instantiateIfNull();
+            instance.setDiscoEventDirection(discoEventDirection);
             return this;
         }
 
@@ -511,9 +564,6 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
         public DiscoSolrDocument build() {
             instantiateIfNull();
-            if (!lastUpdatedInvoked) {
-                this.docLastUpdated(Calendar.getInstance().getTimeInMillis());
-            }
             return instance;
         }
 
@@ -525,8 +575,39 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
         private void reset() {
             instance = null;
-            lastUpdatedInvoked = false;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DiscoSolrDocument{" +
+                "docId='" + docId + '\'' +
+                ", docLastUpdated=" + docLastUpdated +
+                ", discoUri='" + discoUri + '\'' +
+                ", discoCreatorUri='" + discoCreatorUri + '\'' +
+                ", discoDescription='" + discoDescription + '\'' +
+                ", discoProviderid='" + discoProviderid + '\'' +
+                ", discoAggregatedResourceUris=" + discoAggregatedResourceUris +
+                ", discoProvenanceUri='" + discoProvenanceUri + '\'' +
+                ", discoRelatedStatements=" + discoRelatedStatements +
+                ", discoStatus='" + discoStatus + '\'' +
+                ", discoEventDirection='" + discoEventDirection + '\'' +
+                ", eventUri='" + eventUri + '\'' +
+                ", eventAgentUri='" + eventAgentUri + '\'' +
+                ", eventStartTime='" + eventStartTime + '\'' +
+                ", eventEndTime='" + eventEndTime + '\'' +
+                ", eventDescription='" + eventDescription + '\'' +
+                ", eventType='" + eventType + '\'' +
+                ", eventSourceObjectUris=" + eventSourceObjectUris +
+                ", eventTargetObjectUris=" + eventTargetObjectUris +
+                ", agentUri='" + agentUri + '\'' +
+                ", agentProviderUri='" + agentProviderUri + '\'' +
+                ", agentDescription='" + agentDescription + '\'' +
+                ", metadata=" + metadata +
+                ", kafkaTopic='" + kafkaTopic + '\'' +
+                ", kafkaPartition=" + kafkaPartition +
+                ", kafkaOffset=" + kafkaOffset +
+                '}';
     }
 
     @Override
@@ -567,6 +648,8 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return false;
         if (eventTargetObjectUris != null ? !eventTargetObjectUris.equals(that.eventTargetObjectUris) : that.eventTargetObjectUris != null)
             return false;
+        if (discoEventDirection != null ? !discoEventDirection.equals(that.discoEventDirection) : that.discoEventDirection != null)
+            return false;
         if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
         if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
             return false;
@@ -596,6 +679,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (eventSourceObjectUris != null ? eventSourceObjectUris.hashCode() : 0);
         result = 31 * result + (eventTargetObjectUris != null ? eventTargetObjectUris.hashCode() : 0);
+        result = 31 * result + (discoEventDirection != null ? discoEventDirection.hashCode() : 0);
         result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
         result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);

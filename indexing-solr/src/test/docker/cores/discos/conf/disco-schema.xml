@@ -59,6 +59,8 @@
 
     <field name="disco_status" type="description"/>
 
+    <field name="disco_event_direction" type="string"/>
+
     <!-- TODO: fields for predicate/edge labels for GUI visualization? -->
 
     <!-- Event that resulted in state of this DiSCO document -->

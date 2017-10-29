@@ -62,6 +62,7 @@ public class SaveOffsetOnRebalanceTest {
     }
 
     @Test
+    @SuppressWarnings("serial")
     public void testOnPartitionsRevoked() throws Exception {
         String topic = "topic";
         int partition = 0;

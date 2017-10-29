@@ -9,7 +9,10 @@ import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.repository.CustomRepo;
+import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
+import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -48,7 +51,7 @@ public class IndexingConsumer {
     @Autowired
     private RMapService rmapService;
 
-    private CustomRepo repo;
+    private EventTupleIndexingRepository<DiscoSolrDocument> repo;
 
     private Consumer<String, RMapEvent> consumer;
 
@@ -61,6 +64,8 @@ public class IndexingConsumer {
     private IndexingRetryHandler retryHandler;
 
     private OffsetLookup offsetLookup;
+
+    private IndexDTOMapper dtoMapper;
 
     void consumeLatest(String topic) throws UnknownOffsetException {
         consume(topic, Seek.LATEST);
@@ -137,7 +142,11 @@ public class IndexingConsumer {
         dto.setOffset(recordOffset);
 
         try {
-            repo.index(dto);
+            repo.index(dtoMapper.apply(dto), (doc) -> {
+                doc.setKafkaOffset(recordOffset);
+                doc.setKafkaPartition(recordPartition);
+                doc.setKafkaTopic(recordTopic);
+            });
             LOG.debug("Indexed event {} ({}/{}/{})",
                     event.getId().getStringValue(),
                     recordTopic,
@@ -154,7 +163,11 @@ public class IndexingConsumer {
 
             // in this case we don't want to commit the offset to Kafka until we've successfully retried
             try {
-                retryHandler.retry(dto);
+                retryHandler.retry(dto, (doc) -> {
+                    doc.setKafkaOffset(recordOffset);
+                    doc.setKafkaPartition(recordPartition);
+                    doc.setKafkaTopic(recordTopic);
+                });
             } catch (IndexingTimeoutException|IndexingInterruptedException ex) {
                 throw new RuntimeException(
                         "Failed to index event " + event.getId().getStringValue(), ex);
@@ -191,12 +204,20 @@ public class IndexingConsumer {
         this.rmapService = rmapService;
     }
 
-    public CustomRepo getRepo() {
+    public EventTupleIndexingRepository<DiscoSolrDocument> getRepo() {
         return repo;
     }
 
-    public void setRepo(CustomRepo repo) {
+    public void setRepo(EventTupleIndexingRepository<DiscoSolrDocument> repo) {
         this.repo = repo;
+    }
+
+    public IndexDTOMapper getDtoMapper() {
+        return dtoMapper;
+    }
+
+    public void setDtoMapper(IndexDTOMapper dtoMapper) {
+        this.dtoMapper = dtoMapper;
     }
 
     public Consumer<String, RMapEvent> getConsumer() {

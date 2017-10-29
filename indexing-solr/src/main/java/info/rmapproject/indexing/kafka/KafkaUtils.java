@@ -15,7 +15,7 @@ class KafkaUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexingConsumer.class);
 
-    static void commitOffsets(Consumer consumer, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
+    static void commitOffsets(Consumer<?, ?> consumer, Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
                               boolean async) {
 
         if (offsetsToCommit == null || offsetsToCommit.isEmpty()) {

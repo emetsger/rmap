@@ -1,16 +1,15 @@
 package info.rmapproject.indexing.solr.repository;
 
-import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-
 import java.util.function.Function;
 
 /**
  * Maps {@link EventDiscoTuple} instances to {@link info.rmapproject.indexing.solr.model.DiscoSolrDocument}s.  Unlike
  * the {@link IndexDTOMapper}, a single {@code EventDiscoTuple} will map to a single {@code DiscoSolrDocument}.
  *
+ * @param <T> the Solr document type
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-interface EventDiscoTupleMapper extends Function<EventDiscoTuple, DiscoSolrDocument> {
+interface EventDiscoTupleMapper<T> extends Function<EventDiscoTuple, T> {
 
     /**
      * Converts a {@code EventDiscoTuple} to a {@code DiscoSolrDocument} for indexing.
@@ -19,6 +18,6 @@ interface EventDiscoTupleMapper extends Function<EventDiscoTuple, DiscoSolrDocum
      * @return the solr document
      */
     @Override
-    DiscoSolrDocument apply(EventDiscoTuple eventDiscoTuple);
+    T apply(EventDiscoTuple eventDiscoTuple);
 
 }

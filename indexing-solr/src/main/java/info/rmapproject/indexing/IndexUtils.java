@@ -11,6 +11,7 @@ import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventUpdateWithReplace;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
+import org.openrdf.model.IRI;
 
 import java.net.URI;
 import java.util.Collection;
@@ -20,6 +21,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import static info.rmapproject.core.model.impl.openrdf.ORAdapter.openRdfIri2RMapIri;
+import static info.rmapproject.core.model.impl.openrdf.ORAdapter.uri2OpenRdfIri;
+import static java.net.URI.create;
 
 /**
  * Provides common utility methods used by model classes.
@@ -161,6 +166,20 @@ public class IndexUtils {
         return o;
     }
 
+    public static void assertNull(Object o) {
+        assertNull(o, iae("Supplied object must not be null"));
+    }
+
+    public static void assertNull(Object o, String message) {
+        assertNull(o, iae(message));
+    }
+
+    public static void assertNull(Object o, Supplier<? extends RuntimeException> exceptionSupplier) {
+        if (o != null) {
+            throw exceptionSupplier.get();
+        }
+    }
+
     public static String dateToString(Date d) {
         return ISODateTimeFormat.dateTime().withZoneUTC().print(new DateTime(d));
     }
@@ -181,6 +200,14 @@ public class IndexUtils {
 
     public static boolean irisEqual(Optional<RMapIri> optionalOne, Optional<RMapIri> optionalTwo) {
         return irisEqual(optionalOne.get(), optionalTwo.get());
+    }
+
+    public static IRI asIri(String uri) {
+        return uri2OpenRdfIri(create(uri));
+    }
+
+    public static RMapIri asRmapIri(String uri) {
+        return openRdfIri2RMapIri(asIri(uri));
     }
 
     /**

@@ -2,10 +2,16 @@ package info.rmapproject.indexing.kafka;
 
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.model.KafkaMetadata;
 import info.rmapproject.indexing.solr.repository.CustomRepo;
+import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
+import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.Consumer;
 
 import static info.rmapproject.indexing.IndexUtils.assertNotNull;
 import static info.rmapproject.indexing.IndexUtils.assertPositive;
@@ -27,7 +33,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
 
     private int indexRetryMaxMs;
 
-    private CustomRepo repository;
+    private EventTupleIndexingRepository<DiscoSolrDocument> repository;
+
+    private IndexDTOMapper dtoMapper;
 
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
@@ -49,8 +57,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-    public DefaultIndexRetryHandler(CustomRepo repository) {
-        this(repository, 100, 120000);
+    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+                                    IndexDTOMapper dtoMapper) {
+        this(repository, dtoMapper,100, 120000);
     }
 
     /**
@@ -71,8 +80,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-     public DefaultIndexRetryHandler(CustomRepo repository, int indexRetryTimeoutMs, int indexRetryMaxMs) {
-        this(repository, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
+     public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+                                     IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs) {
+        this(repository, dtoMapper, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
      }
 
     /**
@@ -87,7 +97,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-    public DefaultIndexRetryHandler(CustomRepo repository, int indexRetryTimeoutMs, int indexRetryMaxMs, float indexRetryBackoffFactor) {
+    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+                                    IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs,
+                                    float indexRetryBackoffFactor) {
         this.indexRetryTimeoutMs = assertPositive(indexRetryTimeoutMs,
                 iae("Index retry timeout must be a positive integer."));
         this.indexRetryBackoffFactor = assertPositive(indexRetryBackoffFactor,
@@ -95,6 +107,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
         this.indexRetryMaxMs = assertPositive(indexRetryMaxMs,
                 iae("Index retry max ms must be a positive integer."));
         this.repository = assertNotNull(repository, iae("Repository must not be null."));
+        this.dtoMapper = assertNotNull(dtoMapper, iae("DTO Mapper must not be null."));
 
         validateRetryMaxMs(indexRetryTimeoutMs, indexRetryMaxMs,
                 "Index retry max ms must be equal or greater than index retry timeout");
@@ -111,7 +124,8 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                      indexing the {@code dto}
      */
     @Override
-    public void retry(IndexDTO dto) throws IndexingTimeoutException, IndexingInterruptedException {
+    public void retry(IndexDTO dto, Consumer<DiscoSolrDocument> documentDecorator)
+            throws IndexingTimeoutException, IndexingInterruptedException {
         long start = currentTimeMillis();
         int attempt = 1;
         long timeout = indexRetryTimeoutMs;
@@ -123,7 +137,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
             try {
                 LOG.debug("Retry attempt {} (total elapsed time {} ms) indexing {}",
                         attempt, (currentTimeMillis() - start), dto);
-                repository.index(dto);
+                repository.index(dtoMapper.apply(dto), documentDecorator);
                 success = true;
             } catch (Exception e) {
                 retryFailure = e;
@@ -235,13 +249,20 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
                 iae("Index retry max ms must be a positive integer."));
     }
 
-    public CustomRepo getRepository() {
+    public EventTupleIndexingRepository<DiscoSolrDocument> getRepository() {
         return repository;
     }
 
-    public void setRepository(CustomRepo repository) {
-        assertNotNull(repository, iae("Repository must not be null."));
+    public void setRepository(EventTupleIndexingRepository<DiscoSolrDocument> repository) {
         this.repository = repository;
+    }
+
+    public IndexDTOMapper getDtoMapper() {
+        return dtoMapper;
+    }
+
+    public void setDtoMapper(IndexDTOMapper dtoMapper) {
+        this.dtoMapper = dtoMapper;
     }
 
     private static void validateRetryMaxMs(int indexRetryTimeoutMs, int indexRetryMaxMs, String s) {

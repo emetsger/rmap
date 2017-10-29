@@ -5,6 +5,8 @@ package info.rmapproject.indexing;
  */
 public class IndexingTimeoutException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     public IndexingTimeoutException(String message) {
         super(message);
     }

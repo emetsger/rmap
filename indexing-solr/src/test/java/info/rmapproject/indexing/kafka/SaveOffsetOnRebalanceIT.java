@@ -1,28 +1,21 @@
 package info.rmapproject.indexing.kafka;
 
 import info.rmapproject.auth.service.RMapAuthService;
-import info.rmapproject.core.exception.RMapDefectiveArgumentException;
-import info.rmapproject.core.exception.RMapException;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.core.model.impl.openrdf.ORAdapter;
-import info.rmapproject.core.model.impl.openrdf.ORMapAgent;
 import info.rmapproject.core.model.request.RequestEventDetails;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
-import info.rmapproject.testdata.service.TestConstants;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-import org.openrdf.model.IRI;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +26,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,8 +41,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
+import static info.rmapproject.indexing.kafka.ConsumerTestUtil.assertExceptionHolderEmpty;
 import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
 import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
+import static java.util.Comparator.comparing;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -97,6 +90,13 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
     @Value("${rmapcore.producer.topic}")
     private String topic;
 
+    @Override
+    @Before
+    public void setUp() throws Exception {
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+    }
+
     /**
      * Arguably a consumer test.  Insures that the rebalancer methods are invoked when a consumer joins.
      */
@@ -128,7 +128,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         });
 
         AtomicReference<Exception> exceptionHolder = new AtomicReference<>();
-        Thread t = new Thread(newConsumerRunnable(exceptionHolder), "testPartitionsRevokedAndAssignedOnConsumerJoin-consumer");
+        Thread t = new Thread(ConsumerTestUtil.newConsumerRunnable(indexer, topic, exceptionHolder), "testPartitionsRevokedAndAssignedOnConsumerJoin-consumer");
 
         t.start();
 
@@ -136,6 +136,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         assertTrue(initialLatch2.await(60000, TimeUnit.MILLISECONDS));
 
         CountDownLatch secondaryLatch2 = new CountDownLatch(2);
+        @SuppressWarnings("rawtypes")
         Consumer secondaryConsumer = SpringKafkaConsumerFactory.newConsumer("-02");
         secondaryConsumer.subscribe(Collections.singleton(topic), new ConsumerAwareRebalanceListener<String, RMapEvent>() {
             @Override
@@ -174,21 +175,20 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         t.join();
         LOG.debug("Closing secondary consumer.");
         secondaryConsumer.close();
-        assertNull("Consumer threw an unexpected exception: " + exceptionHolder.get().getMessage(),
-                exceptionHolder.get());
+        assertExceptionHolderEmpty(exceptionHolder);
     }
 
     /**
      * Arguably a consumer test.  Insures that the rebalancer methods are invoked when a consumer joins.
      */
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes", "serial"})
     public void testPartitionsRevokedAndAssignedInvokedOnStart() throws UnknownOffsetException, InterruptedException {
         ConsumerAwareRebalanceListener underTest = mock(ConsumerAwareRebalanceListener.class);
         indexer.setRebalanceListener(underTest);
 
         AtomicReference<Exception> exceptionHolder = new AtomicReference<>();
-        Thread t = new Thread(newConsumerRunnable(exceptionHolder), "testPartitionsRevokedAndAssignedOnStart-consumer");
+        Thread t = new Thread(ConsumerTestUtil.newConsumerRunnable(indexer, topic, exceptionHolder), "testPartitionsRevokedAndAssignedOnStart-consumer");
         t.start();
 
         // allow thread to run a bit
@@ -200,8 +200,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         LOG.debug("Thread joining.");
         t.join();
 
-        assertNull("Consumer threw an unexpected exception: " + exceptionHolder.get().getMessage(),
-                exceptionHolder.get());
+        ConsumerTestUtil.assertExceptionHolderEmpty(exceptionHolder);
 
         verify(underTest).onPartitionsRevoked(Collections.emptySet());
         verify(underTest).onPartitionsAssigned(new HashSet() {
@@ -225,7 +224,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
         assertFalse(rmapObjects.isEmpty());
 
-        RMapAgent systemAgent = createSystemAgent(rMapService);
+        RMapAgent systemAgent = ConsumerTestUtil.createSystemAgent(rMapService);
         RequestEventDetails requestEventDetails = new RequestEventDetails(systemAgent.getId().getIri());
 
         List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
@@ -263,7 +262,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
         // Print out the triplestore contents to stderr
         System.err.println("Dump one:");
-        dumpTriplestore(new PrintStream(System.err, true));
+        ConsumerTestUtil.dumpTriplestore(triplestore, new PrintStream(System.err, true));
 
         rmapObjects.values().stream().flatMap(Set::stream)
                 .forEach(source -> {
@@ -279,18 +278,18 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         });
 
         System.err.println("Dump two:");
-        dumpTriplestore(new PrintStream(System.err, true));
+        ConsumerTestUtil.dumpTriplestore(triplestore, new PrintStream(System.err, true));
 
         LOG.debug("Producing events.");
         // Produce some events, so they're waiting for the consumer when it starts.
-        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler);
+        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler, comparing(RMapEvent::getStartTime));
         events.forEach(event -> producer.send(topic, event));
         producer.flush();
 
         LOG.debug("Starting indexer.");
         AtomicReference<Exception> exceptionHolder = new AtomicReference<>();
         // Boot up the first indexing consumer, and consume some events.
-        Thread initialIndexerThread = new Thread(newConsumerRunnable(exceptionHolder), "Initial Indexer");
+        Thread initialIndexerThread = new Thread(ConsumerTestUtil.newConsumerRunnable(indexer, topic, exceptionHolder), "Initial Indexer");
         initialIndexerThread.start();
         Thread.sleep(30000);
 
@@ -298,86 +297,23 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
         indexer.getConsumer().wakeup();
         initialIndexerThread.join();
 
-        assertExceptionHolderEmpty(exceptionHolder);
+        assertExceptionHolderEmpty("Consumer threw an unexpected exception.", exceptionHolder);
+
+        final Set<DiscoSolrDocument> inactive = discoRepository.findDiscoSolrDocumentsByDiscoStatus("INACTIVE");
+        final Set<DiscoSolrDocument> active = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE");
+        assertEquals(5, discoRepository.count());
+        assertEquals(4, inactive.size());
+        assertEquals(1, active.size());
+
+        final DiscoSolrDocument activeDocument = active.iterator().next();
+        assertEquals("rmap:rmd18mddcw", activeDocument.getDiscoUri());
+        assertEquals(TARGET.name(), activeDocument.getDiscoEventDirection());
+        assertEquals("rmap:rmd18mddcw", activeDocument.getEventTargetObjectUris().get(0));
+        assertEquals("rmap:rmd18mdddd", activeDocument.getEventUri());
+        assertEquals("rmap:rmd18m7mj4", activeDocument.getAgentUri());
+        assertTrue(activeDocument.getKafkaOffset() > -1);
+        assertTrue(activeDocument.getKafkaPartition() > -1);
+        assertNotNull(activeDocument.getKafkaTopic());
     }
 
-    /**
-     * Asserts the supplied {@code exceptionHolder} is empty, otherwise {@link Assert#fail(String) fail} the test,
-     * emitting the stacktrace in the failure message.
-     *
-     * @param exceptionHolder an {@code AtomicReference} which may hold an {@code Exception}
-     */
-    private void assertExceptionHolderEmpty(AtomicReference<Exception> exceptionHolder) {
-        if (exceptionHolder.get() == null) {
-            return;
-        }
-
-        ByteArrayOutputStream trace = new ByteArrayOutputStream();
-        exceptionHolder.get().printStackTrace(new PrintStream(trace, true));
-        fail("Consumer threw an unexpected exception: \n" + trace);
-    }
-
-    private Runnable newConsumerRunnable(AtomicReference<Exception> caughtException) {
-        return newConsumerRunnable(this.indexer, caughtException);
-    }
-
-    private Runnable newConsumerRunnable(IndexingConsumer indexer, AtomicReference<Exception> caughtExeption) {
-        return () -> {
-            try {
-                indexer.consumeEarliest(topic);
-            } catch (Exception e) {
-                caughtExeption.set(e);
-            }
-        };
-    }
-
-    /**
-     * Instantiate an {@link ORMapAgent} to represent a System agent, and use the {@link RMapService} to create the
-     * agent.  Verifies the agent was created using {@link RMapService#isAgentId(URI)}
-     *
-     * @param rmapService used to create the agent in the underlying triplestore
-     * @throws RMapException
-     * @throws RMapDefectiveArgumentException
-     * @throws URISyntaxException
-     */
-    private RMapAgent createSystemAgent(RMapService rmapService) throws RMapException, RMapDefectiveArgumentException, URISyntaxException {
-        IRI AGENT_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID);
-        IRI ID_PROVIDER_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_ID_PROVIDER);
-        IRI AUTH_ID_IRI = ORAdapter.getValueFactory().createIRI(TestConstants.SYSAGENT_AUTH_ID);
-        Literal NAME = ORAdapter.getValueFactory().createLiteral(TestConstants.SYSAGENT_NAME);
-        RMapAgent sysagent = new ORMapAgent(AGENT_IRI, ID_PROVIDER_IRI, AUTH_ID_IRI, NAME);
-
-        RequestEventDetails requestEventDetails = new RequestEventDetails(new URI(TestConstants.SYSAGENT_ID), new URI(TestConstants.SYSAGENT_KEY));
-
-        //create new test agent
-        URI agentId = sysagent.getId().getIri();
-        if (!rmapService.isAgentId(agentId)) {
-            rmapService.createAgent(sysagent, requestEventDetails);
-        }
-
-        // Check the agent was created
-        assertTrue(rmapService.isAgentId(agentId));
-
-        return sysagent;
-    }
-
-    /**
-     * Dumps the contents of the triplestore to the provided output stream.
-     *
-     * @param outputStream
-     * @throws Exception
-     */
-    private void dumpTriplestore(OutputStream outputStream) throws Exception {
-        List<Statement> statements = triplestore.getStatementListBySPARQL("select ?s ?p ?o ?c where {GRAPH ?c {?s ?p ?o}}");
-        statements.forEach(
-                statement -> {
-                    try {
-                        outputStream.write(statement.toString().getBytes("UTF-8"));
-                        outputStream.write("\n".getBytes());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e.getMessage(), e);
-                    }
-                }
-        );
-    }
 }

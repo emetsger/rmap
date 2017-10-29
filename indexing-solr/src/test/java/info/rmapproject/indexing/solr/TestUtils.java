@@ -196,6 +196,48 @@ public class TestUtils {
     }
 
     /**
+     * Deserialize Turtle RDF from Spring Resources for the specified RMap object type.
+     *
+     * @param rmapObjects
+     * @param desiredType
+     * @param <T>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends RMapObject> List<T> getRmapObjects(Map<RMapObjectType, Set<RDFResource>> rmapObjects,
+                                                                RMapObjectType desiredType, RDFHandler rdfHandler,
+                                                                Comparator<T> sortBy) {
+
+        List<T> objects = (List<T>)rmapObjects.keySet().stream().filter(candidate -> candidate == desiredType)
+                .flatMap(type -> rmapObjects.get(type).stream())
+                .map(resource -> {
+                    try {
+                        switch (desiredType) {
+                            case DISCO:
+                                return rdfHandler.rdf2RMapDiSCO(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            case AGENT:
+                                return rdfHandler.rdf2RMapAgent(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            case EVENT:
+                                return rdfHandler.rdf2RMapEvent(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            default:
+                                throw new IllegalArgumentException("Unknown type " + desiredType);
+                        }
+                    } catch (IOException e) {
+                        fail("Error opening RDF resource " + resource + ": " + e.getMessage());
+                        return null;
+                    }
+
+                }).collect(Collectors.toList());
+
+        objects.sort(sortBy);
+
+        return objects;
+    }
+
+    /**
      * Creates an {@link IndexDTO} for each {@link RMapEvent} found at the specified {@code resourcePath}.  The stream
      * is ordered, with the earliest event at the head of the stream and the most recent event at the tail.
      * <h3>Assumptions:</h3>
