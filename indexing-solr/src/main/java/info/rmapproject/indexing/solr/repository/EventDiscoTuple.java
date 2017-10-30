@@ -7,10 +7,10 @@ import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
 
 /**
- * Decomposes an instance of {@link IndexDTO} into tuples keyed by the event and disco.
+ * A decomposed instance of a {@link IndexDTO} into tuples keyed by the event and disco.
  * <p>
  * A {@code IndexDTO} instance will decompose to at least one (at most two) {@code EventDiscoTuple} instance; one
- * instance for the {@code (Event, Event Source)} and one instance for the {@code (Event, Event Target)}.  Event source
+ * tuple for the {@code (Event, Event Source)} and one tuple for the {@code (Event, Event Target)}.  Event source
  * and targets are typically DiSCOs.  Practically speaking, each instance of a {@code EventDiscoTuple} is
  * represented by a Solr document in the index.
  */

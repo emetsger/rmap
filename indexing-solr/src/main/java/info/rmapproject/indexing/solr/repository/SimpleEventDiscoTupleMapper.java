@@ -1,20 +1,22 @@
 package info.rmapproject.indexing.solr.repository;
 
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertNotNull;
-import static info.rmapproject.indexing.solr.IndexUtils.ise;
-import static info.rmapproject.indexing.solr.IndexUtils.notNull;
+import static info.rmapproject.indexing.IndexUtils.assertNotNull;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.ise;
+import static info.rmapproject.indexing.IndexUtils.notNull;
 
 /**
  * Maps {@link EventDiscoTuple} instances to {@link info.rmapproject.indexing.solr.model.DiscoSolrDocument}s.
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
+class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper<DiscoSolrDocument> {
 
     @Autowired
     private DiscoMapper discoMapper;
@@ -25,6 +27,8 @@ class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
     @Autowired
     private EventMapper eventMapper;
 
+    private DiscoSolrDocument prototype;
+
     /**
      * Constructs a {@code SimpleEventDiscoTupleMapper}.  The caller must set a
      * {@link #setDiscoMapper(DiscoMapper) DiscoMapper}, {@link #setAgentMapper(AgentMapper) AgentMapper}, and an
@@ -32,6 +36,17 @@ class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
      */
     public SimpleEventDiscoTupleMapper() {
 
+    }
+
+    /**
+     * Constructs a {@code SimpleEventDiscoTupleMapper}, mapping to the supplied {@link DiscoSolrDocument}.  The caller
+     * must set a {@link #setDiscoMapper(DiscoMapper) DiscoMapper}, {@link #setAgentMapper(AgentMapper) AgentMapper},
+     * and an {@link #setEventMapper(EventMapper) EventMapper}.
+     *
+     * @param prototype the {@code DiscoSolrDocument} being mapped to, may be {@code null}
+     */
+    public SimpleEventDiscoTupleMapper(DiscoSolrDocument prototype) {
+        this.prototype = prototype;
     }
 
     /**
@@ -53,9 +68,34 @@ class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
     }
 
     /**
+     * Constructs a {@code SimpleEventDiscoTupleManager} with the supplied mappers, mapping to the supplied
+     * {@link DiscoSolrDocument}.
+     *
+     * @param discoMapper the disco mapper, must not be {@code null}
+     * @param agentMapper the agent mapper, must not be {@code null}
+     * @param eventMapper the event mapper, must not be {@code null}
+     * @param prototype the {@code DiscoSolrDocument} being mapped to, may be {@code null}
+     * @throws IllegalArgumentException if any mapper is {@code null}
+     */
+    public SimpleEventDiscoTupleMapper(DiscoMapper discoMapper, AgentMapper agentMapper, EventMapper eventMapper,
+                                       DiscoSolrDocument prototype) {
+        assertNotNull(discoMapper, "Disco Mapper must not be null.");
+        assertNotNull(agentMapper, "Agent Mapper must not be null.");
+        assertNotNull(eventMapper, "Event Mapper must not be null.");
+
+        this.discoMapper = discoMapper;
+        this.agentMapper = agentMapper;
+        this.eventMapper = eventMapper;
+        this.prototype = prototype;
+    }
+
+    /**
      * Maps a {@link EventDiscoTuple} to a {@link DiscoSolrDocument} field by field.  The mapping logic is tolerant with
      * respect to {@code null} values; no field validation is performed.  Any validation logic ought to exist outside of
-     * this method.
+     * this method.  If a {@code prototype} was supplied on construction, it will be used as a template; a new document
+     * instance will be created based on the prototype document, and used as a target of mapping operations.  The state
+     * of the prototype will be preserved across the mapping operation, provided that mapping operations don't over-
+     * write the state.
      *
      * @param eventDiscoTuple the thing to be indexed
      * @return the {@code DiscoSolrDocument}
@@ -69,7 +109,12 @@ class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
         assertNotNull(eventMapper, ise("The EventMapper must not be null."));
         assertNotNull(agentMapper, ise("The AgentMapper must not be null."));
 
-        DiscoSolrDocument doc = new DiscoSolrDocument();
+        DiscoSolrDocument doc = null;
+        if (prototype == null) {
+            doc = new DiscoSolrDocument();
+        } else {
+            doc = new DiscoSolrDocument.Builder(prototype).build();
+        }
 
         // Fields mapped from EventDiscoTuple.disco
 
@@ -94,13 +139,22 @@ class SimpleEventDiscoTupleMapper implements EventDiscoTupleMapper {
         if (notNull(eventDiscoTuple.event)) {
 
             doc = eventMapper.apply(eventDiscoTuple.event, doc);
+        }
 
-            if (notNull(eventDiscoTuple.eventTarget)) {
-                doc.setEventTargetObjectUris(Collections.singletonList(eventDiscoTuple.eventTarget.getStringValue()));
-            }
-            if (notNull(eventDiscoTuple.eventSource)) {
-                doc.setEventSourceObjectUris(Collections.singletonList(eventDiscoTuple.eventSource.getStringValue()));
-            }
+        if (notNull(eventDiscoTuple.eventTarget)) {
+            doc.setEventTargetObjectUris(Collections.singletonList(eventDiscoTuple.eventTarget.getStringValue()));
+        }
+
+        if (notNull(eventDiscoTuple.eventSource)) {
+            doc.setEventSourceObjectUris(Collections.singletonList(eventDiscoTuple.eventSource.getStringValue()));
+        }
+
+        if (eventDiscoTuple.eventSource != null && eventDiscoTuple.disco != null && irisEqual(eventDiscoTuple.eventSource, eventDiscoTuple.disco.getId())) {
+            doc.setDiscoEventDirection(IndexUtils.EventDirection.SOURCE.name());
+        }
+
+        if (eventDiscoTuple.eventTarget != null && eventDiscoTuple.disco != null && irisEqual(eventDiscoTuple.eventTarget, eventDiscoTuple.disco.getId())) {
+            doc.setDiscoEventDirection(IndexUtils.EventDirection.TARGET.name());
         }
 
         return doc;

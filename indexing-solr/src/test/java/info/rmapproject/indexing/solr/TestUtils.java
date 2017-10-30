@@ -9,6 +9,7 @@ import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
 import info.rmapproject.indexing.solr.repository.SimpleSolrTest;
 import org.openrdf.model.IRI;
@@ -37,8 +38,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
-import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -190,6 +191,48 @@ public class TestUtils {
                     }
 
                 }).collect(Collectors.toList());
+
+        return objects;
+    }
+
+    /**
+     * Deserialize Turtle RDF from Spring Resources for the specified RMap object type.
+     *
+     * @param rmapObjects
+     * @param desiredType
+     * @param <T>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends RMapObject> List<T> getRmapObjects(Map<RMapObjectType, Set<RDFResource>> rmapObjects,
+                                                                RMapObjectType desiredType, RDFHandler rdfHandler,
+                                                                Comparator<T> sortBy) {
+
+        List<T> objects = (List<T>)rmapObjects.keySet().stream().filter(candidate -> candidate == desiredType)
+                .flatMap(type -> rmapObjects.get(type).stream())
+                .map(resource -> {
+                    try {
+                        switch (desiredType) {
+                            case DISCO:
+                                return rdfHandler.rdf2RMapDiSCO(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            case AGENT:
+                                return rdfHandler.rdf2RMapAgent(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            case EVENT:
+                                return rdfHandler.rdf2RMapEvent(resource.getInputStream(),
+                                        resource.getRmapFormat(), "");
+                            default:
+                                throw new IllegalArgumentException("Unknown type " + desiredType);
+                        }
+                    } catch (IOException e) {
+                        fail("Error opening RDF resource " + resource + ": " + e.getMessage());
+                        return null;
+                    }
+
+                }).collect(Collectors.toList());
+
+        objects.sort(sortBy);
 
         return objects;
     }

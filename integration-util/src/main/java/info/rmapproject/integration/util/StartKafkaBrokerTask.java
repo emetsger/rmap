@@ -8,12 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
 
@@ -43,7 +40,8 @@ public class StartKafkaBrokerTask extends AbstractKafkaBrokerTask {
                     "': " + e.getMessage(), e);
         }
 
-        KafkaEmbedded broker = new KafkaEmbedded(1, true, 2, "topic");
+        // TODO parameterize these things in the ant task
+        KafkaEmbedded broker = new KafkaEmbedded(1, true, 2, "rmap-event-topic");
         broker.brokerProperties((Map<String,String>) (Map<?,?>) brokerProperties);
         broker.setKafkaPorts(Arrays.stream(brokerProperties.getProperty("listeners").split(","))
                 .map(URI::create)

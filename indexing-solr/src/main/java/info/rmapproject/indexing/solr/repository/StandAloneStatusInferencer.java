@@ -6,7 +6,7 @@ import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.event.RMapEventType;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ import static info.rmapproject.core.model.event.RMapEventType.DERIVATION;
 import static info.rmapproject.core.model.event.RMapEventType.REPLACE;
 import static info.rmapproject.core.model.event.RMapEventType.TOMBSTONE;
 import static info.rmapproject.core.model.event.RMapEventType.UPDATE;
-import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
 
 /**
  * Infers the status of a DiSCO using only the supplied Event, DiSCO, and Agent.

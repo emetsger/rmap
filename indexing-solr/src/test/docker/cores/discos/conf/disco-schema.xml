@@ -18,8 +18,8 @@
          solr.MappingCharFilterFactory
      (handling literals with diacritics, etc.) -->
 
-     <!-- solr.TypeTokenFilterFactory -->
-     <!-- solr.HTMLStripCharFilterFactory -->
+    <!-- solr.TypeTokenFilterFactory -->
+    <!-- solr.HTMLStripCharFilterFactory -->
 
     <fieldType name="uri" class="solr.TextField">
         <analyzer>
@@ -51,12 +51,15 @@
     <field name="disco_creator_uri" type="uri"/>
     <field name="disco_description" type="description"/>
     <field name="disco_providerid" type="description"/>     <!-- TODO: any literal values to index here? -->
-                                                            <!-- TODO: is this a URI or any string? -->
+    <!-- TODO: is this a URI or any string? -->
     <field name="disco_aggregated_resource_uris" type="uris"/>
     <field name="disco_provenance_uri" type="uri"/>         <!-- TODO: any literal values to index here? -->
-    <field name="disco_related_statements" type="triples"/> <!-- TODO: could have a single field containing all triples -->
+    <field name="disco_related_statements"
+           type="triples"/> <!-- TODO: could have a single field containing all triples -->
 
     <field name="disco_status" type="description"/>
+
+    <field name="disco_event_direction" type="string"/>
 
     <!-- TODO: fields for predicate/edge labels for GUI visualization? -->
 
@@ -95,6 +98,9 @@
     -->
     <field name="event_target_object_uris" type="uris"/>
 
+    <!-- Dynamic field indexing for Kafka metadata -->
+    <dynamicField name="md_*" type="string" indexed="true"  stored="true"/>
+
     <!--
       Agent that is responsible for the event and state of the DiSCO
     -->
@@ -105,128 +111,140 @@
     <field name="agent_description" type="description"/>
     <!-- auth id? -->
 
+    <field name="kafka_topic" type="string"/>
 
-<!-- Portions of the default managed_schema file follows.  It seems that solr depends on some of these fieldTypes being defined -->
+    <field name="kafka_partition" type="int"/>
 
-<fieldType name="ancestor_path" class="solr.TextField">
-    <analyzer type="index">
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
-    </analyzer>
-  </fieldType>
+    <field name="kafka_offset" type="long"/>
 
-  <fieldType name="binary" class="solr.BinaryField"/>
 
-  <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
 
-  <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
 
-  <!-- Commented out so we don't have to rely on an external file, 'currency.xml' -->
-  <!-- <fieldType name="currency" class="solr.CurrencyField" currencyConfig="currency.xml" defaultCurrency="USD" precisionStep="8"/> -->
-  <fieldType name="date" class="solr.TrieDateField" positionIncrementGap="0" precisionStep="0"/>
+    <!-- Portions of the default managed_schema file follows.  It seems that solr depends on some of these fieldTypes being defined -->
 
-  <fieldType name="dates" class="solr.TrieDateField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
+    <fieldType name="ancestor_path" class="solr.TextField">
+        <analyzer type="index">
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+        </analyzer>
+        <analyzer type="query">
+            <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
+        </analyzer>
+    </fieldType>
 
-  <fieldType name="descendent_path" class="solr.TextField">
-    <analyzer type="index">
-      <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-    </analyzer>
-  </fieldType>
+    <fieldType name="binary" class="solr.BinaryField"/>
 
-  <fieldType name="double" class="solr.TrieDoubleField" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
 
-  <fieldType name="doubles" class="solr.TrieDoubleField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
+    <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
 
-  <fieldType name="float" class="solr.TrieFloatField" positionIncrementGap="0" precisionStep="0"/>
+    <!-- Commented out so we don't have to rely on an external file, 'currency.xml' -->
+    <!-- <fieldType name="currency" class="solr.CurrencyField" currencyConfig="currency.xml" defaultCurrency="USD" precisionStep="8"/> -->
+    <fieldType name="date" class="solr.TrieDateField" positionIncrementGap="0" precisionStep="0"/>
 
-  <fieldType name="floats" class="solr.TrieFloatField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
+    <fieldType name="dates" class="solr.TrieDateField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
 
-  <fieldType name="ignored" class="solr.StrField" indexed="false" stored="false" multiValued="true"/>
+    <fieldType name="descendent_path" class="solr.TextField">
+        <analyzer type="index">
+            <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
+        </analyzer>
+        <analyzer type="query">
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+        </analyzer>
+    </fieldType>
 
-  <fieldType name="int" class="solr.TrieIntField" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType name="double" class="solr.TrieDoubleField" positionIncrementGap="0" precisionStep="0"/>
 
-  <fieldType name="ints" class="solr.TrieIntField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
+    <fieldType name="doubles" class="solr.TrieDoubleField" positionIncrementGap="0" multiValued="true"
+               precisionStep="0"/>
 
-  <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
+    <fieldType name="float" class="solr.TrieFloatField" positionIncrementGap="0" precisionStep="0"/>
 
-  <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" geo="true" maxDistErr="0.001" distErrPct="0.025" distanceUnits="kilometers"/>
+    <fieldType name="floats" class="solr.TrieFloatField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
 
-  <fieldType name="long" class="solr.TrieLongField" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType name="ignored" class="solr.StrField" indexed="false" stored="false" multiValued="true"/>
 
-  <fieldType name="longs" class="solr.TrieLongField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
+    <fieldType name="int" class="solr.TrieIntField" positionIncrementGap="0" precisionStep="0"/>
 
-  <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
-    <analyzer>
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-    </analyzer>
-  </fieldType>
+    <fieldType name="ints" class="solr.TrieIntField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
 
-  <fieldType name="phonetic_en" class="solr.TextField" indexed="true" stored="false">
-    <analyzer>
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <filter class="solr.DoubleMetaphoneFilterFactory" inject="false"/>
-    </analyzer>
-  </fieldType>
+    <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
 
-  <fieldType name="point" class="solr.PointType" subFieldSuffix="_d" dimension="2"/>
+    <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" geo="true" maxDistErr="0.001"
+               distErrPct="0.025" distanceUnits="kilometers"/>
 
-  <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
+    <fieldType name="long" class="solr.TrieLongField" positionIncrementGap="0" precisionStep="0"/>
 
-  <fieldType name="string" class="solr.StrField" sortMissingLast="true"/>
+    <fieldType name="longs" class="solr.TrieLongField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
 
-  <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true"/>
+    <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+    </fieldType>
 
-  <fieldType name="tdate" class="solr.TrieDateField" positionIncrementGap="0" precisionStep="6"/>
+    <fieldType name="phonetic_en" class="solr.TextField" indexed="true" stored="false">
+        <analyzer>
+            <tokenizer class="solr.StandardTokenizerFactory"/>
+            <filter class="solr.DoubleMetaphoneFilterFactory" inject="false"/>
+        </analyzer>
+    </fieldType>
 
-  <fieldType name="tdates" class="solr.TrieDateField" positionIncrementGap="0" multiValued="true" precisionStep="6"/>
+    <fieldType name="point" class="solr.PointType" subFieldSuffix="_d" dimension="2"/>
 
-  <fieldType name="tdouble" class="solr.TrieDoubleField" positionIncrementGap="0" precisionStep="8"/>
+    <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
 
-  <fieldType name="tdoubles" class="solr.TrieDoubleField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true"/>
 
-  <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
-    <analyzer>
-      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    </analyzer>
-  </fieldType>
+    <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true"/>
 
-  <fieldType name="tfloat" class="solr.TrieFloatField" positionIncrementGap="0" precisionStep="8"/>
+    <fieldType name="tdate" class="solr.TrieDateField" positionIncrementGap="0" precisionStep="6"/>
 
-  <fieldType name="tfloats" class="solr.TrieFloatField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+    <fieldType name="tdates" class="solr.TrieDateField" positionIncrementGap="0" multiValued="true" precisionStep="6"/>
 
-  <fieldType name="tint" class="solr.TrieIntField" positionIncrementGap="0" precisionStep="8"/>
+    <fieldType name="tdouble" class="solr.TrieDoubleField" positionIncrementGap="0" precisionStep="8"/>
 
-  <fieldType name="tints" class="solr.TrieIntField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+    <fieldType name="tdoubles" class="solr.TrieDoubleField" positionIncrementGap="0" multiValued="true"
+               precisionStep="8"/>
 
-  <fieldType name="tlong" class="solr.TrieLongField" positionIncrementGap="0" precisionStep="8"/>
+    <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
+        <analyzer>
+            <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        </analyzer>
+    </fieldType>
 
-  <fieldType name="tlongs" class="solr.TrieLongField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+    <fieldType name="tfloat" class="solr.TrieFloatField" positionIncrementGap="0" precisionStep="8"/>
 
-  <fieldType name="text_shingles" class="solr.TextField" positionIncrementGap="100" multiValued="true">
-    <analyzer type="index">
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <!-- <filter class="solr.StopFilterFactory" words="lang/stopwords_en.txt" ignoreCase="false" /> -->
-      <filter class="solr.LengthFilterFactory" min="2" max="18"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.PatternReplaceFilterFactory" pattern="(^[^a-z]+$)" replacement="" replace="all"/>
-      <filter class="solr.ShingleFilterFactory" minShingleSize="3"  maxShingleSize="3"
-             outputUnigrams="false" outputUnigramsIfNoShingles="false" tokenSeparator=" " fillerToken="*"/>
-      <filter class="solr.PatternReplaceFilterFactory" pattern="(.*[\*].*)"  replacement=""/>
-      <filter class="solr.TrimFilterFactory"/>
+    <fieldType name="tfloats" class="solr.TrieFloatField" positionIncrementGap="0" multiValued="true"
+               precisionStep="8"/>
 
-      <!-- PRFF could have removed everything down to an empty string, remove if so -->
-      <filter class="solr.LengthFilterFactory" min="1" max="100"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-    </analyzer>
-  </fieldType>
+    <fieldType name="tint" class="solr.TrieIntField" positionIncrementGap="0" precisionStep="8"/>
+
+    <fieldType name="tints" class="solr.TrieIntField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+
+    <fieldType name="tlong" class="solr.TrieLongField" positionIncrementGap="0" precisionStep="8"/>
+
+    <fieldType name="tlongs" class="solr.TrieLongField" positionIncrementGap="0" multiValued="true" precisionStep="8"/>
+
+    <fieldType name="text_shingles" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+        <analyzer type="index">
+            <tokenizer class="solr.StandardTokenizerFactory"/>
+            <!-- <filter class="solr.StopFilterFactory" words="lang/stopwords_en.txt" ignoreCase="false" /> -->
+            <filter class="solr.LengthFilterFactory" min="2" max="18"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+            <filter class="solr.PatternReplaceFilterFactory" pattern="(^[^a-z]+$)" replacement="" replace="all"/>
+            <filter class="solr.ShingleFilterFactory" minShingleSize="3" maxShingleSize="3"
+                    outputUnigrams="false" outputUnigramsIfNoShingles="false" tokenSeparator=" " fillerToken="*"/>
+            <filter class="solr.PatternReplaceFilterFactory" pattern="(.*[\*].*)" replacement=""/>
+            <filter class="solr.TrimFilterFactory"/>
+
+            <!-- PRFF could have removed everything down to an empty string, remove if so -->
+            <filter class="solr.LengthFilterFactory" min="1" max="100"/>
+        </analyzer>
+        <analyzer type="query">
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+    </fieldType>
 
 </schema>

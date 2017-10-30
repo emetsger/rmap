@@ -1,6 +1,6 @@
 package info.rmapproject.indexing.solr.repository;
 
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 
 import java.util.function.Function;
 import java.util.stream.Stream;

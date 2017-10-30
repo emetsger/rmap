@@ -10,7 +10,7 @@ import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.solr.core.DefaultQueryParser;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -553,6 +555,38 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
             }
         });
         solrTemplate.registerQueryParser(Query.class, queryParser);
+    }
+
+    @Test
+    public void testKafkaOffsetSort() throws Exception {
+        discoRepository.deleteAll();
+        assertEquals(0, discoRepository.count());
+
+        // Create 100 documents, increasing the offset, and storing them in the index
+
+        Set<DiscoSolrDocument> toStore = new HashSet<>();
+
+        for (int i = 0; i < 100; i++) {
+            DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
+                    .docId(String.valueOf(i))
+                    .kafkaOffset(i)
+                    .kafkaTopic("topic")
+                    .kafkaPartition(2)
+                    .build();
+            toStore.add(doc);
+        }
+
+        discoRepository.saveAll(toStore);
+
+        List<DiscoSolrDocument> results = discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("topic", 2, new Sort(Sort.Direction.DESC, "kafka_offset"));
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+
+        assertEquals(99, results.get(0).getKafkaOffset());
+
+        assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("topic", 0, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
+        assertEquals(0, discoRepository.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition("foo", 2, new Sort(Sort.Direction.DESC, "kafka_offset")).size());
     }
 
     /**

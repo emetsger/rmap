@@ -18,6 +18,7 @@
         <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka-broker</kafka.broker.logs-dir>
         <kafka.broker.host>localhost</kafka.broker.host>
         <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
+        <derby.home>${project.build.testOutputDirectory}/derby</derby.home>
     </properties>
 
     <build>
@@ -137,6 +138,20 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>start-derby</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <target>
+                                <taskdef name="startDerby" classname="info.rmapproject.integration.util.StartDerbyTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <startDerby derbyHome="${derby.home}"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
@@ -161,6 +176,7 @@
                     <systemProperties>
                         <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                         <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
+                        <derby.home>${derby.home}</derby.home>
                     </systemProperties>
                 </configuration>
                 <executions>
@@ -258,12 +274,6 @@
 
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
@@ -273,6 +283,37 @@
             <artifactId>rmap-core</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-auth</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-integration</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbyclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-testdata</artifactId>
             <scope>test</scope>
         </dependency>
 

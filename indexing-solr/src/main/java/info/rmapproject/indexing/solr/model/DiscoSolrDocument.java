@@ -4,15 +4,21 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static info.rmapproject.indexing.solr.IndexUtils.assertValidUri;
+import static info.rmapproject.indexing.IndexUtils.assertValidUri;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @SolrDocument(solrCoreName = "discos")
-public class DiscoSolrDocument {
+public class DiscoSolrDocument implements KafkaMetadata {
 
     /**
      * Name of the Solr core which stores instances of this document
@@ -70,6 +76,9 @@ public class DiscoSolrDocument {
     @Field(DISCO_STATUS)
     private String discoStatus;
 
+    @Field("disco_event_direction")
+    private String discoEventDirection;
+
 
     @Field("event_uri")
     private String eventUri;
@@ -105,8 +114,66 @@ public class DiscoSolrDocument {
     @Field("agent_description")
     private String agentDescription;
 
+
+    @Field("md_*")
+    private Map<String, String> metadata;
+
+
+    /**
+     * Kafka metadata field representing the Kafka topic that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_TOPIC)
+    private String kafkaTopic;
+
+    /**
+     * Kafka metadata field representing the Kafka partition that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_PARTITION)
+    private int kafkaPartition;
+
+    /**
+     * Kafka metadata field representing the offset of the Kafka record in the {@link #KAFKA_TOPIC topic} and
+     * {@link #KAFKA_PARTITION partition} that contributed to information in this document.
+     */
+    @Field(KafkaMetadata.KAFKA_OFFSET)
+    private long kafkaOffset;
+
     public DiscoSolrDocument() {
 
+    }
+
+    public DiscoSolrDocument(DiscoSolrDocument prototype) {
+        this.docId = prototype.docId;
+        this.docLastUpdated = prototype.docLastUpdated;
+
+        this.discoUri = prototype.discoUri;
+        this.discoCreatorUri = prototype.discoCreatorUri;
+        this.discoDescription = prototype.discoDescription;
+        this.discoProviderid = prototype.discoProviderid;
+        this.discoAggregatedResourceUris = (prototype.discoAggregatedResourceUris != null) ? new ArrayList<>(prototype.discoAggregatedResourceUris) : null;
+        this.discoProvenanceUri = prototype.discoProvenanceUri;
+        this.discoRelatedStatements = (prototype.discoRelatedStatements != null) ? new ArrayList<>(prototype.discoRelatedStatements) : null;
+        this.discoStatus = prototype.discoStatus;
+        this.discoEventDirection = prototype.discoEventDirection;
+
+        this.eventUri = prototype.eventUri;
+        this.eventAgentUri = prototype.eventAgentUri;
+        this.eventStartTime = prototype.eventStartTime;
+        this.eventEndTime = prototype.eventEndTime;
+        this.eventDescription = prototype.eventDescription;
+        this.eventType = prototype.eventType;
+        this.eventSourceObjectUris = (prototype.eventSourceObjectUris != null) ? new ArrayList<>(prototype.eventSourceObjectUris) : null;
+        this.eventTargetObjectUris = (prototype.eventTargetObjectUris != null) ? new ArrayList<>(prototype.eventTargetObjectUris) : null;
+
+        this.agentUri = prototype.agentUri;
+        this.agentProviderUri = prototype.agentProviderUri;
+        this.agentDescription = prototype.agentDescription;
+
+        this.metadata = (prototype.metadata != null) ? new HashMap<>(prototype.metadata) : null;
+
+        this.kafkaTopic = prototype.kafkaTopic;
+        this.kafkaPartition = prototype.kafkaPartition;
+        this.kafkaOffset = prototype.kafkaOffset;
     }
 
     public String getDocId() {
@@ -262,6 +329,14 @@ public class DiscoSolrDocument {
         this.eventTargetObjectUris = eventTargetObjectUris;
     }
 
+    public String getDiscoEventDirection() {
+        return discoEventDirection;
+    }
+
+    public void setDiscoEventDirection(String discoEventDirection) {
+        this.discoEventDirection = discoEventDirection;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
@@ -288,6 +363,253 @@ public class DiscoSolrDocument {
         this.agentDescription = agentDescription;
     }
 
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getKafkaTopic() {
+        return kafkaTopic;
+    }
+
+    public void setKafkaTopic(String kafkaTopic) {
+        this.kafkaTopic = kafkaTopic;
+    }
+
+    public int getKafkaPartition() {
+        return kafkaPartition;
+    }
+
+    public void setKafkaPartition(int kafkaPartition) {
+        this.kafkaPartition = kafkaPartition;
+    }
+
+    public long getKafkaOffset() {
+        return kafkaOffset;
+    }
+
+    public void setKafkaOffset(long kafkaOffset) {
+        this.kafkaOffset = kafkaOffset;
+    }
+
+    public static class Builder {
+        private DiscoSolrDocument instance;
+
+        public Builder() {
+
+        }
+
+        public Builder(DiscoSolrDocument doc) {
+            instance = new DiscoSolrDocument(doc);
+        }
+
+        public Builder docId(String docId) {
+            instantiateIfNull();
+            instance.setDocId(docId);
+            return this;
+        }
+
+        public Builder docLastUpdated(long docLastUpdated) {
+            instantiateIfNull();
+            instance.setDocLastUpdated(docLastUpdated);
+            return this;
+        }
+
+        public Builder discoUri(String discoUri) {
+            instantiateIfNull();
+            instance.setDiscoUri(discoUri);
+            return this;
+        }
+
+        public Builder discoCreatorUri(String discoCreatorUri) {
+            instantiateIfNull();
+            instance.setDiscoCreatorUri(discoCreatorUri);
+            return this;
+        }
+
+        public Builder discoDescription(String discoDescription) {
+            instantiateIfNull();
+            instance.setDiscoDescription(discoDescription);
+            return this;
+        }
+
+        public Builder discoProviderid(String discoProviderid) {
+            instantiateIfNull();
+            instance.setDiscoProviderid(discoProviderid);
+            return this;
+        }
+
+        public Builder discoAggregatedResourceUris(List<String> discoAggregatedResourceUris) {
+            instantiateIfNull();
+            instance.setDiscoAggregatedResourceUris(discoAggregatedResourceUris);
+            return this;
+        }
+
+        public Builder discoProvenanceUri(String discoProvenanceUri) {
+            instantiateIfNull();
+            instance.setDiscoProvenanceUri(discoProvenanceUri);
+            return this;
+        }
+
+        public Builder discoRelatedStatements(List<String> discoRelatedStatements) {
+            instantiateIfNull();
+            instance.setDiscoRelatedStatements(discoRelatedStatements);
+            return this;
+        }
+
+        public Builder discoEventDirection(String discoEventDirection) {
+            instantiateIfNull();
+            instance.setDiscoEventDirection(discoEventDirection);
+            return this;
+        }
+
+        public Builder discoStatus(String discoStatus) {
+            instantiateIfNull();
+            instance.setDiscoStatus(discoStatus);
+            return this;
+        }
+
+        public Builder eventUri(String eventUri) {
+            instantiateIfNull();
+            instance.setEventUri(eventUri);
+            return this;
+        }
+
+        public Builder eventAgentUri(String eventAgentUri) {
+            instantiateIfNull();
+            instance.setEventAgentUri(eventAgentUri);
+            return this;
+        }
+
+        public Builder eventStartTime(String eventStartTime) {
+            instantiateIfNull();
+            instance.setEventStartTime(eventStartTime);
+            return this;
+        }
+
+        public Builder eventEndTime(String eventEndTime) {
+            instantiateIfNull();
+            instance.setEventEndTime(eventEndTime);
+            return this;
+        }
+
+        public Builder eventDescription(String eventDescription) {
+            instantiateIfNull();
+            instance.setEventDescription(eventDescription);
+            return this;
+        }
+
+        public Builder eventType(String eventType) {
+            instantiateIfNull();
+            instance.setEventType(eventType);
+            return this;
+        }
+
+        public Builder eventSourceObjectUris(List<String> eventSourceObjectUris) {
+            instantiateIfNull();
+            instance.setEventSourceObjectUris(eventSourceObjectUris);
+            return this;
+        }
+
+        public Builder eventTargetObjectUris(List<String> eventTargetObjectUris) {
+            instantiateIfNull();
+            instance.setEventTargetObjectUris(eventTargetObjectUris);
+            return this;
+        }
+
+        public Builder agentUri(String agentUri) {
+            instantiateIfNull();
+            instance.setAgentUri(agentUri);
+            return this;
+        }
+
+        public Builder agentProviderUri(String agentProviderUri) {
+            instantiateIfNull();
+            instance.setAgentProviderUri(agentProviderUri);
+            return this;
+        }
+
+        public Builder agentDescription(String agentDescription) {
+            instantiateIfNull();
+            instance.setAgentDescription(agentDescription);
+            return this;
+        }
+
+        public Builder metadata(Map<String, String> metadata) {
+            instantiateIfNull();
+            instance.setMetadata(metadata);
+            return this;
+        }
+
+        public Builder kafkaTopic(String topic) {
+            instantiateIfNull();
+            instance.setKafkaTopic(topic);
+            return this;
+        }
+
+        public Builder kafkaPartition(int partition) {
+            instantiateIfNull();
+            instance.setKafkaPartition(partition);
+            return this;
+        }
+
+        public Builder kafkaOffset(long offset) {
+            instantiateIfNull();
+            instance.setKafkaOffset(offset);
+            return this;
+        }
+
+        public DiscoSolrDocument build() {
+            instantiateIfNull();
+            return instance;
+        }
+
+        private void instantiateIfNull() {
+            if (instance == null) {
+                instance = new DiscoSolrDocument();
+            }
+        }
+
+        private void reset() {
+            instance = null;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "DiscoSolrDocument{" +
+                "docId='" + docId + '\'' +
+                ", docLastUpdated=" + docLastUpdated +
+                ", discoUri='" + discoUri + '\'' +
+                ", discoCreatorUri='" + discoCreatorUri + '\'' +
+                ", discoDescription='" + discoDescription + '\'' +
+                ", discoProviderid='" + discoProviderid + '\'' +
+                ", discoAggregatedResourceUris=" + discoAggregatedResourceUris +
+                ", discoProvenanceUri='" + discoProvenanceUri + '\'' +
+                ", discoRelatedStatements=" + discoRelatedStatements +
+                ", discoStatus='" + discoStatus + '\'' +
+                ", discoEventDirection='" + discoEventDirection + '\'' +
+                ", eventUri='" + eventUri + '\'' +
+                ", eventAgentUri='" + eventAgentUri + '\'' +
+                ", eventStartTime='" + eventStartTime + '\'' +
+                ", eventEndTime='" + eventEndTime + '\'' +
+                ", eventDescription='" + eventDescription + '\'' +
+                ", eventType='" + eventType + '\'' +
+                ", eventSourceObjectUris=" + eventSourceObjectUris +
+                ", eventTargetObjectUris=" + eventTargetObjectUris +
+                ", agentUri='" + agentUri + '\'' +
+                ", agentProviderUri='" + agentProviderUri + '\'' +
+                ", agentDescription='" + agentDescription + '\'' +
+                ", metadata=" + metadata +
+                ", kafkaTopic='" + kafkaTopic + '\'' +
+                ", kafkaPartition=" + kafkaPartition +
+                ", kafkaOffset=" + kafkaOffset +
+                '}';
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -296,6 +618,8 @@ public class DiscoSolrDocument {
         DiscoSolrDocument that = (DiscoSolrDocument) o;
 
         if (docLastUpdated != that.docLastUpdated) return false;
+        if (kafkaPartition != that.kafkaPartition) return false;
+        if (kafkaOffset != that.kafkaOffset) return false;
         if (docId != null ? !docId.equals(that.docId) : that.docId != null) return false;
         if (discoUri != null ? !discoUri.equals(that.discoUri) : that.discoUri != null) return false;
         if (discoCreatorUri != null ? !discoCreatorUri.equals(that.discoCreatorUri) : that.discoCreatorUri != null)
@@ -324,10 +648,15 @@ public class DiscoSolrDocument {
             return false;
         if (eventTargetObjectUris != null ? !eventTargetObjectUris.equals(that.eventTargetObjectUris) : that.eventTargetObjectUris != null)
             return false;
+        if (discoEventDirection != null ? !discoEventDirection.equals(that.discoEventDirection) : that.discoEventDirection != null)
+            return false;
         if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
         if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
             return false;
-        return agentDescription != null ? agentDescription.equals(that.agentDescription) : that.agentDescription == null;
+        if (agentDescription != null ? !agentDescription.equals(that.agentDescription) : that.agentDescription != null)
+            return false;
+        if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
+        return kafkaTopic != null ? kafkaTopic.equals(that.kafkaTopic) : that.kafkaTopic == null;
     }
 
     @Override
@@ -350,9 +679,14 @@ public class DiscoSolrDocument {
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (eventSourceObjectUris != null ? eventSourceObjectUris.hashCode() : 0);
         result = 31 * result + (eventTargetObjectUris != null ? eventTargetObjectUris.hashCode() : 0);
+        result = 31 * result + (discoEventDirection != null ? discoEventDirection.hashCode() : 0);
         result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
         result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
+        result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
+        result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
+        result = 31 * result + kafkaPartition;
+        result = 31 * result + (int) (kafkaOffset ^ (kafkaOffset >>> 32));
         return result;
     }
 }

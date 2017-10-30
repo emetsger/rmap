@@ -4,7 +4,7 @@ import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.indexing.solr.IndexUtils;
+import info.rmapproject.indexing.IndexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +12,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 
-import static info.rmapproject.indexing.solr.IndexUtils.findEventIri;
-import static info.rmapproject.indexing.solr.IndexUtils.irisEqual;
+import static info.rmapproject.indexing.IndexUtils.findEventIri;
+import static info.rmapproject.indexing.IndexUtils.irisEqual;
 
 /**
  * Encapsulates the unit of information sent to the indexer for indexing.  An {@code IndexDTO} forms a connected graph
