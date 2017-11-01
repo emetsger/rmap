@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:property-placeholder location="classpath:/rmapcore.properties" ignore-unresolvable="true"/>
 	<context:component-scan base-package="info.rmapproject.core"/>
+	<context:component-scan base-package="info.rmapproject.kafka"/>
 
 	<bean id="idSupplier" class="info.rmapproject.core.idservice.IdServiceSupplier"/>
     <bean id="rdfHandler" class="info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler"/>
@@ -28,6 +30,11 @@
 			</set>
 		</property>
 	</bean>
+
+	<!-- production kafka config, from rmap-kafka-shared module -->
+	<beans profile="prod-kafka">
+		<import resource="classpath*:/rmap-kafka-shared.xml"/>
+	</beans>
 
 	<!-- production triplestore -->
 	<beans profile="http-triplestore">

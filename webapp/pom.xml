@@ -107,6 +107,30 @@
             <artifactId>derby</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-core</artifactId>
+            <version>${project.parent.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-kafka-shared</artifactId>
+            <version>${project.parent.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>
@@ -121,7 +145,7 @@
                 <configuration>
                     <systemProperties>
                         <derby.system.home>${project.build.testOutputDirectory}/derby</derby.system.home>
-                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore</spring.profiles.active>
+                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore,mock-kafka</spring.profiles.active>
                     </systemProperties>
                 </configuration>
             </plugin>

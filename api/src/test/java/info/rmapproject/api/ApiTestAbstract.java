@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"classpath:/beans.xml"})
+@ContextConfiguration({"classpath:/beans.xml", "classpath*:/rmap-kafka-shared-test.xml"})
 @Transactional
 public abstract class ApiTestAbstract {
 	
@@ -43,7 +43,7 @@ public abstract class ApiTestAbstract {
 	@BeforeClass
 	public static void setUpSpringProfiles() {
 		if (!activeProfilesPreSet) {
-			System.setProperty(SPRING_ACTIVE_PROFILE_PROP, "default,inmemory-db,inmemory-idservice,inmemory-triplestore");
+			System.setProperty(SPRING_ACTIVE_PROFILE_PROP, "default,inmemory-db,inmemory-idservice,inmemory-triplestore,mock-kafka");
 		}
 	}
 
