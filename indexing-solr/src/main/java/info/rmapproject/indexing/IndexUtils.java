@@ -37,7 +37,38 @@ public class IndexUtils {
         return o != null;
     }
 
-    public enum EventDirection { SOURCE, TARGET, EITHER }
+    /**
+     * Abstracts the "direction" of an {@link RMapEvent}.
+     * <p>
+     * Events can be interpreted as having a <em>source</em> and <em>target</em>.  For example, an
+     * {@link RMapEventUpdate update event} has the DiSCO <em>to be updated</em> as the source of the event, and the
+     * <em>updated</em> DiSCO as the target of the event.
+     * </p>
+     * <p>
+     * The method used to access the source or target of an event depends on the type of event.  A {@code
+     * RMapEventUpdate} uses {@link RMapEventUpdate#getInactivatedObjectId()} to refer to the {@code SOURCE}, while a
+     * {@link RMapEventTombstone tombstone} event uses {@link RMapEventTombstone#getTombstonedObjectId()} to refer to
+     * the {@code SOURCE}.  {@code EventDirection} provides an abstraction, allowing the source or target of an event to
+     * be indicated, independent of the concrete event type.
+     * </p>
+     */
+    public enum EventDirection {
+
+        /**
+         * Abstract name to refer to the source of an event, without having to reason about the concrete event type.
+         */
+        SOURCE,
+
+        /**
+         * Abstract name to refer to the target of an event, without having to reason about the concrete event type.
+         */
+        TARGET,
+
+        /**
+         * An abstract way to indicate that the directionality of the event is unimportant.
+         */
+        EITHER
+    }
 
     /**
      * Asserts the supplied string is a valid URI according to {@link URI#create(String)}.  {@code null} URIs are OK,
