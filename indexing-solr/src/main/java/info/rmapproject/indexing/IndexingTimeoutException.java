@@ -1,6 +1,8 @@
 package info.rmapproject.indexing;
 
 /**
+ * Thrown when a thread performing an indexing operation times out.
+ *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 public class IndexingTimeoutException extends Exception {

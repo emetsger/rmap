@@ -27,7 +27,7 @@ import static info.rmapproject.core.model.impl.openrdf.ORAdapter.uri2OpenRdfIri;
 import static java.net.URI.create;
 
 /**
- * Provides common utility methods used by model classes.
+ * Provides common utility methods.
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
