@@ -4,10 +4,7 @@ import org.apache.solr.client.solrj.beans.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +12,17 @@ import java.util.Map;
 import static info.rmapproject.indexing.IndexUtils.assertValidUri;
 
 /**
+ * Domain object that represents Solr documents managed by the {@code discos} core.  See the Solr schema for the
+ * {@code discos} core for more details. The {@code DiscosSolrDocument} contains fields for:
+ * <ul>
+ *     <li>An {@link info.rmapproject.core.model.event.RMapEvent event}</li>
+ *     <li>A DiSCO that was the {@link info.rmapproject.indexing.IndexUtils.EventDirection#SOURCE source} or {@link info.rmapproject.indexing.IndexUtils.EventDirection#TARGET target} of the event</li>
+ *     <li>The {@link info.rmapproject.core.model.agent.RMapAgent agent} that was associated with the event</li>
+ *     <li>Arbitrary key/value pairs that are considered as opaque {@link #getMetadata() metadata}</li>
+ * </ul>
+ * Since {@code DiscoSolrDocument} is a {@link KafkaMetadata Kafka metadata} document, it carries fields related to the
+ * Kafka topic, partition, and record offset that contributed to the information in this document.
+ *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @SolrDocument(solrCoreName = "discos")
@@ -138,10 +146,19 @@ public class DiscoSolrDocument implements KafkaMetadata {
     @Field(KafkaMetadata.KAFKA_OFFSET)
     private long kafkaOffset;
 
+    /**
+     * Create an empty {@code DiscoSolrDocument}
+     */
     public DiscoSolrDocument() {
 
     }
 
+    /**
+     * Create a {@code DiscoSolrDocument}, copying the state of this instance from the {@code prototype}.  Strings
+     * and primitives are simply assigned from the prototype; collections are deep-copied.
+     *
+     * @param prototype provides the state for this instance
+     */
     public DiscoSolrDocument(DiscoSolrDocument prototype) {
         this.docId = prototype.docId;
         this.docLastUpdated = prototype.docLastUpdated;
@@ -395,15 +412,26 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.kafkaOffset = kafkaOffset;
     }
 
+    /**
+     * Convenience class for building a {@code DiscoSolrDocument} using a fluent API.
+     */
     public static class Builder {
         private DiscoSolrDocument instance;
 
+        /**
+         * Instantiates a new builder with no state
+         */
         public Builder() {
 
         }
 
-        public Builder(DiscoSolrDocument doc) {
-            instance = new DiscoSolrDocument(doc);
+        /**
+         * Instantiates a new builder using the state supplied from the prototype
+         *
+         * @param prototype
+         */
+        public Builder(DiscoSolrDocument prototype) {
+            instance = new DiscoSolrDocument(prototype);
         }
 
         public Builder docId(String docId) {
