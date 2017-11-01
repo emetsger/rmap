@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:solr="http://www.springframework.org/schema/data/solr"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-2.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--<context:property-placeholder location="classpath:/solr.properties" ignore-unresolvable="true"/>-->
+
+    <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
+
+
+    <beans profile="http-solr">
+        <context:property-placeholder location="classpath*:/http-solr.properties" ignore-unresolvable="true"/>
+        <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
+    </beans>
+
+    <!-- production kafka config, from rmap-kafka-shared module -->
+    <beans profile="prod-kafka">
+        <import resource="classpath*:/rmap-kafka-shared.xml"/>
+
+        <bean id="offsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
+            <constructor-arg>
+                <map>
+                    <entry key="${rmapcore.producer.topic}" value-ref="discoRepository"/>
+                </map>
+            </constructor-arg>
+        </bean>
+
+        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
+            <constructor-arg ref="offsetLookup"/>
+            <property name="consumer" ref="eventConsumer"/>
+        </bean>
+
+        <bean id="retryHandler" class="info.rmapproject.indexing.kafka.DefaultIndexRetryHandler">
+            <constructor-arg ref="discosRepository"/>
+            <constructor-arg ref="indexDTOMapper"/>
+            <constructor-arg value="1000"/>
+            <constructor-arg value="60000"/>
+            <constructor-arg value="1.5"/>
+        </bean>
+
+        <bean id="indexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
+            <property name="repo" ref="discosRepository"/>
+            <property name="consumer" ref="eventConsumer"/>
+            <property name="pollTimeoutMs" value="30000"/>
+            <!--<property name="shutdownHook" ref=""/>-->
+            <property name="rebalanceListener" ref="rebalancer"/>
+            <property name="retryHandler" ref="retryHandler"/>
+            <property name="dtoMapper" ref="indexDTOMapper"/>
+        </bean>
+
+    </beans>
+
+    <beans>
+        <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
+        <bean id="eventTupleMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventDiscoTupleMapper"/>
+        <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
+        <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
+        <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
+        <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
+
+        <bean id="discosRepository" class="info.rmapproject.indexing.solr.repository.DiscosRepository">
+            <constructor-arg ref="eventTupleMapper"/>
+            <constructor-arg ref="discoRepository"/>
+            <constructor-arg ref="solrTemplate"/>
+        </bean>
+    </beans>
+
+</beans>

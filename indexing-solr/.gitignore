@@ -1,0 +1,6 @@
+src/test/resources/docker/cores/discos/data/*
+src/test/resources/docker/cores/versions/data/*
+src/test/resources/docker/cores/resources/data/*
+src/test/docker/cores/discos/data/*
+src/test/docker/cores/versions/data/*
+src/test/docker/cores/resources/data/*
