@@ -11,7 +11,7 @@ import org.apache.kafka.common.TopicPartition;
  * already exist in Solr.
  *
  * @see org.apache.kafka.clients.consumer.Consumer#seek(TopicPartition, long)
- * @see IndexingConsumer#consume(String, int, long)
+ * @see IndexingConsumer#consume(String, Seek)
  * @see info.rmapproject.indexing.kafka.OffsetLookup#lookupOffset(String, int, Seek)
  * @see info.rmapproject.indexing.solr.repository.KafkaMetadataRepository
  */

@@ -40,7 +40,7 @@ public class DiscoPartialUpdate extends PartialUpdate {
     /**
      * The IRI of the Disco that is affected by this update
      *
-     * @param discoIri
+     * @param discoIri the iri
      */
     public void setDiscoIri(String discoIri) {
         assertNotNullOrEmpty(discoIri);

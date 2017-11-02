@@ -428,7 +428,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         /**
          * Instantiates a new builder using the state supplied from the prototype
          *
-         * @param prototype
+         * @param prototype used as the initial state for this builder
          */
         public Builder(DiscoSolrDocument prototype) {
             instance = new DiscoSolrDocument(prototype);
