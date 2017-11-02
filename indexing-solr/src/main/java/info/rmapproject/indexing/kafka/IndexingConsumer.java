@@ -10,7 +10,6 @@ import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import info.rmapproject.indexing.solr.repository.CustomRepo;
 import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
 import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
 import org.apache.kafka.clients.consumer.Consumer;
