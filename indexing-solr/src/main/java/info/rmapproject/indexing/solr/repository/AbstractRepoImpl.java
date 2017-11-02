@@ -53,7 +53,6 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      *     <li>Provides the supplied {@link SolrTemplate} to implementations, allowing custom processing of the
      *         index</li>
      * </ul>
-     *
      * @param documentMapper maps tuples to Solr documents
      * @param repository stores Solr documents
      * @param template perform custom operations on indexes
@@ -85,7 +84,6 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      * {@inheritDoc}
      * <h3>Implementation discussion</h3>
      * Responsible for indexing a stream of {@link EventDiscoTuple}s.
-     * <p>
      * Executes in order:
      * <ol>
      *     <li>Invokes the {@link #preIndex(EventDiscoTuple) pre-index} hook for each tuple in the stream, allowing sub
@@ -96,7 +94,6 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      *     <li>Invokes the {@link #postIndex(Object) post-index} hook for each Solr document, allowing sub classes
      *         to perform custom logic after indexing a document</li>
      * </ol>
-     * </p>
      *
      * @param tupleStream {@inheritDoc}
      */
@@ -109,7 +106,6 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      * {@inheritDoc}
      * <h3>Implementation discussion</h3>
      * Responsible for indexing a stream of {@link EventDiscoTuple}s.
-     * <p>
      * Executes in order:
      * <ol>
      *     <li>Invokes the {@link #preIndex(EventDiscoTuple) pre-index} hook for each tuple in the stream, allowing sub
@@ -122,7 +118,6 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      *     <li>Invokes the {@link #postIndex(Object) post-index} hook for each Solr document, allowing sub classes
      *         to perform custom logic after indexing a document</li>
      * </ol>
-     * </p>
      *
      * @param tupleStream {@inheritDoc}
      * @param decorator decorates each Solr document prior to indexing
