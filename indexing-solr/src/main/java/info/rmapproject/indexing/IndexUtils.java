@@ -346,8 +346,8 @@ public class IndexUtils {
     /**
      * Supplies an {@link IllegalArgumentException} with the supplied message.
      *
-     * @param message
-     * @return
+     * @param message error message
+     * @return the supplier of the exception
      */
     public static Supplier<IllegalArgumentException> iae(String message) {
         assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
@@ -357,8 +357,8 @@ public class IndexUtils {
     /**
      * Supplies an {@link IllegalArgumentException} with the supplied message and cause.
      *
-     * @param message
-     * @return
+     * @param message error message
+     * @return the supplier of the exception
      */
     public static Supplier<IllegalArgumentException> iae(String message, Throwable cause) {
         assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
@@ -369,8 +369,8 @@ public class IndexUtils {
     /**
      * Supplies an {@link IllegalStateException} with the supplied message.
      *
-     * @param message
-     * @return
+     * @param message error message
+     * @return the supplier of the exception
      */
     public static Supplier<IllegalStateException> ise(String message) {
         assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
@@ -380,8 +380,8 @@ public class IndexUtils {
     /**
      * Supplies an {@link IllegalStateException} with the supplied message and cause.
      *
-     * @param message
-     * @return
+     * @param message error message
+     * @return the supplier of the exception
      */
     public static Supplier<IllegalStateException> ise(String message, Throwable cause) {
         assertNotNullOrEmpty(message, "Exception message must not be null or empty.");
