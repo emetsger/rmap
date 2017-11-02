@@ -32,8 +32,9 @@ public interface KafkaMetadataRepository<T extends KafkaMetadata> {
      *
      * @param topic the Kafka topic
      * @param partition the Kafka partition
-     * @param sort
-     * @return
+     * @param sort the sort order of the returned {@code List}
+     * @return a List of Solr documents containing Kafka metadata for the supplied {@code topic} and {@code partition},
+     *         ordered by {@code sort}
      */
     List<T> findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(String topic, int partition, Sort sort);
 

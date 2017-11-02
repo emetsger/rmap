@@ -358,6 +358,7 @@ public class IndexUtils {
      * Supplies an {@link IllegalArgumentException} with the supplied message and cause.
      *
      * @param message error message
+     * @param cause will be chained to the {@code IllegalArgumentException} supplied by the returned {@code Supplier}
      * @return the supplier of the exception
      */
     public static Supplier<IllegalArgumentException> iae(String message, Throwable cause) {
@@ -381,6 +382,7 @@ public class IndexUtils {
      * Supplies an {@link IllegalStateException} with the supplied message and cause.
      *
      * @param message error message
+     * @param cause will be chained to the {@code IllegalArgumentException} supplied by the returned {@code Supplier}
      * @return the supplier of the exception
      */
     public static Supplier<IllegalStateException> ise(String message, Throwable cause) {
