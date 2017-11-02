@@ -243,12 +243,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>info.rmapproject</groupId>
             <artifactId>rmap-kafka-shared</artifactId>
             <version>${project.parent.version}</version>
