@@ -99,10 +99,12 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     /**
      * Arguably a consumer test.  Insures that the rebalancer methods are invoked when a consumer joins.
+     *
+     * @throws InterruptedException if concurrent operations are interrupted
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void testPartitionsRevokedAndAssignedInvokedOnConsumerJoin() throws UnknownOffsetException, InterruptedException {
+    public void testPartitionsRevokedAndAssignedInvokedOnConsumerJoin() throws InterruptedException {
         CountDownLatch initialLatch2 = new CountDownLatch(2);
         CountDownLatch initialLatch4 = new CountDownLatch(4);
 
@@ -180,10 +182,12 @@ public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     /**
      * Arguably a consumer test.  Insures that the rebalancer methods are invoked when a consumer joins.
+     *
+     * @throws InterruptedException if concurrent operations are interrupted
      */
     @Test
     @SuppressWarnings({"unchecked", "rawtypes", "serial"})
-    public void testPartitionsRevokedAndAssignedInvokedOnStart() throws UnknownOffsetException, InterruptedException {
+    public void testPartitionsRevokedAndAssignedInvokedOnStart() throws InterruptedException {
         ConsumerAwareRebalanceListener underTest = mock(ConsumerAwareRebalanceListener.class);
         indexer.setRebalanceListener(underTest);
 
