@@ -40,7 +40,6 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
      * {@code indexRetryMaxMs}.
-     * <p>
      * Constructs a retry handler with:
      * <dl>
      *     <dt>indexRetryTimeoutMs</dt>
@@ -50,9 +49,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *     <dt>indexRetryBackoffFactor</dt>
      *     <dd>1.5</dd>
      * </dl>
-     * </p>
      *
      * @param repository the Solr repository, must not be {@code null}
+     * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @throws IllegalArgumentException if {@code repository} is {@code null}, if any time-out related parameter is not
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
@@ -65,15 +64,14 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
      * {@code indexRetryMaxMs}.
-     * <p>
      * Constructs a retry handler with:
      * <dl>
      *     <dt>indexRetryBackoffFactor</dt>
      *     <dd>1.5</dd>
      * </dl>
-     * </p>
      *
      * @param repository the Solr repository, must not be {@code null}
+     * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @param indexRetryTimeoutMs initial time to wait between retry attempts, in ms
      * @param indexRetryMaxMs  absolute amount of time to wait before timing out, in ms
      * @throws IllegalArgumentException if {@code repository} is {@code null}, if any time-out related parameter is not
@@ -90,6 +88,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      * {@code indexRetryMaxMs}.
      *
      * @param repository the Solr repository, must not be {@code null}
+     * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @param indexRetryTimeoutMs initial time to wait between retry attempts, in ms
      * @param indexRetryMaxMs  absolute amount of time to wait before timing out, in ms
      * @param indexRetryBackoffFactor multiplied by the {@code indexRetryTimeoutMs} on each attempt
