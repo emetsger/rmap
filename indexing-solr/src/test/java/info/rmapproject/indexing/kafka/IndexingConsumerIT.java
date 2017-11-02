@@ -71,7 +71,7 @@ public class IndexingConsumerIT extends AbstractSpringIndexingTest {
     /**
      * Simple IT that consumes 5 events, indexes them, and makes a few assertions about the resulting documents.
      *
-     * @throws Exception
+     * @throws Exception if the triplestore cannot be populated
      */
     @Test
     public void simpleIT() throws Exception {
