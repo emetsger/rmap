@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @DirtiesContext
-@EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2", "topic3", "topic4"})
+@EmbeddedKafka(partitions = 1, topics = {"topic1", "topic2", "topic3", "topic4"}, brokerProperties = { "log.dir=target/classes/kafka-broker-simplekafkait"} )
 public class SimpleKafkaIT extends AbstractSpringIndexingTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleKafkaIT.class);
