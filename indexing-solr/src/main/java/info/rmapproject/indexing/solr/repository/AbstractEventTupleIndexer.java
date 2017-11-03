@@ -15,14 +15,14 @@ import static info.rmapproject.indexing.IndexUtils.assertNotNull;
  * of the Solr document prior to indexing.
  * <p>
  * Each Solr core is expected to have exactly one concrete instance of this repository (i.e. there is a one-to-one
- * mapping between a concrete instance of {@code AbstractRepoImpl} and a Solr core).  Adding (or removing) a Solr
- * core from the indexing infrastructure should result in the configuration (or removal) of a {@code AbstractRepoImpl}.
+ * mapping between a concrete instance of {@code AbstractEventTupleIndexer} and a Solr core).  Adding (or removing) a Solr
+ * core from the indexing infrastructure should result in the configuration (or removal) of a {@code AbstractEventTupleIndexer}.
  * </p>
  *
  * @param <T> the type representing the Solr document
  * @param <ID> the type representing the identifier of the Solr document
  */
-public abstract class AbstractRepoImpl<T, ID extends Serializable> implements EventTupleIndexingRepository<T> {
+public abstract class AbstractEventTupleIndexer<T, ID extends Serializable> implements EventTupleIndexingRepository<T> {
 
     /**
      * Maps an {@link EventDiscoTuple} to a Solr document
@@ -57,8 +57,8 @@ public abstract class AbstractRepoImpl<T, ID extends Serializable> implements Ev
      * @param repository stores Solr documents
      * @param template perform custom operations on indexes
      */
-    public AbstractRepoImpl(Function<EventDiscoTuple, T> documentMapper, SolrCrudRepository<T, ID> repository,
-                            SolrTemplate template) {
+    public AbstractEventTupleIndexer(Function<EventDiscoTuple, T> documentMapper, SolrCrudRepository<T, ID> repository,
+                                     SolrTemplate template) {
         this.documentMapper = assertNotNull(documentMapper,
                 "EventDiscoTuple document mapper must not be null.");
         this.repository = assertNotNull(repository, "Solr repository must not be null.");

@@ -36,9 +36,9 @@ import static org.mockito.Mockito.when;
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public class DiscosRepositoryTest extends AbstractSpringIndexingTest {
+public class DiscosIndexerTest extends AbstractSpringIndexingTest {
 
-    private DiscosRepository underTest;
+    private DiscosIndexer underTest;
 
     private SolrTemplate mockTemplate;
 
@@ -46,7 +46,7 @@ public class DiscosRepositoryTest extends AbstractSpringIndexingTest {
     @SuppressWarnings("unchecked")
     public void setUpMocks() throws Exception {
         this.mockTemplate = mock(SolrTemplate.class);
-        underTest = new DiscosRepository(mock(EventDiscoTupleMapper.class), mock(SolrCrudRepository.class), mockTemplate);
+        underTest = new DiscosIndexer(mock(EventDiscoTupleMapper.class), mock(SolrCrudRepository.class), mockTemplate);
     }
 
     /**
