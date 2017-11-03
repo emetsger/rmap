@@ -118,7 +118,7 @@
                                          classpathref="maven.plugin.classpath"/>
                                 <!-- Kafka windows path intolerance -->
                                 <startKafkaBroker
-                                        brokerPropertiesLocation="target/classes/maven-shared-archive-resources/kafka-broker.properties"/>
+                                        brokerPropertiesLocation="target/maven-shared-archive-resources/kafka-broker.properties"/>
                             </target>
                         </configuration>
                         <goals>
