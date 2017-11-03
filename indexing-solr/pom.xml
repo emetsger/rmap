@@ -15,7 +15,8 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka-broker</kafka.broker.logs-dir>
+        <!-- Kafka doesn't like the mix of C:\ and / in paths -->
+        <kafka.broker.logs-dir>target/classes/kafka-broker</kafka.broker.logs-dir>
         <kafka.broker.host>localhost</kafka.broker.host>
         <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
         <derby.home>${project.build.testOutputDirectory}/derby</derby.home>
