@@ -18,7 +18,7 @@ import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.CORE_NAME;
  * Performs  pre- and post-indexing tasks for the "discos" Solr core, including updating the state of existing documents
  * in the index based on newly indexed documents.
  */
-public class DiscosRepository extends AbstractRepoImpl<DiscoSolrDocument, Long> {
+public class DiscosIndexer extends AbstractEventTupleIndexer<DiscoSolrDocument, Long> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -31,8 +31,8 @@ public class DiscosRepository extends AbstractRepoImpl<DiscoSolrDocument, Long> 
      * @param repository {@inheritDoc}
      * @param template {@inheritDoc}
      */
-    public DiscosRepository(Function<EventDiscoTuple, DiscoSolrDocument> documentMapper,
-                            SolrCrudRepository<DiscoSolrDocument, Long> repository, SolrTemplate template) {
+    public DiscosIndexer(Function<EventDiscoTuple, DiscoSolrDocument> documentMapper,
+                         SolrCrudRepository<DiscoSolrDocument, Long> repository, SolrTemplate template) {
         super(documentMapper, repository, template);
         this.discoOperations = new DiscosSolrOperations(template, CORE_NAME);
     }

@@ -9,8 +9,8 @@ import info.rmapproject.core.model.event.RMapEventDerivation;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
-import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.IndexUtils;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
@@ -70,8 +70,14 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     @Autowired
     private SolrTemplate solrTemplate;
 
+    @Autowired
+    private DiscosIndexer discosIndexer;
+
+    @Autowired
+    private IndexDTOMapper mapper;
+
     /**
-     * Tests the {@link DiscoRepository#index(IndexDTO)} method by supplying three {@code IndexDTO}s for indexing from
+     * Tests the {@link DiscosIndexer#index(Stream)} method by supplying three {@code IndexDTO}s for indexing from
      * the {@code /data/discos/rmd18mddcw} directory:
      * <ul>
      *     <li>a creation event</li>
@@ -103,7 +109,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         LOG.debug("Preparing indexable objects.");
         Stream<IndexDTO> dtos = prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw", assertions);
 
-        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discoRepository.index(dto));
+        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discosIndexer.index(mapper.apply(dto)));
 
         // 5 documents should have been added
         // - one document per DiSCO, Event tuple
@@ -136,10 +142,10 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
 
         // index the same DTOs twice.
         prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw", null)
-                .forEach(dto -> discoRepository.index(dto));
+                .forEach(dto -> discosIndexer.index(mapper.apply(dto)));
 
         prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw", null)
-                .forEach(dto -> discoRepository.index(dto));
+                .forEach(dto -> discosIndexer.index(mapper.apply(dto)));
 
         // 10 documents should have been added
         // - one document per DiSCO, Event tuple
@@ -163,7 +169,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     }
 
     /**
-     * Tests the {@link DiscoRepository#index(IndexDTO)} method by supplying three {@code IndexDTO}s for indexing from
+     * Tests the {@link DiscosIndexer#index(Stream)} method by supplying three {@code IndexDTO}s for indexing from
      * the {@code /data/discos/rmd18mddcw} directory:
      * <ul>
      *     <li>a creation event</li>
@@ -196,7 +202,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
         LOG.debug("Preparing indexable objects.");
         Stream<IndexDTO> dtos = prepareIndexableDtos(rdfHandler,"/data/discos/rmd18mddcw-with-tombstone", assertions);
 
-        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discoRepository.index(dto));
+        dtos.peek(dto -> LOG.debug("Indexing {}", dto)).forEach(dto -> discosIndexer.index(mapper.apply(dto)));
 
         // 6 documents should have been added
         // - one document per DiSCO, Event tuple

@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public class AbstractRepoImplTest {
+public class AbstractEventTupleIndexerTest {
 
     /**
      * Insure that a non-null document decorator is provided by the abstract impl\
@@ -34,7 +34,7 @@ public class AbstractRepoImplTest {
         SolrCrudRepository repository = mock(SolrCrudRepository.class);
         SolrTemplate template = mock(SolrTemplate.class);
 
-        AbstractRepoImpl underTest = new AbstractRepoImpl(documentMapper, repository, template) {
+        AbstractEventTupleIndexer underTest = new AbstractEventTupleIndexer(documentMapper, repository, template) {
             @Override
             public void preIndex(EventDiscoTuple tuple) {
 
@@ -50,7 +50,7 @@ public class AbstractRepoImplTest {
     }
 
     /**
-     * Insure that the sequence documented by {@link AbstractRepoImpl#index(Stream, Consumer)} is executed in proper
+     * Insure that the sequence documented by {@link AbstractEventTupleIndexer#index(Stream, Consumer)} is executed in proper
      * order.
      */
     @Test
@@ -67,7 +67,7 @@ public class AbstractRepoImplTest {
         EventDiscoTuple tuple = new EventDiscoTuple();
         DiscoSolrDocument doc = new DiscoSolrDocument();
 
-        AbstractRepoImpl underTest = new AbstractRepoImpl(documentMapper, repository, template) {
+        AbstractEventTupleIndexer underTest = new AbstractEventTupleIndexer(documentMapper, repository, template) {
             @Override
             public void preIndex(EventDiscoTuple tuple) {
                 preIndexProbe.fireBoolean(true);
@@ -96,7 +96,7 @@ public class AbstractRepoImplTest {
     }
 
     /**
-     * Insure that the sequence documented by {@link AbstractRepoImpl#index(Stream, Consumer)} is executed in proper
+     * Insure that the sequence documented by {@link AbstractEventTupleIndexer#index(Stream, Consumer)} is executed in proper
      * order when no decorator is provided by the caller.
      */
     @Test
@@ -113,7 +113,7 @@ public class AbstractRepoImplTest {
         EventDiscoTuple tuple = new EventDiscoTuple();
         DiscoSolrDocument doc = new DiscoSolrDocument();
 
-        AbstractRepoImpl underTest = new AbstractRepoImpl(documentMapper, repository, template) {
+        AbstractEventTupleIndexer underTest = new AbstractEventTupleIndexer(documentMapper, repository, template) {
             @Override
             public void preIndex(EventDiscoTuple tuple) {
                 preIndexProbe.fireBoolean(true);

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Composes a {@link CompositeAnswer} containing assertions that may be used to validate the contents of the
- * {@code Set<PartialUpdate>} that are {@link DiscosRepository#postIndex(DiscoSolrDocument) saved} post-index.  Use the
+ * {@code Set<PartialUpdate>} that are {@link DiscosIndexer#postIndex(DiscoSolrDocument) saved} post-index.  Use the
  * {@link UpdateAssertions.Builder} to create instances.
  * <h3>Example usage:</h3>
  * To assert that the set of partial updates contains at least two documents.  One document with the id
