@@ -23,7 +23,8 @@
 
         <!-- Kafka properties used to configure a broker for unit tests
 (see also src/test/resources/kafka-broker.properties, resource plugin and surefire plugin config) -->
-        <kafka.broker.logs-dir>${project.build.outputDirectory}/kafka-broker</kafka.broker.logs-dir>
+        <!-- Kafka doesn't like a mix of C:\ and / on Windows platform -->
+        <kafka.broker.logs-dir>target/classes/kafka-broker</kafka.broker.logs-dir>
         <kafka.broker.host>localhost</kafka.broker.host>
         <!-- separate multiple topics with a comma -->
         <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
