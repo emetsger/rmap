@@ -41,7 +41,10 @@
             <constructor-arg value="1.5"/>
         </bean>
 
-        <bean id="indexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
+        <!--
+          Consumes RMap Events from a specified Kafka topic, and indexes DiscoSolrDocuments to the 'discos' Solr core.
+        -->
+        <bean id="discosIndexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
             <property name="indexer" ref="discosIndexer"/>
             <property name="consumer" ref="eventConsumer"/>
             <property name="pollTimeoutMs" value="30000"/>
@@ -65,17 +68,53 @@
 
     <beans>
         <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
-        <bean id="eventTupleMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventDiscoTupleMapper"/>
+
+        <!--
+          Shared instance of the EventDiscoTupleMapper; accepts EventDiscoTuples and maps them to DiscoSolrDocuments.
+        -->
+        <bean id="eventTupleToDiscoSolrDocumentMapper"
+              class="info.rmapproject.indexing.solr.repository.SimpleEventDiscoTupleMapper"/>
+
+        <!--
+          Collaborators of eventTupleToDiscoSolrDocumentMapper
+        -->
         <bean id="agentMapper" class="info.rmapproject.indexing.solr.repository.SimpleAgentMapper"/>
         <bean id="eventMapper" class="info.rmapproject.indexing.solr.repository.SimpleEventMapper"/>
         <bean id="discoMapper" class="info.rmapproject.indexing.solr.repository.SimpleDiscoMapper"/>
+
+        <!--
+          Maps IndexDTO objects to EventDiscoTuple objects.
+        -->
         <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
 
+        <!--
+          Shared instance of the "discos" core Solr indexer; indexes the DiscoSolrDocument domain object.
+          - Each Solr core will require its own indexer, because each core indexes a different domain object
+        -->
         <bean id="discosIndexer" class="info.rmapproject.indexing.solr.repository.DiscosIndexer">
-            <constructor-arg ref="eventTupleMapper"/>
-            <constructor-arg ref="discoRepository"/>
-            <constructor-arg ref="solrTemplate"/>
+            <constructor-arg ref="eventTupleToDiscoSolrDocumentMapper"/> <!-- eventTupleMapper may be shared -->
+            <constructor-arg ref="discoRepository"/>                     <!-- may _not_ be shared, each indexer will need its own repository -->
+            <constructor-arg ref="solrTemplate"/>                        <!-- solrTemplate may be shared -->
         </bean>
+
+        <!--
+          Hypothetical instance of the "versions" core Solr indexer.
+        -->
+        <!--bean id="versionsIndexer" class="info.rmapproject.indexing.solr.repository.VersionsIndexer">
+            <constructor-arg ref="eventTupleToVersionSolrDocumentMapper"/>
+            <constructor-arg ref="versionRepository"/>
+            <constructor-arg ref="solrTemplate"/>
+        </bean-->
+
+        <!--
+          Hypothetical instance of the "resources" core Solr indexer.
+        -->
+        <!--bean id="versionsIndexer" class="info.rmapproject.indexing.solr.repository.ResourcessIndexer">
+            <constructor-arg ref="eventTupleToResourcesSolrDocumentMapper"/>
+            <constructor-arg ref="resourcesRepository"/>
+            <constructor-arg ref="solrTemplate"/>
+        </bean-->
+
     </beans>
 
 </beans>

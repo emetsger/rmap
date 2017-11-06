@@ -15,7 +15,10 @@
             <prop key="bootstrap.servers">${bootstrap.servers}</prop>
         </util:properties>
 
-        <bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
+        <!--
+          Produces (i.e. emits) RMap events to the specified Kafka topic.  May be safely shared.
+        -->
+        <bean id="rmapEventProducerTemplate" class="org.springframework.kafka.core.KafkaTemplate">
             <constructor-arg>
                 <bean class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
                     <constructor-arg ref="producerProperties"/>
@@ -51,6 +54,10 @@
             </property>
         </bean>
 
+        <!--
+          Consumes RMap events.  Spring creates a new consumer each time an instance is requested from the container
+          (i.e. prototype scope).  The topic (and partition) being consumed from is specified by collaborating objects.
+        -->
         <bean id="eventConsumer" class="info.rmapproject.kafka.shared.SpringKafkaConsumerFactory"
               factory-method="newConsumer" scope="prototype"/>
 
