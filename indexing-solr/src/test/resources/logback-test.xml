@@ -10,16 +10,16 @@
     <root level="WARN">
         <appender-ref ref="STDERR" />
     </root>
-    <logger name="info.rmapproject" additivity="false" level="DEBUG">
+    <logger name="info.rmapproject" additivity="false" level="INFO">
         <appender-ref ref="STDERR" />
     </logger>
-    <logger name="info.rmapproject.indexing" additivity="false" level="TRACE">
+    <logger name="info.rmapproject.indexing" additivity="false" level="INFO">
         <appender-ref ref="STDERR" />
     </logger>
     <logger name="org.springframework" additivity="false" level="WARN">
         <appender-ref ref="STDERR"/>
     </logger>
-    <logger name="org.springframework.data.solr" additivity="false" level="TRACE">
+    <logger name="org.springframework.data.solr" additivity="false" level="INFO">
         <appender-ref ref="STDERR"/>
     </logger>
     <logger name="org.apache.kafka" additivity="false" level="INFO">
