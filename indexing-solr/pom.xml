@@ -42,7 +42,7 @@
                 <configuration>
                     <images>
                         <image>
-                            <alias>solr</alias>
+                            <alias>solrindexing</alias>
                             <run>
                                 <wait>
                                     <http>
