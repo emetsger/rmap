@@ -42,7 +42,7 @@
         </bean>
 
         <bean id="indexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
-            <property name="repo" ref="discosIndexer"/>
+            <property name="indexer" ref="discosIndexer"/>
             <property name="consumer" ref="eventConsumer"/>
             <property name="pollTimeoutMs" value="30000"/>
             <!--<property name="shutdownHook" ref=""/>-->

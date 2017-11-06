@@ -50,7 +50,7 @@ public class IndexingConsumer {
     @Autowired
     private RMapService rmapService;
 
-    private EventTupleIndexingRepository<DiscoSolrDocument> repo;
+    private EventTupleIndexingRepository<DiscoSolrDocument> indexer;
 
     private Consumer<String, RMapEvent> consumer;
 
@@ -77,7 +77,7 @@ public class IndexingConsumer {
     void consume(String topic, Seek seek) throws UnknownOffsetException {
         IndexUtils.assertNotNull(consumer, ise("Consumer must not be null."));
         IndexUtils.assertNotNullOrEmpty(topic, "Topic must not be null or empty");
-        IndexUtils.assertNotNull(seek, ise("Seek must not be null."));
+//        IndexUtils.assertNotNull(seek, ise("Seek must not be null."));
 
         rebalanceListener.setConsumer(consumer);
         consumer.subscribe(singleton(topic), rebalanceListener);
@@ -141,7 +141,7 @@ public class IndexingConsumer {
         dto.setOffset(recordOffset);
 
         try {
-            repo.index(dtoMapper.apply(dto), (doc) -> {
+            indexer.index(dtoMapper.apply(dto), (doc) -> {
                 doc.setKafkaOffset(recordOffset);
                 doc.setKafkaPartition(recordPartition);
                 doc.setKafkaTopic(recordTopic);
@@ -203,12 +203,12 @@ public class IndexingConsumer {
         this.rmapService = rmapService;
     }
 
-    public EventTupleIndexingRepository<DiscoSolrDocument> getRepo() {
-        return repo;
+    public EventTupleIndexingRepository<DiscoSolrDocument> getIndexer() {
+        return indexer;
     }
 
-    public void setRepo(EventTupleIndexingRepository<DiscoSolrDocument> repo) {
-        this.repo = repo;
+    public void setIndexer(EventTupleIndexingRepository<DiscoSolrDocument> indexer) {
+        this.indexer = indexer;
     }
 
     public IndexDTOMapper getDtoMapper() {
