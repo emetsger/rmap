@@ -2,7 +2,6 @@ version: '2'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
-    network_mode: host
     env_file: .env
     environment:
       ZOOKEEPER_CLIENT_PORT: "${ZOOKEEPER_CLIENT_PORT}"
@@ -15,7 +14,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    network_mode: host
     depends_on:
       - zookeeper
     env_file: .env
@@ -29,6 +27,9 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
       - "default:127.0.0.1"
+    links:
+      - "zookeeper"
+
 
   solrintegration:
      container_name: solrintegration
