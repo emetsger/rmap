@@ -2,6 +2,7 @@ package info.rmapproject.indexing.solr.repository;
 
 import info.rmapproject.indexing.kafka.OffsetLookup;
 import info.rmapproject.indexing.kafka.Seek;
+import info.rmapproject.indexing.solr.AbstractKafkaTest;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import org.junit.Before;
@@ -14,7 +15,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
-public class SolrOffsetLookupIT extends AbstractSpringIndexingTest {
+public class SolrOffsetLookupIT extends AbstractKafkaTest {
 
     private static boolean initialized = false;
 

@@ -8,6 +8,7 @@ import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.IndexUtils;
+import info.rmapproject.indexing.solr.AbstractKafkaTest;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
@@ -47,8 +48,7 @@ import static org.junit.Assert.fail;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration("classpath:/spring-rmapauth-context.xml")
-@ActiveProfiles(value = {"default", "inmemory-triplestore", "inmemory-idservice", "inmemory-db", "http-solr", "prod-kafka"}, inheritProfiles = false)
-public class IndexingConsumerIT extends AbstractSpringIndexingTest {
+public class IndexingConsumerIT extends AbstractKafkaTest {
 
     @Autowired
     private IndexingConsumer indexer;

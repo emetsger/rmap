@@ -2,12 +2,18 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <beans profile="prod-kafka">
 
-        <util:properties id="producerProperties" location="classpath:/event-producer.properties"/>
+
+        <context:property-placeholder ignore-unresolvable="true"/>
+
+        <util:properties id="producerProperties" location="classpath:/event-producer.properties" local-override="true">
+            <prop key="bootstrap.servers">${bootstrap.servers}</prop>
+        </util:properties>
 
         <bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
             <constructor-arg>
@@ -24,7 +30,9 @@
             <property name="defaultTopic" value="${rmapcore.producer.topic}"/>
         </bean>
 
-        <util:properties id="consumerProperties" location="classpath:/event-consumer.properties"/>
+        <util:properties id="consumerProperties" location="classpath:/event-consumer.properties" local-override="true">
+            <prop key="bootstrap.servers">${bootstrap.servers}</prop>
+        </util:properties>
 
         <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
             <property name="staticMethod" value="info.rmapproject.kafka.shared.SpringKafkaConsumerFactory.setFactory"/>
