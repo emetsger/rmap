@@ -79,8 +79,8 @@ import static org.junit.Assert.assertNotNull;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:/spring-rmapcore-context.xml")
-@ActiveProfiles({"integration-triplestore", "integration-db", "inmemory-idservice", "prod-kafka"})
+@ContextConfiguration(locations = { "classpath*:/spring-rmapcore-context.xml", "classpath:/rmap-kafka-shared-test.xml" })
+@ActiveProfiles({"integration-triplestore", "integration-db", "inmemory-idservice", "mock-kafka"})
 public class ManagerObjectSerializationIT {
 
     private static final IRI DISCO_IRI = asIri("http://example.org/disco/1");
