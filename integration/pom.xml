@@ -239,7 +239,7 @@
                 <configuration>
                     <images>
                         <image>
-                            <alias>solr</alias>
+                            <alias>solrintegration</alias>
                             <run>
                                 <wait>
                                     <http>

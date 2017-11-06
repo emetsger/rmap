@@ -24,8 +24,8 @@ services:
     ports:
       - "${RMAP_KAFKA_PORT}:${RMAP_KAFKA_PORT}"
 
-  solr:
-     container_name: solr
+  solrintegration:
+     container_name: solrintegration
      image: solr:6.6.0-alpine
      user: root
      env_file: .env
