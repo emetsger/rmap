@@ -20,6 +20,16 @@
         <kafka.broker.host>localhost</kafka.broker.host>
         <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
         <derby.home>${project.build.testOutputDirectory}/derby</derby.home>
+
+        <RMAP_KAFKA_PORT>29092</RMAP_KAFKA_PORT>
+        <KAFKA_ADVERTISED_LISTENERS>PLAINTEXT://${docker.host.address}:29092</KAFKA_ADVERTISED_LISTENERS>
+        <ZOOKEEPER_CLIENT_PORT>32181</ZOOKEEPER_CLIENT_PORT>
+        <KAFKA_ZOOKEEPER_CONNECT>localhost:32181</KAFKA_ZOOKEEPER_CONNECT>
+        <KAFKA_BROKER_ID>1</KAFKA_BROKER_ID>
+        <KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>1</KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>
+        <ZOOKEEPER_TICK_TIME>2000</ZOOKEEPER_TICK_TIME>
+        <SOLR_PORT>8983</SOLR_PORT>
+        <SOLR_DEBUG_PORT>5005</SOLR_DEBUG_PORT>
     </properties>
 
     <build>
@@ -33,16 +43,17 @@
                     <images>
                         <image>
                             <alias>solr</alias>
-                            <name>solr:6.6.0-alpine</name>
                             <run>
                                 <wait>
-                                    <log>.*\[discos\] Registered new searcher.*</log>
-                                    <time>120000</time>
+                                    <http>
+                                        <url>http://${docker.host.address}:${SOLR_PORT}/solr</url>
+                                    </http>
+                                    <time>20000</time>
                                 </wait>
                             </run>
                             <external>
                                 <type>compose</type>
-                                <basedir>src/test/docker</basedir>
+                                <basedir>src/docker</basedir>
                                 <composeFile>docker-compose.yaml</composeFile>
                             </external>
                         </image>
@@ -87,59 +98,9 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-remote-resources-plugin</artifactId>
-                <configuration>
-                    <resourceBundles>
-                        <resourceBundle>info.rmapproject:rmap-kafka-shared:${project.parent.version}</resourceBundle>
-                    </resourceBundles>
-                    <includeProjectProperties>true</includeProjectProperties>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
-                    <execution>
-                        <id>start-kafka</id>
-                        <phase>pre-integration-test</phase>
-                        <configuration>
-                            <target>
-                                <taskdef name="startKafkaBroker"
-                                         classname="info.rmapproject.integration.util.StartKafkaBrokerTask"
-                                         classpathref="maven.plugin.classpath"/>
-                                <!-- Kafka windows path intolerance -->
-                                <startKafkaBroker
-                                        brokerPropertiesLocation="target/maven-shared-archive-resources/kafka-broker.properties"/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-kafka</id>
-                        <phase>post-integration-test</phase>
-                        <configuration>
-                            <target>
-                                <taskdef name="stopKafkaBroker"
-                                         classname="info.rmapproject.integration.util.StopKafkaBrokerTask"
-                                         classpathref="maven.plugin.classpath"/>
-                                <stopKafkaBroker/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
                     <execution>
                         <id>start-derby</id>
                         <phase>validate</phase>
@@ -157,21 +118,9 @@
                 </executions>
                 <dependencies>
                     <dependency>
-                        <groupId>org.springframework.kafka</groupId>
-                        <artifactId>spring-kafka-test</artifactId>
-                        <version>${spring-data-kafka.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <dependency>
                         <groupId>info.rmapproject</groupId>
                         <artifactId>rmap-integration-util</artifactId>
                         <version>${project.parent.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.kafka</groupId>
-                        <artifactId>kafka-clients</artifactId>
-                        <version>${kafka.version}</version>
                         <scope>runtime</scope>
                     </dependency>
                 </dependencies>
@@ -185,6 +134,7 @@
                         <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                         <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
                         <derby.home>${derby.home}</derby.home>
+                        <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
                     </systemProperties>
                 </configuration>
                 <executions>
@@ -203,6 +153,9 @@
                 <configuration>
                     <systemProperties>
                         <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
+                        <kafka.broker.host>${kafka.broker.host}</kafka.broker.host>
+                        <kafka.broker.port>${kafka.broker.port}</kafka.broker.port>
+                        <bootstrap.servers>${kafka.broker.host}:${kafka.broker.port}</bootstrap.servers>
                     </systemProperties>
                 </configuration>
             </plugin>

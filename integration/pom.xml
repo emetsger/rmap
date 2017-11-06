@@ -25,9 +25,18 @@
 (see also src/test/resources/kafka-broker.properties, resource plugin and surefire plugin config) -->
         <!-- Kafka doesn't like a mix of C:\ and / on Windows platform -->
         <kafka.broker.logs-dir>target/classes/kafka-broker</kafka.broker.logs-dir>
-        <kafka.broker.host>localhost</kafka.broker.host>
         <!-- separate multiple topics with a comma -->
         <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
+
+        <RMAP_KAFKA_PORT>29092</RMAP_KAFKA_PORT>
+        <KAFKA_ADVERTISED_LISTENERS>PLAINTEXT://${docker.host.address}:29092</KAFKA_ADVERTISED_LISTENERS>
+        <ZOOKEEPER_CLIENT_PORT>32181</ZOOKEEPER_CLIENT_PORT>
+        <KAFKA_ZOOKEEPER_CONNECT>localhost:32181</KAFKA_ZOOKEEPER_CONNECT>
+        <KAFKA_BROKER_ID>1</KAFKA_BROKER_ID>
+        <KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>1</KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>
+        <ZOOKEEPER_TICK_TIME>2000</ZOOKEEPER_TICK_TIME>
+        <SOLR_PORT>8983</SOLR_PORT>
+        <SOLR_DEBUG_PORT>5005</SOLR_DEBUG_PORT>
     </properties>
 
     <dependencies>
@@ -177,25 +186,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-remote-resources-plugin</artifactId>
-                <configuration>
-                    <resourceBundles>
-                        <resourceBundle>info.rmapproject:rmap-kafka-shared:${project.parent.version}</resourceBundle>
-                    </resourceBundles>
-                    <includeProjectProperties>true</includeProjectProperties>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
@@ -213,37 +203,6 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>start-kafka</id>
-                        <phase>pre-integration-test</phase>
-                        <configuration>
-                            <target>
-                                <taskdef name="startKafkaBroker"
-                                         classname="info.rmapproject.integration.util.StartKafkaBrokerTask"
-                                         classpathref="maven.plugin.classpath"/>
-                                <startKafkaBroker
-                                        brokerPropertiesLocation="${project.build.directory}/maven-shared-archive-resources/kafka-broker.properties"/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-kafka</id>
-                        <phase>post-integration-test</phase>
-                        <configuration>
-                            <target>
-                                <taskdef name="stopKafkaBroker"
-                                         classname="info.rmapproject.integration.util.StopKafkaBrokerTask"
-                                         classpathref="maven.plugin.classpath"/>
-                                <stopKafkaBroker/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
@@ -252,15 +211,8 @@
                         <version>${project.parent.version}</version>
                         <scope>runtime</scope>
                     </dependency>
-                    <dependency>
-                        <groupId>org.springframework.kafka</groupId>
-                        <artifactId>spring-kafka-test</artifactId>
-                        <version>${spring-data-kafka.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
                 </dependencies>
             </plugin>
-
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -275,13 +227,52 @@
                         <configuration>
                             <portNames>
                                 <portName>rmap.webapp.test.port</portName>
-                                <portName>kafka.broker.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>solr</alias>
+                            <run>
+                                <wait>
+                                    <http>
+                                        <url>http://${docker.host.address}:${SOLR_PORT}/solr</url>
+                                    </http>
+                                    <time>20000</time>
+                                </wait>
+                            </run>
+                            <external>
+                                <type>compose</type>
+                                <basedir>src/docker</basedir>
+                                <composeFile>docker-compose.yaml</composeFile>
+                            </external>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>start-docker-its</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-docker-its</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>
@@ -298,14 +289,6 @@
                             <version>8.0.44</version>
                             <type>tar.gz</type>
                         </artifactInstaller>
-                        <!--<containerId>jetty9x</containerId>-->
-                        <!--<type>installed</type>-->
-                        <!--<artifactInstaller>-->
-                            <!--<groupId>org.eclipse.jetty</groupId>-->
-                            <!--<artifactId>jetty-distribution</artifactId>-->
-                            <!--<version>9.4.6.v20170531</version>-->
-                            <!--<type>tar.gz</type>-->
-                        <!--</artifactInstaller>-->
                         <systemProperties>
                             <cargo.servlet.port>${rmap.webapp.test.port}</cargo.servlet.port>
                             <derby.system.home>${derby.home}</derby.system.home>
@@ -315,6 +298,8 @@
                             <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
                             <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
+                            <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
+                            <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
                         </systemProperties>
                         <dependencies>
                             <dependency>
@@ -375,7 +360,7 @@
                     <configuration>
                         <properties>
                             <!-- <cargo.jvmargs>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -Dlogback.debug=true </cargo.jvmargs> -->
-                            <cargo.jvmargs>-Dlogback.configurationFile=${project.basedir}/src/main/resources/logback.xml -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging.properties</cargo.jvmargs>
+                            <cargo.jvmargs>-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging.properties</cargo.jvmargs>
                             <cargo.servlet.port>${rmap.webapp.test.port}</cargo.servlet.port>
                         </properties>
                         <!-- Spring 'integration-db' beans -->
@@ -397,11 +382,15 @@
                                 <todir>shared/classes</todir>
                             </copy>
                             <copy>
-                                <file>${project.build.directory}/maven-shared-archive-resources/event-producer.properties</file>
+                                <file>${project.basedir}/src/main/resources/event-producer.properties</file>
                                 <todir>shared/classes</todir>
                             </copy>
                             <copy>
-                                <file>${project.build.directory}/maven-shared-archive-resources/event-consumer.properties</file>
+                                <file>${project.basedir}/src/main/resources/event-consumer.properties</file>
+                                <todir>shared/classes</todir>
+                            </copy>
+                            <copy>
+                                <file>${project.basedir}/src/main/resources/logback.xml</file>
                                 <todir>shared/classes</todir>
                             </copy>
                         </files>
@@ -436,6 +425,8 @@
                                     <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                                     <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                                     <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
+                                    <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
+                                    <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
                                 </systemProperties>
                             </container>
                         </configuration>
@@ -460,6 +451,8 @@
                         <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                         <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                         <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
+                        <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
+                        <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
                     </systemProperties>
                 </configuration>
                 <executions>

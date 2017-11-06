@@ -7,7 +7,7 @@
     </encoder>
     <target>System.err</target>
   </appender>
-  <root level="WARN">
+  <root level="DEBUG">
     <appender-ref ref="STDERR" />
   </root>
   <logger name="org.springframework" additivity="false" level="DEBUG">
@@ -22,28 +22,25 @@
   <logger name="info.rmapproject" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.openrdf" additivity="false" level="WARN">
+  <logger name="org.openrdf" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="ERROR">
+  <logger name="kafka" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="org.springframework.kafka" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR"/>
+  </logger>
+  <logger name="org.apache.kafka" additivity="false" level="DEBUG">
+    <appender-ref ref="STDERR" />
+  </logger>
+  <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
   <logger name="org.apache.kafka.common.utils.AppInfoParser" additivity="false" level="ERROR">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.apache.kafka.clients.producer.internals" additivity="false" level="WARN">
-    <appender-ref ref="STDERR"/>
-  </logger>
-  <logger name="kafka" additivity="false" level="WARN">
-    <appender-ref ref="STDERR"/>
-  </logger>
-  <logger name="org.springframework.kafka" additivity="false" level="WARN">
-    <appender-ref ref="STDERR"/>
-  </logger>
-  <logger name="info.rmapproject.core" additivity="false" level="WARN">
-    <appender-ref ref="STDERR"/>
-  </logger>
-  <logger name="info.rmapproject.kafka.shared" additivity="false" level="WARN">
+  <logger name="org.apache.kafka.clients.producer.internals" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR"/>
   </logger>
 </configuration>
