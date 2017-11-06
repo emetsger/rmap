@@ -1,5 +1,0 @@
-bootstrap.servers = ${project.properties["kafka.broker.host"]}:${project.properties["kafka.broker.port"]}
-client.id = rmap-event-producer
-enable.idempotence = true
-compression.type = gzip
-linger.ms = 100

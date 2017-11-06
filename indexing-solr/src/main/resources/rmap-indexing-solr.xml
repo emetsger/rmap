@@ -51,6 +51,16 @@
             <property name="dtoMapper" ref="indexDTOMapper"/>
         </bean>
 
+        <!--<bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">-->
+            <!--<property name="targetObject" ref="indexingConsumer"/>-->
+            <!--<property name="targetMethod" value="consumeEarliest"/>-->
+            <!--<property name="arguments">-->
+                <!--<list>-->
+                    <!--<value>${rmapcore.producer.topic}</value>-->
+                <!--</list>-->
+            <!--</property>-->
+        <!--</bean>-->
+
     </beans>
 
     <beans>
