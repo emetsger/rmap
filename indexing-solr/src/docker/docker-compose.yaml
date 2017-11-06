@@ -11,7 +11,7 @@ services:
       - "${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}"
     extra_hosts:
       - "moby:127.0.0.1"
-      - "default:127.0.01"
+      - "default:127.0.0.1"
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -28,7 +28,7 @@ services:
       - "${RMAP_KAFKA_PORT}:${RMAP_KAFKA_PORT}"
     extra_hosts:
       - "moby:127.0.0.1"
-      - "default:127.0.01"
+      - "default:127.0.0.1"
 
   solrindexing:
      container_name: solrindexing
