@@ -245,7 +245,7 @@
                                     <http>
                                         <url>http://${docker.host.address}:${SOLR_PORT}/solr</url>
                                     </http>
-                                    <time>20000</time>
+                                    <time>60000</time>
                                 </wait>
                             </run>
                             <external>
