@@ -120,7 +120,7 @@ public class IndexingConsumer {
                 int recordPartition = record.partition();
 
                 LOG.trace("Processing record {}/{}/{} for event: {}", recordTopic, recordPartition, recordOffset, event);
-                processEventRecord(recordTopic, recordPartition, recordOffset, event);
+                indexEvent(recordTopic, recordPartition, recordOffset, event);
 
                 offsetsToCommit.put(new TopicPartition(recordTopic, recordPartition),
                         new OffsetAndMetadata(recordOffset));
@@ -132,7 +132,7 @@ public class IndexingConsumer {
         }
     }
 
-    private void processEventRecord(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) {
+    private void indexEvent(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) {
         KafkaDTO dto = composeDTO(event, rmapService);
 
         // Store offsets in the index
