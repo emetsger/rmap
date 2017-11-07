@@ -20,16 +20,16 @@
     <beans profile="prod-kafka">
         <import resource="classpath*:/rmap-kafka-shared.xml"/>
 
-        <bean id="offsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
-            <constructor-arg>
-                <map>
-                    <entry key="${rmapcore.producer.topic}" value-ref="discoRepository"/>
-                </map>
-            </constructor-arg>
+        <!--
+          Provides access to Kafka metadata kept in the "discos" Solr core.  Sharable.  Each Solr core that stores
+          Kafka metadata (topic, partition, offset) will need its own instance of SolrOffsetLookup.
+        -->
+        <bean id="discosRepositoryOffsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
+            <constructor-arg ref="discoRepository"/>
         </bean>
 
         <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
-            <constructor-arg ref="offsetLookup"/>
+            <constructor-arg ref="discosRepositoryOffsetLookup"/>
             <property name="consumer" ref="eventConsumer"/>
         </bean>
 

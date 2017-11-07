@@ -65,6 +65,6 @@ public class SolrOffsetLookupIT extends AbstractKafkaTest {
 
     @Test
     public void testUnknownPartitionLookup() throws Exception {
-        assertEquals(-1, underTest.lookupOffset("foo", 1, Seek.LATEST));
+        assertEquals(-1, underTest.lookupOffset(topic, 1, Seek.LATEST));
     }
 }

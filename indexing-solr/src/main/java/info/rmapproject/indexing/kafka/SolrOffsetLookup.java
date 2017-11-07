@@ -1,20 +1,16 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.KafkaMetadata;
 import info.rmapproject.indexing.solr.repository.KafkaMetadataRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+import static info.rmapproject.indexing.IndexUtils.assertNotNull;
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_ASC_BY_KAFKA_OFFSET;
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_DESC_BY_KAFKA_OFFSET;
 
 /**
- * Determines the earliest or latest offset for a topic and partition by consulting a Solr repository.
+ * Determines the earliest or latest offset for a topic and partition by consulting a Solr repository or core.
  * <p>
  * Kafka-related metadata is stored with Solr documents that implement {@link KafkaMetadata}.  This implementation is
  * able to look up Kafka offsets for a given topic and partition by querying a Solr repository containing such
@@ -25,41 +21,21 @@ import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.
  */
 public class SolrOffsetLookup<T extends KafkaMetadata> implements OffsetLookup {
 
-    private static Logger LOG = LoggerFactory.getLogger(SolrOffsetLookup.class);
-
-    private Map<String, KafkaMetadataRepository<T>> repositories;
+    private KafkaMetadataRepository<T> repository;
 
     /**
      * Support offset lookups for any topic in the supplied Map.  The expectation is that Kafka metadata for a topic
      * is kept in exactly one Solr repository.
      *
-     * @param repositories mapping of Kafka topics to Solr repositories
+     * @param repository the Solr repository or core that carries KafkaMetadata
      */
-    public SolrOffsetLookup(Map<String, KafkaMetadataRepository<T>> repositories) {
-        this.repositories = IndexUtils.assertNotNull(repositories,
-                "Topic to Repository map must not be null.");
-        if (repositories.isEmpty()) {
-            throw IndexUtils.iae("Topic to Repository map must not be empty.").get();
-        }
+    public SolrOffsetLookup(KafkaMetadataRepository<T> repository) {
+        this.repository = assertNotNull(repository, "Repository not be null.");
     }
 
     @Override
     public long lookupOffset(String topic, int partition, Seek seek) {
-        KafkaMetadataRepository<T> repo = repositories.get(topic);
-
-        if (repo == null) {
-            String existingMappings = repositories
-                    .entrySet()
-                    .stream()
-                    .map(entry -> "Topic: " + entry.getKey() + " Repository: " + entry.getValue().getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(entry.getValue())))
-                    .collect(Collectors.joining(",", "[", "]"));
-            LOG.warn("Unable to determine latest offset for topic {}.  Missing a mapping from topic {} to a " +
-                    "KafkaMetadataRepository (Hint: look at the wiring for {}, existing mappings are {})",
-                    topic, topic, this.getClass().getSimpleName(), existingMappings);
-            return -1;
-        }
-
-        List<T> results = repo.
+        List<T> results = repository.
                 findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(topic, partition,
                         (seek == Seek.LATEST) ? SORT_DESC_BY_KAFKA_OFFSET : SORT_ASC_BY_KAFKA_OFFSET);
 
