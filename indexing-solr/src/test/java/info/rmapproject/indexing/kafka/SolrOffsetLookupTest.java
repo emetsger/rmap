@@ -5,7 +5,6 @@ import info.rmapproject.indexing.solr.repository.KafkaMetadataRepository;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.HashMap;
 
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_ASC_BY_KAFKA_OFFSET;
 import static info.rmapproject.indexing.solr.repository.KafkaMetadataRepository.SORT_DESC_BY_KAFKA_OFFSET;
@@ -22,35 +21,11 @@ public class SolrOffsetLookupTest {
         new SolrOffsetLookup<DiscoSolrDocument>(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testEmptyMapConstructor() throws Exception {
-        new SolrOffsetLookup<DiscoSolrDocument>(Collections.emptyMap());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testLookupMissingMap() throws Exception {
-        SolrOffsetLookup underTest = new SolrOffsetLookup(
-                new HashMap<String, KafkaMetadataRepository>() {
-                    {
-                        put("foo", mock(KafkaMetadataRepository.class));
-                    }
-                });
-
-        assertEquals(-1, underTest.lookupOffset("bar", 0, Seek.EARLIEST));
-    }
-
     @Test
     @SuppressWarnings("unchecked")
     public void testNullResults() throws Exception {
         final KafkaMetadataRepository repo = mock(KafkaMetadataRepository.class);
-        SolrOffsetLookup underTest = new SolrOffsetLookup(
-                new HashMap<String, KafkaMetadataRepository>() {
-                    {
-                        put("foo", repo);
-                    }
-
-                });
+        SolrOffsetLookup underTest = new SolrOffsetLookup(repo);
 
         when(repo.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(
                 "foo", 0, SORT_DESC_BY_KAFKA_OFFSET)).thenReturn(null);
@@ -65,13 +40,7 @@ public class SolrOffsetLookupTest {
     @SuppressWarnings("unchecked")
     public void testEmptyResults() throws Exception {
         final KafkaMetadataRepository repo = mock(KafkaMetadataRepository.class);
-        SolrOffsetLookup underTest = new SolrOffsetLookup(
-                new HashMap<String, KafkaMetadataRepository>() {
-                    {
-                        put("foo", repo);
-                    }
-
-                });
+        SolrOffsetLookup underTest = new SolrOffsetLookup(repo);
 
         when(repo.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(
                 "foo", 0, SORT_DESC_BY_KAFKA_OFFSET)).thenReturn(Collections.emptyList());
@@ -86,13 +55,7 @@ public class SolrOffsetLookupTest {
     @SuppressWarnings("unchecked")
     public void testValidResult() throws Exception {
         final KafkaMetadataRepository repo = mock(KafkaMetadataRepository.class);
-        SolrOffsetLookup underTest = new SolrOffsetLookup(
-                new HashMap<String, KafkaMetadataRepository>() {
-                    {
-                        put("foo", repo);
-                    }
-
-                });
+        SolrOffsetLookup underTest = new SolrOffsetLookup(repo);
         DiscoSolrDocument doc = new DiscoSolrDocument.Builder().kafkaOffset(20).build();
 
         when(repo.findTopDiscoSolrDocumentByKafkaTopicAndKafkaPartition(
@@ -108,13 +71,7 @@ public class SolrOffsetLookupTest {
     @SuppressWarnings("unchecked")
     public void testSeek() throws Exception {
         final KafkaMetadataRepository repo = mock(KafkaMetadataRepository.class);
-        SolrOffsetLookup underTest = new SolrOffsetLookup(
-                new HashMap<String, KafkaMetadataRepository>() {
-                    {
-                        put("foo", repo);
-                    }
-
-                });
+        SolrOffsetLookup underTest = new SolrOffsetLookup(repo);
 
         underTest.lookupOffset("foo", 0, Seek.LATEST);
 
