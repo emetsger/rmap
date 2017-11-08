@@ -7,40 +7,43 @@
     </encoder>
     <target>System.err</target>
   </appender>
-  <root level="DEBUG">
+  <root level="WARN">
     <appender-ref ref="STDERR" />
   </root>
-  <logger name="org.springframework" additivity="false" level="DEBUG">
+  <logger name="org.springframework" additivity="false" level="WARN">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.springframework.jdbc" additivity="false" level="DEBUG">
+  <logger name="org.springframework.jdbc" additivity="false" level="WARN">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.hibernate" additivity="false" level="DEBUG">
+  <logger name="org.hibernate" additivity="false" level="WARN">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="info.rmapproject" additivity="false" level="TRACE">
+  <logger name="info.rmapproject" additivity="false" level="DEBUG">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.openrdf" additivity="false" level="DEBUG">
+  <logger name="info.rmapproject.indexing" additivity="false" level="TRACE">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="kafka" additivity="false" level="DEBUG">
+  <logger name="org.openrdf" additivity="false" level="WARN">
+    <appender-ref ref="STDERR" />
+  </logger>
+  <logger name="kafka" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.springframework.kafka" additivity="false" level="TRACE">
+  <logger name="org.springframework.kafka" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.apache.kafka" additivity="false" level="TRACE">
+  <logger name="org.apache.kafka" additivity="false" level="WARN">
     <appender-ref ref="STDERR" />
   </logger>
-  <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="TRACE">
+  <logger name="org.apache.kafka.clients.NetworkClient" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
   <logger name="org.apache.kafka.common.utils.AppInfoParser" additivity="false" level="ERROR">
     <appender-ref ref="STDERR"/>
   </logger>
-  <logger name="org.apache.kafka.clients.producer.internals" additivity="false" level="TRACE">
+  <logger name="org.apache.kafka.clients.producer.internals" additivity="false" level="WARN">
     <appender-ref ref="STDERR"/>
   </logger>
 </configuration>

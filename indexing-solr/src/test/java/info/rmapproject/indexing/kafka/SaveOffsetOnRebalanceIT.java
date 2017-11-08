@@ -57,7 +57,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration("classpath:/spring-rmapauth-context.xml")
 public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
 
     @Autowired
@@ -80,9 +79,6 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
 
     @Autowired
     private RMapService rMapService;
-
-    @Autowired
-    private RMapAuthService authService;
 
     @Autowired
     private SesameTriplestore triplestore;

@@ -1,27 +1,41 @@
 package info.rmapproject.indexing.kafka;
 
+import info.rmapproject.core.model.RMapIri;
+import info.rmapproject.core.model.agent.RMapAgent;
+import info.rmapproject.core.model.disco.RMapDiSCO;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.model.KafkaMetadata;
+import info.rmapproject.indexing.solr.repository.EventDiscoTuple;
 import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
-import info.rmapproject.indexing.solr.repository.IndexDTO;
 import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.URI;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
+import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
 import static info.rmapproject.indexing.IndexUtils.assertNotNull;
 import static info.rmapproject.indexing.IndexUtils.assertPositive;
+import static info.rmapproject.indexing.IndexUtils.findEventIri;
 import static info.rmapproject.indexing.IndexUtils.iae;
+import static info.rmapproject.indexing.IndexUtils.ise;
 import static java.lang.System.currentTimeMillis;
 
 /**
- * Attempts to index a {@link IndexDTO}, retrying until the operation succeeds or a timeout is exceeded.
+ * Attempts to index a {@link RMapEvent}, retrying until the operation succeeds or a timeout is exceeded.
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public class DefaultIndexRetryHandler implements IndexingRetryHandler {
+public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupleIndexingRepository<DiscoSolrDocument> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexRetryHandler.class);
 
@@ -31,9 +45,12 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
 
     private int indexRetryMaxMs;
 
-    private EventTupleIndexingRepository<DiscoSolrDocument> repository;
+    private EventTupleIndexingRepository<DiscoSolrDocument> indexer;
 
     private IndexDTOMapper dtoMapper;
+
+    @Autowired
+    private RMapService rmapService;
 
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
@@ -48,15 +65,15 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *     <dd>1.5</dd>
      * </dl>
      *
-     * @param repository the Solr repository, must not be {@code null}
+     * @param indexer the Solr repository, must not be {@code null}
      * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @throws IllegalArgumentException if {@code repository} is {@code null}, if any time-out related parameter is not
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
                                     IndexDTOMapper dtoMapper) {
-        this(repository, dtoMapper,100, 120000);
+        this(indexer, dtoMapper,100, 120000);
     }
 
     /**
@@ -68,7 +85,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *     <dd>1.5</dd>
      * </dl>
      *
-     * @param repository the Solr repository, must not be {@code null}
+     * @param indexer the Solr repository, must not be {@code null}
      * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @param indexRetryTimeoutMs initial time to wait between retry attempts, in ms
      * @param indexRetryMaxMs  absolute amount of time to wait before timing out, in ms
@@ -76,16 +93,16 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-     public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+     public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
                                      IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs) {
-        this(repository, dtoMapper, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
+        this(indexer, dtoMapper, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
      }
 
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
      * {@code indexRetryMaxMs}.
      *
-     * @param repository the Solr repository, must not be {@code null}
+     * @param indexer the Solr repository, must not be {@code null}
      * @param dtoMapper maps {@code IndexDTO} objects to a stream of {@code EventDiscoTuple}
      * @param indexRetryTimeoutMs initial time to wait between retry attempts, in ms
      * @param indexRetryMaxMs  absolute amount of time to wait before timing out, in ms
@@ -94,7 +111,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
      *                                  1 or greater, if {@code indexRetryTimeoutMs} is greater than
      *                                  {@code indexRetryMaxMs}
      */
-    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> repository,
+    public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
                                     IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs,
                                     float indexRetryBackoffFactor) {
         this.indexRetryTimeoutMs = assertPositive(indexRetryTimeoutMs,
@@ -103,7 +120,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
                 iae("Index retry backoff factor must be a positive float greater than one."));
         this.indexRetryMaxMs = assertPositive(indexRetryMaxMs,
                 iae("Index retry max ms must be a positive integer."));
-        this.repository = assertNotNull(repository, iae("Repository must not be null."));
+        this.indexer = assertNotNull(indexer, iae("Repository must not be null."));
         this.dtoMapper = assertNotNull(dtoMapper, iae("DTO Mapper must not be null."));
 
         validateRetryMaxMs(indexRetryTimeoutMs, indexRetryMaxMs,
@@ -111,18 +128,22 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
     }
 
     /**
-     * Attempts to index the supplied {@code dto} until the operation succeeds, or exceeds
+     * Attempts to index the supplied {@code event} until the operation succeeds, or exceeds
      * {@link #getIndexRetryMaxMs()}.
      *
-     * @param dto the data transfer object to index
+     * @param event the RMap event being indexed
+     * @param documentDecorator decorates the solr document prior to indexing
      * @throws IndexingTimeoutException if {@code indexRetryMaxMs} is exceeded prior to successfully indexing the
-     *                                  {@code dto}
+     *                                  {@code event}
      * @throws IndexingInterruptedException if the thread performing the indexing is interrupted before successfully
-     *                                      indexing the {@code dto}
+     *                                      indexing the {@code event}
      */
     @Override
-    public void retry(IndexDTO dto, Consumer<DiscoSolrDocument> documentDecorator)
+    public void retry(RMapEvent event, KafkaMetadata metadata, Consumer<DiscoSolrDocument> documentDecorator)
             throws IndexingTimeoutException, IndexingInterruptedException {
+
+        assertNotNull(rmapService, ise("RMapService must not be null.  Was setRmapService(...) invoked?"));
+
         long start = currentTimeMillis();
         int attempt = 1;
         long timeout = indexRetryTimeoutMs;
@@ -132,13 +153,29 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
         do {
 
             try {
-                LOG.debug("Retry attempt {} (total elapsed time {} ms) indexing {}",
-                        attempt, (currentTimeMillis() - start), dto);
-                repository.index(dtoMapper.apply(dto), documentDecorator);
+                LOG.trace("Indexing event {}, attempt {} (total elapsed time {} ms)",
+                        event.getId().getStringValue(), attempt, (currentTimeMillis() - start));
+                KafkaDTO dto = composeDTO(event, rmapService);
+
+                // Store offsets in the index
+                dto.setTopic(metadata.getKafkaTopic());
+                dto.setPartition(metadata.getKafkaPartition());
+                dto.setOffset(metadata.getKafkaOffset());
+
+                index(dtoMapper.apply(dto), documentDecorator);
                 success = true;
+                LOG.info("Indexed event {} after {} attempt(s) from Kafka topic/partition/offset {}/{}/{}, " +
+                                "total elapsed time {} ms",
+                        event.getId().getStringValue(),
+                        attempt,
+                        metadata.getKafkaTopic(),
+                        metadata.getKafkaPartition(),
+                        metadata.getKafkaOffset(),
+                        (currentTimeMillis() - start));
             } catch (Exception e) {
                 retryFailure = e;
-                LOG.debug("Retry attempt {} failed: {}", e.getMessage(), e);
+                LOG.trace("Indexing attempt {} failed for event {}: {}", attempt, event.getId().getStringValue(),
+                        e.getMessage(), e);
             }
 
             if (!success) {
@@ -147,8 +184,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
                 } catch (InterruptedException e) {
                     Thread.interrupted();
                     String fmt = "Retry operation was interrupted after %s attempts, %s ms: failed to index %s";
-                    String msg = String.format(fmt, attempt, (currentTimeMillis() - start), dto);
-                    LOG.error(msg);
+                    String msg = String.format(fmt, attempt, (currentTimeMillis() - start), event);
                     throw new IndexingInterruptedException(msg, e);
                 }
                 attempt++;
@@ -159,10 +195,50 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
 
         if (!success) {
             String fmt = "Timeout after %s attempts, %s ms: failed to index %s: %s";
-            String msg = String.format(fmt, attempt, (currentTimeMillis() - start), dto, retryFailure.getMessage());
-            LOG.error(msg);
+            String msg = String.format(fmt, attempt, (currentTimeMillis() - start), event, retryFailure.getMessage());
             throw new IndexingTimeoutException(msg, retryFailure);
         }
+    }
+
+    private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
+        RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE), rmapService);
+        RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET), rmapService);
+        RMapAgent agent = getAgent(event.getAssociatedAgent().getIri(), rmapService);
+
+        return new KafkaDTO(event, agent, sourceDisco, targetDisco);
+    }
+
+    private static RMapDiSCO getDisco(Optional<RMapIri> optionalIri, RMapService rmapService) {
+        RMapDiSCO disco = null;
+        if (optionalIri.isPresent()) {
+            disco = rmapService.readDiSCO(optionalIri.get().getIri());
+        }
+
+        return disco;
+    }
+
+    private static RMapAgent getAgent(URI agentUri, RMapService rmapService) {
+        return rmapService.readAgent(agentUri);
+    }
+
+    @Override
+    public void index(Stream<EventDiscoTuple> tupleStream) {
+        assertNotNull(indexer, ise("EventTupleIndexingRepository must not be null."));
+        indexer.index(tupleStream);
+    }
+
+    @Override
+    public void index(Stream<EventDiscoTuple> tupleStream, Consumer<DiscoSolrDocument> decorator) {
+        assertNotNull(indexer, ise("EventTupleIndexingRepository must not be null."));
+        indexer.index(tupleStream, decorator);
+    }
+
+    public RMapService getRmapService() {
+        return rmapService;
+    }
+
+    public void setRmapService(RMapService rmapService) {
+        this.rmapService = assertNotNull(rmapService, "RMapService must not be null.");
     }
 
     /**
@@ -246,12 +322,12 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler {
                 iae("Index retry max ms must be a positive integer."));
     }
 
-    public EventTupleIndexingRepository<DiscoSolrDocument> getRepository() {
-        return repository;
+    public EventTupleIndexingRepository<DiscoSolrDocument> getIndexer() {
+        return indexer;
     }
 
-    public void setRepository(EventTupleIndexingRepository<DiscoSolrDocument> repository) {
-        this.repository = repository;
+    public void setIndexer(EventTupleIndexingRepository<DiscoSolrDocument> indexer) {
+        this.indexer = indexer;
     }
 
     public IndexDTOMapper getDtoMapper() {
