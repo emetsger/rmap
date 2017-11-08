@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "integration-db", "http-solr", "mock-kafka"})
+@ActiveProfiles({"default", "inmemory-triplestore", "inmemory-idservice", "inmemory-db", "http-solr", "mock-kafka"})
 @ContextConfiguration({"classpath:/rmap-indexing-solr.xml", "classpath:/spring-rmapcore-context.xml", "classpath:/rmap-kafka-shared-test.xml"})
 @TestPropertySource(properties = {"integration.db.rmap-agent-sql = classpath:/create-rmap-agent.sql"})
 public abstract class AbstractSpringIndexingTest {

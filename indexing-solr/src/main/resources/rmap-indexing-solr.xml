@@ -24,11 +24,12 @@
           Provides access to Kafka metadata kept in the "discos" Solr core.  Sharable.  Each Solr core that stores
           Kafka metadata (topic, partition, offset) will need its own instance of SolrOffsetLookup.
         -->
-        <bean id="discosRepositoryOffsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup">
+        <bean id="discosRepositoryOffsetLookup" class="info.rmapproject.indexing.kafka.SolrOffsetLookup"
+              depends-on="solrClient">
             <constructor-arg ref="discoRepository"/>
         </bean>
 
-        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance">
+        <bean id="rebalancer" class="info.rmapproject.indexing.kafka.SaveOffsetOnRebalance" scope="prototype">
             <constructor-arg ref="discosRepositoryOffsetLookup"/>
             <property name="consumer" ref="eventConsumer"/>
         </bean>
@@ -44,7 +45,7 @@
         <!--
           Consumes RMap Events from a specified Kafka topic, and indexes DiscoSolrDocuments to the 'discos' Solr core.
         -->
-        <bean id="discosIndexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer">
+        <bean id="discosIndexingConsumer" class="info.rmapproject.indexing.kafka.IndexingConsumer" scope="prototype">
             <property name="indexer" ref="discosIndexer"/>
             <property name="consumer" ref="eventConsumer"/>
             <property name="pollTimeoutMs" value="30000"/>
@@ -54,19 +55,27 @@
             <property name="dtoMapper" ref="indexDTOMapper"/>
         </bean>
 
-        <!--<bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">-->
-            <!--<property name="targetObject" ref="indexingConsumer"/>-->
-            <!--<property name="targetMethod" value="consumeEarliest"/>-->
-            <!--<property name="arguments">-->
-                <!--<list>-->
-                    <!--<value>${rmapcore.producer.topic}</value>-->
-                <!--</list>-->
-            <!--</property>-->
-        <!--</bean>-->
+        <bean id="consumerInitializer" class="info.rmapproject.indexing.kafka.SpringAwareConsumerInitializer"
+              init-method="start" depends-on="discosIndexingConsumer">
+            <constructor-arg value="${rmap.solr.url}"/>
+            <constructor-arg value="discos"/>
+            <property name="consumerBeanName" value="discosIndexingConsumer"/>
+            <property name="consumerCount" value="1"/>
+            <property name="kafkaTopic" value="${rmapcore.producer.topic}"/>
+            <property name="brokerBootstrapServers" value="${bootstrap.servers}"/>
+            <property name="consumerThreads">
+                <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                    <property name="targetClass" value="java.util.concurrent.Executors"/>
+                    <property name="staticMethod" value="java.util.concurrent.Executors.newFixedThreadPool"/>
+                    <property name="arguments" value="1"/>
+                </bean>
+            </property>
+        </bean>
 
     </beans>
 
     <beans>
+
         <bean id="standAloneStatusInferencer" class="info.rmapproject.indexing.solr.repository.StandAloneStatusInferencer"/>
 
         <!--
@@ -91,7 +100,8 @@
           Shared instance of the "discos" core Solr indexer; indexes the DiscoSolrDocument domain object.
           - Each Solr core will require its own indexer, because each core indexes a different domain object
         -->
-        <bean id="discosIndexer" class="info.rmapproject.indexing.solr.repository.DiscosIndexer">
+        <bean id="discosIndexer" class="info.rmapproject.indexing.solr.repository.DiscosIndexer"
+              depends-on="solrClient">
             <constructor-arg ref="eventTupleToDiscoSolrDocumentMapper"/> <!-- eventTupleMapper may be shared -->
             <constructor-arg ref="discoRepository"/>                     <!-- may _not_ be shared, each indexer will need its own repository -->
             <constructor-arg ref="solrTemplate"/>                        <!-- solrTemplate may be shared -->

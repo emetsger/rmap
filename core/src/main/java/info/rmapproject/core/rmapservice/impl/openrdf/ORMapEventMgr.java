@@ -78,11 +78,12 @@ public class ORMapEventMgr extends ORMapObjectMgr {
 
 	private KafkaTemplate<String, ORMapEvent> kafkaTemplate;
 
-	@Autowired
+	public ORMapEventMgr() {
+		// required, since ORMapEventMgr(KafkaTemplate<String, ORMapEvent> kafkaTemplate) is optional
+	}
+
+	@Autowired(required = false)
 	public ORMapEventMgr(KafkaTemplate<String, ORMapEvent> kafkaTemplate) {
-		if (kafkaTemplate == null) {
-			throw new IllegalArgumentException("KafkaTemplate must not be null.");
-		}
 		this.kafkaTemplate = kafkaTemplate;
 	}
 

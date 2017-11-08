@@ -196,7 +196,7 @@
                             <target>
                                 <taskdef name="startDerby" classname="info.rmapproject.integration.util.StartDerbyTask"
                                          classpathref="maven.plugin.classpath"/>
-                                <startDerby derbyHome="${derby.home}"/>
+                                <startDerby derbyHome="${derby.home}" springContextLocation="classpath*:/spring-rmapauth-context.xml" springProfiles="default,inmemory-idservice,inmemory-triplestore,integration-db"/>
                             </target>
                         </configuration>
                         <goals>
@@ -209,7 +209,46 @@
                         <groupId>info.rmapproject</groupId>
                         <artifactId>rmap-integration-util</artifactId>
                         <version>${project.parent.version}</version>
-                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>info.rmapproject</groupId>
+                        <artifactId>rmap-integration</artifactId>
+                        <version>${project.parent.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>info.rmapproject</groupId>
+                        <artifactId>rmap-auth</artifactId>
+                        <version>${project.parent.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                        <version>${org.springframework-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-jdbc</artifactId>
+                        <version>${org.springframework-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-orm</artifactId>
+                        <version>${org.springframework-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-core</artifactId>
+                        <version>${hibernate.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-validator</artifactId>
+                        <version>${hibernate-validator.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-entitymanager</artifactId>
+                        <version>${hibernate.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -243,14 +282,14 @@
                             <run>
                                 <wait>
                                     <http>
-                                        <url>http://${docker.host.address}:${SOLR_PORT}/solr</url>
+                                        <url>http://${docker.host.address}:${SOLR_PORT}/solr/discos/admin/ping</url>
                                     </http>
                                     <time>60000</time>
                                 </wait>
                             </run>
                             <external>
                                 <type>compose</type>
-                                <basedir>src/docker</basedir>
+                                <basedir>target/test-classes/docker</basedir>
                                 <composeFile>docker-compose.yaml</composeFile>
                             </external>
                         </image>
@@ -296,7 +335,7 @@
                             <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                             <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                             <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
-                            <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
+                            <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka</spring.profiles.active>
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
                             <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                             <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
@@ -366,7 +405,7 @@
                         <!-- Spring 'integration-db' beans -->
                         <files>
                             <copy>
-                                <file>${project.basedir}/src/main/resources/integration-db.properties</file>
+                                <file>${project.basedir}/src/main/resources/persistent-db.properties</file>
                                 <todir>shared/classes</todir>
                             </copy>
                             <copy>
@@ -418,7 +457,7 @@
                             <container>
                                 <systemProperties>
                                     <derby.system.home>${derby.home}</derby.system.home>
-                                    <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
+                                    <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka</spring.profiles.active>
                                     <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
                                     <logback.configurationFile>${project.basedir}/src/main/resources/logback.xml</logback.configurationFile>
                                     <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
@@ -447,7 +486,7 @@
                         <sesame.http.context>${sesame.http.context}</sesame.http.context>
                         <sesame.workbench.context>${sesame.workbench.context}</sesame.workbench.context>
                         <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
-                        <spring.profiles.active>default,integration-db,inmemory-idservice,integration-triplestore,persistent-userservice,prod-kafka</spring.profiles.active>
+                        <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka</spring.profiles.active>
                         <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                         <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                         <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>

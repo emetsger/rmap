@@ -1,8 +1,10 @@
 package info.rmapproject.indexing.kafka;
 
+import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.model.KafkaMetadata;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
 
 import java.util.function.Consumer;
@@ -13,7 +15,7 @@ import java.util.function.Consumer;
 @FunctionalInterface
 public interface IndexingRetryHandler {
 
-    void retry(IndexDTO dto, Consumer<DiscoSolrDocument> documentDecorator)
+    void retry(RMapEvent event, KafkaMetadata metadata,  Consumer<DiscoSolrDocument> documentDecorator)
             throws IndexingTimeoutException, IndexingInterruptedException;
 
 }
