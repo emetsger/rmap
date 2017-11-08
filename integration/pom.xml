@@ -339,6 +339,7 @@
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
                             <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                             <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
+                            <logback.configurationFile>src/main/resources/logback.xml</logback.configurationFile>
                         </systemProperties>
                         <dependencies>
                             <dependency>
@@ -399,7 +400,7 @@
                     <configuration>
                         <properties>
                             <!-- <cargo.jvmargs>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -Dlogback.debug=true </cargo.jvmargs> -->
-                            <cargo.jvmargs>-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging.properties</cargo.jvmargs>
+                            <cargo.jvmargs>-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging.properties -Dlogback.configurationFile=src/main/resources/logback.xml</cargo.jvmargs>
                             <cargo.servlet.port>${rmap.webapp.test.port}</cargo.servlet.port>
                         </properties>
                         <!-- Spring 'integration-db' beans -->
