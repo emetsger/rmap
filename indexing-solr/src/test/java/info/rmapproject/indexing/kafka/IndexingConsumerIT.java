@@ -13,6 +13,7 @@ import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFFormat;
@@ -74,6 +75,7 @@ public class IndexingConsumerIT extends AbstractKafkaTest {
      * @throws Exception if the triplestore cannot be populated
      */
     @Test
+    @Ignore("TODO: Pending fix for default seek behavior")
     public void simpleIT() throws Exception {
         // Clear out the index
         discoRepository.deleteAll();
