@@ -80,7 +80,7 @@ public class SpringAwareConsumerInitializer<T> implements ApplicationContextAwar
                             LOG.trace("Failed to ping Solr core {} (HTTP response code {})", req.url().toString(), status);
                             return false;
                         }
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         LOG.trace("Failed to ping Solr core {}: {}", req.url().toString(), e.getMessage(), e);
                         throw new RuntimeException(e.getMessage(), e);
                     }
