@@ -150,6 +150,7 @@
                     <systemProperties>
                         <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore,mock-kafka</spring.profiles.active>
 						<derby.system.home>${project.build.directory}/derby</derby.system.home>
+						<logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
                     </systemProperties>
                 </configuration>
             </plugin>
