@@ -1,8 +1,5 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.core.model.RMapIri;
-import info.rmapproject.core.model.agent.RMapAgent;
-import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
 import info.rmapproject.core.model.event.RMapEventTargetType;
 import info.rmapproject.core.rmapservice.RMapService;
@@ -10,6 +7,7 @@ import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.model.KafkaMetadata;
 import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
 import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -23,16 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
-import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
-import static info.rmapproject.indexing.IndexUtils.findEventIri;
-import static info.rmapproject.indexing.IndexUtils.iae;
 import static info.rmapproject.indexing.IndexUtils.ise;
 import static info.rmapproject.indexing.kafka.KafkaUtils.commitOffsets;
 import static java.util.Collections.singleton;
@@ -120,80 +112,50 @@ public class IndexingConsumer {
                 int recordPartition = record.partition();
 
                 LOG.trace("Processing record {}/{}/{} for event: {}", recordTopic, recordPartition, recordOffset, event);
-                indexEvent(recordTopic, recordPartition, recordOffset, event);
 
-                offsetsToCommit.put(new TopicPartition(recordTopic, recordPartition),
-                        new OffsetAndMetadata(recordOffset));
+                try {
+                    indexEvent(recordTopic, recordPartition, recordOffset, event);
+                    offsetsToCommit.put(new TopicPartition(recordTopic, recordPartition),
+                            new OffsetAndMetadata(recordOffset));
+                } catch (Exception e) {
+                    LOG.warn("Unable to index event {}: {}", event, e.getMessage(), e);
+                }
             });
 
-            LOG.trace("Committing offsets {}", KafkaUtils.offsetsAsString(offsetsToCommit));
-            commitOffsets(consumer, offsetsToCommit, true);
-
-        }
-    }
-
-    private void indexEvent(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) {
-        KafkaDTO dto = composeDTO(event, rmapService);
-
-        // Store offsets in the index
-        dto.setTopic(recordTopic);
-        dto.setPartition(recordPartition);
-        dto.setOffset(recordOffset);
-
-        try {
-            indexer.index(dtoMapper.apply(dto), (doc) -> {
-                doc.setKafkaOffset(recordOffset);
-                doc.setKafkaPartition(recordPartition);
-                doc.setKafkaTopic(recordTopic);
-            });
-            LOG.debug("Indexed event {} ({}/{}/{})",
-                    event.getId().getStringValue(),
-                    recordTopic,
-                    recordPartition,
-                    recordOffset);
-        } catch (Exception e) {
-            LOG.debug("Retrying indexing operation for event {} ({}/{}/{}): {}",
-                    event.getId().getStringValue(),
-                    recordTopic,
-                    recordPartition,
-                    recordOffset,
-                    e.getMessage(),
-                    e);
-
-            // in this case we don't want to commit the offset to Kafka until we've successfully retried
-            try {
-                retryHandler.retry(dto, (doc) -> {
-                    doc.setKafkaOffset(recordOffset);
-                    doc.setKafkaPartition(recordPartition);
-                    doc.setKafkaTopic(recordTopic);
-                });
-            } catch (IndexingTimeoutException|IndexingInterruptedException ex) {
-                throw new RuntimeException(
-                        "Failed to index event " + event.getId().getStringValue(), ex);
+            if (!offsetsToCommit.isEmpty()) {
+                LOG.trace("Committing {} offset(s) {}", offsetsToCommit.size(),
+                        KafkaUtils.offsetsAsString(offsetsToCommit));
+                commitOffsets(consumer, offsetsToCommit, true);
             }
+
         }
     }
 
-    private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
-        RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE), rmapService);
-        RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET), rmapService);
-        RMapAgent agent = getAgent(event.getAssociatedAgent().getIri(), rmapService);
+    private void indexEvent(String recordTopic, int recordPartition, long recordOffset, RMapEvent event) throws IndexingTimeoutException, IndexingInterruptedException {
+        KafkaMetadata md = new KafkaMetadata() {
+            @Override
+            public long getKafkaOffset() {
+                return recordOffset;
+            }
 
-        return new KafkaDTO(event, agent, sourceDisco, targetDisco);
+            @Override
+            public int getKafkaPartition() {
+                return recordPartition;
+            }
+
+            @Override
+            public String getKafkaTopic() {
+                return recordTopic;
+            }
+        };
+
+        retryHandler.retry(event, md, (doc) -> {
+            doc.setKafkaOffset(recordOffset);
+            doc.setKafkaPartition(recordPartition);
+            doc.setKafkaTopic(recordTopic);
+        });
     }
 
-    private static RMapDiSCO getDisco(Optional<RMapIri> optionalIri, RMapService rmapService) {
-        RMapDiSCO disco = null;
-        if (optionalIri.isPresent()) {
-            disco = rmapService.readDiSCO(optionalIri.get().getIri());
-        }
-
-        return disco;
-    }
-
-    private static RMapAgent getAgent(URI agentUri, RMapService rmapService) {
-        return rmapService.readAgent(agentUri);
-    }
 
     public RMapService getRmapService() {
         return rmapService;

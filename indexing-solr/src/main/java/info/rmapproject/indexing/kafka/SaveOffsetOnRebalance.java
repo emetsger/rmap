@@ -22,7 +22,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
     /**
      * The default seek behavior if the requested offset for a topic and partition cannot be found.
      */
-    public static final Seek DEFAULT_SEEK_BEHAVIOR = Seek.EARLIEST;
+    public static final Seek DEFAULT_SEEK_BEHAVIOR = Seek.LATEST;
 
     /**
      * Logging.
@@ -159,7 +159,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
             }
 
             long pos = consumer.position(tp);
-            LOG.debug("Requested offset {}, performed seek to actual offset {} for topic/partiton {}/{}",
+            LOG.debug("Requested offset {}, performed seek to actual offset {} for topic/partition {}/{}",
                     off, pos, tp.topic(), tp.partition());
         });
     }
