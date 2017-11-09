@@ -70,6 +70,7 @@
     <field name="event_start_time" type="datetime"/>
     <field name="event_end_time" type="datetime"/>
     <field name="event_description" type="description"/>
+    <field name="event_lineage_progenitor_uri" type="uri"/>
 
     <!--
       Event type supplies the semantics for event source and target
