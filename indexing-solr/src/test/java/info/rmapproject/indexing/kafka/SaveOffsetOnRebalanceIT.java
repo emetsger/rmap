@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
 import static info.rmapproject.indexing.kafka.ConsumerTestUtil.assertExceptionHolderEmpty;
@@ -283,7 +284,11 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         String expectedEventUri = "rmap:rmd18mdddd";
         String expectedAgentUri = "rmap:rmd18m7mj4";
         String expectedLineageUri = "rmap:rmd18m7mr7";
-        deleteLineageFromIndex(expectedLineageUri);
+
+        final Set<DiscoSolrDocument> existingInactiveDocuments = discoRepository
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "INACTIVE");
+        final Set<DiscoSolrDocument> existingActiveDocuments = discoRepository
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "ACTIVE");
 
         // Produce some events
         LOG.debug("Producing events.");
@@ -310,10 +315,18 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         assertExceptionHolderEmpty("Consumer threw an unexpected exception.", exceptionHolder);
 
         final Set<DiscoSolrDocument> inactiveDocuments = discoRepository
-                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "INACTIVE");
-        final Set<DiscoSolrDocument> activeDocuments = discoRepository
-                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "ACTIVE");
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "INACTIVE")
+                .stream()
+                .filter(doc -> !existingInactiveDocuments.contains(doc))
+                .collect(Collectors.toSet());
 
+        final Set<DiscoSolrDocument> activeDocuments = discoRepository
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "ACTIVE")
+                .stream()
+                .filter(doc -> !existingActiveDocuments.contains(doc))
+                .collect(Collectors.toSet());
+
+        // We added 4 inactive documents, and 1 active document
         assertEquals(4, inactiveDocuments.size());
         assertEquals(1, activeDocuments.size());
 
