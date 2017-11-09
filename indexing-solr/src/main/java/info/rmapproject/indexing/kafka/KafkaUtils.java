@@ -24,13 +24,14 @@ class KafkaUtils {
 
         OffsetCommitCallback callback = (offsets, exception) -> {
             if (exception != null) {
-                LOG.warn("Unable to commit offsets {}: {}",
+                LOG.warn("Unable to commit offsets for {} TopicPartition(s) {}: {}",
+                        offsets.size(),
                         offsetsAsString(offsets),
                         exception.getMessage(),
                         exception);
             } else {
-                LOG.debug("Successfully committed offsets {}",
-                        offsetsAsString(offsets));
+                LOG.debug("Successfully committed offset(s) for {} TopicPartition(s): {}",
+                        offsets.size(), offsetsAsString(offsets));
             }
         };
 
