@@ -75,7 +75,6 @@ public class IndexingConsumerIT extends AbstractKafkaTest {
      * @throws Exception if the triplestore cannot be populated
      */
     @Test
-    @Ignore("TODO: Pending fix for default seek behavior")
     public void simpleIT() throws Exception {
         // Clear out the index
         discoRepository.deleteAll();
