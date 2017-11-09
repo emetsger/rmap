@@ -162,6 +162,11 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
             }
 
             @Override
+            public void setSeekBehavior(Seek seekBehavior) {
+                // no-op
+            }
+
+            @Override
             public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
                 LOG.debug("Initial Consumer: Partitions Revoked {}", KafkaUtils.topicPartitionsAsString(partitions));
                 initialLatch2.countDown();
@@ -190,6 +195,11 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         secondaryConsumer.subscribe(Collections.singleton(topic), new ConsumerAwareRebalanceListener<String, RMapEvent>() {
             @Override
             public void setConsumer(Consumer<String, RMapEvent> consumer) {
+                // no-op
+            }
+
+            @Override
+            public void setSeekBehavior(Seek seekBehavior) {
                 // no-op
             }
 

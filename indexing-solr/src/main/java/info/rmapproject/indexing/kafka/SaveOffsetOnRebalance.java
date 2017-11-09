@@ -98,6 +98,7 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
      * @param seekBehavior directs the {@code Consumer} to seek to the earliest or latest offset when the exact offset
      *                     of the topic/partition cannot be determined
      */
+    @Override
     public void setSeekBehavior(Seek seekBehavior) {
         this.seekBehavior = IndexUtils.assertNotNull(seekBehavior, "Seek behavior must not be null.");
     }

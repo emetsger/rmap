@@ -69,9 +69,11 @@ public class IndexingConsumer {
     void consume(String topic, Seek seek) throws UnknownOffsetException {
         IndexUtils.assertNotNull(consumer, ise("Consumer must not be null."));
         IndexUtils.assertNotNullOrEmpty(topic, "Topic must not be null or empty");
-//        IndexUtils.assertNotNull(seek, ise("Seek must not be null."));
+        IndexUtils.assertNotNull(seek, ise("Seek must not be null."));
 
         rebalanceListener.setConsumer(consumer);
+        rebalanceListener.setSeekBehavior(seek);
+
         consumer.subscribe(singleton(topic), rebalanceListener);
         consumer.poll(0); // join consumer group, get partitions, seek to correct offset
 
