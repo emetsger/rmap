@@ -55,23 +55,6 @@
             <property name="dtoMapper" ref="indexDTOMapper"/>
         </bean>
 
-        <bean id="consumerInitializer" class="info.rmapproject.indexing.kafka.SpringAwareConsumerInitializer"
-              init-method="start" depends-on="discosIndexingConsumer">
-            <constructor-arg value="${rmap.solr.url}"/>
-            <constructor-arg value="discos"/>
-            <property name="consumerBeanName" value="discosIndexingConsumer"/>
-            <property name="consumerCount" value="1"/>
-            <property name="kafkaTopic" value="${rmapcore.producer.topic}"/>
-            <property name="brokerBootstrapServers" value="${bootstrap.servers}"/>
-            <property name="consumerThreads">
-                <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-                    <property name="targetClass" value="java.util.concurrent.Executors"/>
-                    <property name="staticMethod" value="java.util.concurrent.Executors.newFixedThreadPool"/>
-                    <property name="arguments" value="1"/>
-                </bean>
-            </property>
-        </bean>
-
     </beans>
 
     <beans>
@@ -125,6 +108,25 @@
             <constructor-arg ref="solrTemplate"/>
         </bean-->
 
+    </beans>
+
+    <beans profile="auto-start-indexing">
+        <bean id="consumerInitializer" class="info.rmapproject.indexing.kafka.SpringAwareConsumerInitializer"
+              init-method="start" depends-on="discosIndexingConsumer">
+            <constructor-arg value="${rmap.solr.url}"/>
+            <constructor-arg value="discos"/>
+            <property name="consumerBeanName" value="discosIndexingConsumer"/>
+            <property name="consumerCount" value="1"/>
+            <property name="kafkaTopic" value="${rmapcore.producer.topic}"/>
+            <property name="brokerBootstrapServers" value="${bootstrap.servers}"/>
+            <property name="consumerThreads">
+                <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                    <property name="targetClass" value="java.util.concurrent.Executors"/>
+                    <property name="staticMethod" value="java.util.concurrent.Executors.newFixedThreadPool"/>
+                    <property name="arguments" value="1"/>
+                </bean>
+            </property>
+        </bean>
     </beans>
 
 </beans>
