@@ -5,4 +5,5 @@
 	<http://purl.org/ontology/rmap#eventTargetType> <http://purl.org/ontology/rmap#DiSCO> ;
 	<http://www.w3.org/ns/prov#startedAtTime> "2016-07-08T16:37:57.580Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
 	<http://www.w3.org/ns/prov#endedAtTime> "2016-07-08T16:37:57.580Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-	<http://www.w3.org/ns/prov#generated> <rmap:rmp1892f7b> .
+	<http://www.w3.org/ns/prov#generated> <rmap:rmp1892f7b> ;
+    <http://purl.org/ontology/rmap#lineageProgenitor> <rmap:rmp1892f7b> .

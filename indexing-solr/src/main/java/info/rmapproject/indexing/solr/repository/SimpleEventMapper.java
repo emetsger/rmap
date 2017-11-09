@@ -42,6 +42,9 @@ class SimpleEventMapper implements EventMapper {
         if (notNull(event.getEventType())) {
             doc.setEventType(event.getEventType().name());
         }
+        if (notNull(event.getLineageProgenitor())) {
+            doc.setEventLineageProgenitorUri(event.getLineageProgenitor().getStringValue());
+        }
 
         return doc;
     }

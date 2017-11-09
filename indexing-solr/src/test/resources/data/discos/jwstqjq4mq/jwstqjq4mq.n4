@@ -7,3 +7,4 @@
 <rmap:jwstqjq4mq> <http://www.w3.org/ns/prov#generated> <rmap:9cnp5hqdb7> <rmap:jwstqjq4mq> .
 <rmap:jwstqjq4mq> <http://purl.org/ontology/rmap#hasSourceObject> <rmap:rmd18mddgf> <rmap:jwstqjq4mq> .
 <rmap:jwstqjq4mq> <http://purl.org/ontology/rmap#derivedObject> <rmap:9cnp5hqdb7> <rmap:jwstqjq4mq> .
+<rmap:jwstqjq4mq> <http://purl.org/ontology/rmap#lineageProgenitor> <rmap:idOfLineageProgenitor> <rmap:jwstqjq4mq> .

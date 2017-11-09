@@ -7,4 +7,5 @@
 	<http://www.w3.org/ns/prov#endedAtTime> "2015-07-29T17:47:18Z" ;
 	<http://www.w3.org/ns/prov#generated> <rmap:rmd18mddcw> ;
 	<http://purl.org/ontology/rmap#inactivatedObject> <rmap:rmd18mdd8b> ;
-	<http://purl.org/ontology/rmap#derivedObject> <rmap:rmd18mddcw> .
+	<http://purl.org/ontology/rmap#derivedObject> <rmap:rmd18mddcw> ;
+    <http://purl.org/ontology/rmap#lineageProgenitor> <rmap:rmd18m7mr7> .

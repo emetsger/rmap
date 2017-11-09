@@ -5,3 +5,4 @@
 <rmap:rmp1892fdx> <http://www.w3.org/ns/prov#startedAtTime> "2016-07-08T16:33:21.763Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:rmp1892fdx> .
 <rmap:rmp1892fdx> <http://www.w3.org/ns/prov#endedAtTime> "2016-07-08T16:33:21.763Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <rmap:rmp1892fdx> .
 <rmap:rmp1892fdx> <http://purl.org/ontology/rmap#tombstoned> <rmap:rmp1892gbc> <rmap:rmp1892fdx> .
+<rmap:rmp1892fdx> <http://purl.org/ontology/rmap#lineageProgenitor> <rmap:rmp1892gbc> <rmap:rmp1892fdx> .
