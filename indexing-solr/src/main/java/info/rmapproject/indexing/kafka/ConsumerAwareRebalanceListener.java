@@ -18,4 +18,11 @@ public interface ConsumerAwareRebalanceListener<K, V> extends ConsumerRebalanceL
      */
     void setConsumer(Consumer<K, V> consumer);
 
+    /**
+     * What the rebalancer should do when it cannot determine the current offset of the consumer
+     *
+     * @param seekBehavior the seek behavior
+     */
+    void setSeekBehavior(Seek seekBehavior);
+
 }
