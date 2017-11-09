@@ -123,7 +123,7 @@ public class IndexingConsumer {
             });
 
             if (!offsetsToCommit.isEmpty()) {
-                LOG.trace("Committing {} offset(s) {}", offsetsToCommit.size(),
+                LOG.trace("Committing offset(s) for {} TopicPartition(s): {}", offsetsToCommit.size(),
                         KafkaUtils.offsetsAsString(offsetsToCommit));
                 commitOffsets(consumer, offsetsToCommit, true);
             }
