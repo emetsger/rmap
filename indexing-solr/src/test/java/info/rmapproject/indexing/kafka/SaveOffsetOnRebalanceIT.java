@@ -1,6 +1,5 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.auth.service.RMapAuthService;
 import info.rmapproject.core.model.RMapObjectType;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.event.RMapEvent;
@@ -8,39 +7,36 @@ import info.rmapproject.core.model.request.RequestEventDetails;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
 import info.rmapproject.indexing.solr.AbstractKafkaTest;
-import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
@@ -50,28 +46,19 @@ import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
 import static java.util.Comparator.comparing;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Ignore("FIXME: pending lineage addition to indexing/kafka")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
 
     @Autowired
-    private ApplicationContext ctx;
-
-    @Autowired
     private IndexingConsumer indexer;
-
-    @Autowired
-    private OffsetLookup lookup;
-
-    @Autowired
-    private ConsumerAwareRebalanceListener<String, RMapEvent> underTest;
 
     @Autowired
     private KafkaTemplate<String, RMapEvent> producer;
@@ -88,11 +75,73 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
     @Value("${rmapcore.producer.topic}")
     private String topic;
 
+    /**
+     * Note: this is *not* the same Consumer instance referenced by the {@link #indexer IndexingConsumer}.  Be sure to
+     * use {@link IndexingConsumer#getConsumer()} if you want that instance.
+     */
+    @Autowired
+    private Consumer consumer;
+
+    /**
+     * The number of documents in solr at the beginning of each test
+     */
+    private long existingDocumentCount;
+
+    /**
+     * Request details used by this test when creating Agents in RMap
+     */
+    private RequestEventDetails systemAgentEventDetails;
+
+    /**
+     * Keeps track of whether or not the triplestore has been populate with test content by {@link #setUp()}.
+     */
+    private boolean triplestoreInitialized = false;
+
+    /**
+     * A list of test events ordered chronologically, with the oldest event at the head of the list.  The events in
+     * this list, and their source and target objects, are present in the triplestore if the
+     * {@link #triplestoreInitialized} flag is {@code true}.
+     */
+    private List<RMapEvent> events;
+
+    /**
+     * Does a number of things:
+     * <ol>
+     *     <li>Records the number of documents in the solr index at the beginning of each test</li>
+     *     <li>Initializes the triplestore with test content if the {@link #triplestoreInitialized} flag is {@code false}</li>
+     * </ol>
+     * Initializing the triplestore entails:
+     * <ol>
+     *     <li>{@link ConsumerTestUtil#createSystemAgent(RMapService) Creating} a system {@code RMapAgent}</li>
+     *     <li>Using the system agent to create additional {@code RMapAgent}s found in test content</li>
+     *     <li>Streaming the triples found in test content directly to the triplestore</li>
+     * </ol>
+     * This insures that the RMap domain objects used by this integration test have representations in the triplestore.
+     * Using the {@link #triplestoreInitialized} flag allows the expensive operations surrounding triplestore
+     * initialization to happen only once for this test class.
+     */
     @Override
     @Before
     public void setUp() throws Exception {
-        discoRepository.deleteAll();
-        assertEquals(0, discoRepository.count());
+        existingDocumentCount = discoRepository.count();
+
+        if (!triplestoreInitialized) {
+            RMapAgent systemAgent = ConsumerTestUtil.createSystemAgent(rMapService);
+            systemAgentEventDetails = new RequestEventDetails(systemAgent.getId().getIri());
+
+            // Get some Rmap objects from the filesystem, and put them in the triplestore
+            Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
+            getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
+            assertFalse(rmapObjects.isEmpty());
+
+            // Create necessary agents
+            createAgents(rmapObjects);
+
+            addTriplesFromResource("http://foo/bar", triplestore, rmapObjects);
+            triplestoreInitialized = true;
+
+            events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler, comparing(RMapEvent::getStartTime));
+        }
     }
 
     /**
@@ -217,75 +266,26 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
 
     @Test
     public void testRebalance() throws Exception {
-        // Clear out the index
-        discoRepository.deleteAll();
-        assertEquals(0, discoRepository.count());
+        String expectedDiscoUri = "rmap:rmd18mddcw";
+        String expectedEventUri = "rmap:rmd18mdddd";
+        String expectedAgentUri = "rmap:rmd18m7mj4";
+        String expectedLineageProgenitorUri = "rmap:rmd18m7mr7";
 
-        // Get some Rmap objects from the filesystem, and put them in the triplestore
-        Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects = new HashMap<>();
-        getRmapResources("/data/discos/rmd18mddcw", rdfHandler, RDFFormat.NQUADS, rmapObjects);
-        assertFalse(rmapObjects.isEmpty());
+        // Remove documents from the index that may be created by this test invocation
+        Set<DiscoSolrDocument> existingDocs = discoRepository.findDiscoSolrDocumentsByDiscoUri(expectedDiscoUri);
+        if (!existingDocs.isEmpty()) {
+            discoRepository.deleteAll(existingDocs);
+        }
+        assertEquals(0, discoRepository.findDiscoSolrDocumentsByDiscoUri(expectedDiscoUri).size());
 
-        RMapAgent systemAgent = ConsumerTestUtil.createSystemAgent(rMapService);
-        RequestEventDetails requestEventDetails = new RequestEventDetails(systemAgent.getId().getIri());
-
-        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
-        assertNotNull(agents);
-        assertTrue(agents.size() > 0);
-        LOG.debug("Creating {} agents", agents.size());
-        agents.forEach(agent -> {
-//            User u = new User(agent.getName().getStringValue(), "foo@bar.baz");
-//            u.setRmapAgentUri(agent.getId().getStringValue());
-//            u.setUserIdentityProviders(Collections.singleton(new UserIdentityProvider(agent.getIdProvider()));
-//            int userId = 0;
-//            try (RepositoryConnection c = triplestore.getConnection()) {
-//                userId = authService.addUser(u);
-//                RMapEvent created = authService.createOrUpdateAgentFromUser(userId);
-//                assertNotNull("Expected a creation event when creating an agent with uri " + ((agent.getIdProvider() != null) ? agent.getIdProvider().getStringValue() : "null") + " for user id " + userId, created);
-//                LOG.debug("Created Agent {}", created);
-//            } catch (Exception e) {
-//                LOG.error("Error adding user {} id {}: {}", agent.getName().getStringValue(), userId, e.getMessage(), e);
-//            }
-
-//            LOG.debug("Looking up agent {}", agent.getId().getIri());
-//            if (rMapService.readAgent(agent.getId().getIri()) == null) {
-//                LOG.debug("Creating RMap Agent {}", agent.getId().getIri());
-//                rMapService.createAgent(agent, requestEventDetails);
-//            } else {
-//                LOG.debug("RMap Agent {} already existed", agent.getId().getIri());
-//            }
-
-            try {
-                rMapService.createAgent(agent, requestEventDetails);
-            } catch (Exception e) {
-                LOG.debug("Error creating agent {}: {}", agent.getId().getStringValue(), e.getMessage(), e);
-            }
-        });
-
-        // Print out the triplestore contents to stderr
-        System.err.println("Dump one:");
-        ConsumerTestUtil.dumpTriplestore(triplestore, new PrintStream(System.err, true));
-
-        rmapObjects.values().stream().flatMap(Set::stream)
-                .forEach(source -> {
-            try (InputStream in = source.getInputStream();
-                 RepositoryConnection c = triplestore.getConnection();
-            ) {
-                assertTrue(c.isOpen());
-                c.add(in, "http://foo/bar", source.getRdfFormat());
-            } catch (IOException e) {
-                e.printStackTrace(System.err);
-                fail("Unexpected IOException");
-            }
-        });
-
-        System.err.println("Dump two:");
-        ConsumerTestUtil.dumpTriplestore(triplestore, new PrintStream(System.err, true));
-
-        LOG.debug("Producing events.");
         // Produce some events, so they're waiting for the consumer when it starts.
-        List<RMapEvent> events = getRmapObjects(rmapObjects, RMapObjectType.EVENT, rdfHandler, comparing(RMapEvent::getStartTime));
-        events.forEach(event -> producer.send(topic, event));
+        LOG.debug("Producing events.");
+        events.forEach(event -> {
+                    assertEquals("Unexpected lineage progenitor URI", expectedLineageProgenitorUri, event.getLineageProgenitor().getStringValue());
+                    producer.send(topic, event);
+                }
+        );
+
         producer.flush();
 
         LOG.debug("Starting indexer.");
@@ -301,21 +301,114 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
 
         assertExceptionHolderEmpty("Consumer threw an unexpected exception.", exceptionHolder);
 
-        final Set<DiscoSolrDocument> inactive = discoRepository.findDiscoSolrDocumentsByDiscoStatus("INACTIVE");
-        final Set<DiscoSolrDocument> active = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE");
-        assertEquals(5, discoRepository.count());
-        assertEquals(4, inactive.size());
-        assertEquals(1, active.size());
+        final Set<DiscoSolrDocument> inactiveDocuments = discoRepository
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageProgenitorUri, "INACTIVE");
+        final Set<DiscoSolrDocument> activeDocuments = discoRepository
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageProgenitorUri, "ACTIVE");
 
-        final DiscoSolrDocument activeDocument = active.iterator().next();
-        assertEquals("rmap:rmd18mddcw", activeDocument.getDiscoUri());
+        assertEquals(4, inactiveDocuments.size());
+        assertEquals(1, activeDocuments.size());
+
+        final DiscoSolrDocument activeDocument = activeDocuments.iterator().next();
+        assertEquals(expectedDiscoUri, activeDocument.getDiscoUri());
         assertEquals(TARGET.name(), activeDocument.getDiscoEventDirection());
-        assertEquals("rmap:rmd18mddcw", activeDocument.getEventTargetObjectUris().get(0));
-        assertEquals("rmap:rmd18mdddd", activeDocument.getEventUri());
-        assertEquals("rmap:rmd18m7mj4", activeDocument.getAgentUri());
+        assertEquals(expectedDiscoUri, activeDocument.getEventTargetObjectUris().get(0));
+        assertEquals(expectedLineageProgenitorUri, activeDocument.getEventLineageProgenitorUri());
+
+        assertEquals(expectedEventUri, activeDocument.getEventUri());
+        assertEquals(expectedAgentUri, activeDocument.getAgentUri());
         assertTrue(activeDocument.getKafkaOffset() > -1);
         assertTrue(activeDocument.getKafkaPartition() > -1);
         assertNotNull(activeDocument.getKafkaTopic());
+
+        inactiveDocuments.forEach(inactiveDoc -> {
+            assertNotEquals(expectedDiscoUri, inactiveDoc.getDiscoUri());
+            assertEquals("INACTIVE", inactiveDoc.getDiscoStatus());
+            assertEquals(expectedLineageProgenitorUri, inactiveDoc.getEventLineageProgenitorUri());
+        });
+
+    }
+
+    /**
+     * Insures that a consumer can seek to the (last-written-offset + 1) of a Kafka partition without throwing an
+     * exception.  Insures that polling after seeking to (last-written-offset + 1) does not re-read any events, and
+     * does not throw any exceptions.
+     */
+    @Test
+    public void testSeekOffsetPlusOne() throws InterruptedException, ExecutionException, TimeoutException {
+
+        // insure that consumer.poll() does not re-read the last event in the partition when a rebalance occurs
+        // (i.e. the rebalancer seeks to <last-saved-offset> + 1) and that no exceptions are thrown by seeking
+        // to <last-saved-offset> + 1.
+
+        RMapEvent event = mock(RMapEvent.class, withSettings().extraInterfaces(Serializable.class));
+        String testTopic = SaveOffsetOnRebalance.class.getSimpleName() + "-testSeekOffsetPlusOne";
+        RecordMetadata record = producer.send(testTopic, event)
+                .get(5000, TimeUnit.MILLISECONDS)
+                .getRecordMetadata();
+
+        // Wrote the record to offset 0
+        assertEquals(0, record.offset());
+        producer.flush();
+
+        // Assert that we are able to seek to the end of the partition, plus 1 without throwing an exception.
+        TopicPartition tp = new TopicPartition(testTopic, record.partition());
+        consumer.assign(Collections.singleton(tp));
+        consumer.seek(tp, record.offset() + 1);
+        assertEquals(1, consumer.position(tp));
+
+        // Assert that seeking to the beginning is offset 0
+        consumer.seekToBeginning(Collections.singleton(tp));
+        assertEquals(0, consumer.position(tp));
+
+        // Assert that seeking to the end is the last written offset plus 1
+        consumer.seekToEnd(Collections.singleton(tp));
+        assertEquals(record.offset() + 1, consumer.position(tp));
+
+        // Assert that poll() does not re-read an event or throw unwanted exceptions
+        assertTrue(consumer.poll(1000L).isEmpty());
+    }
+
+    /**
+     * Streams the triples found in each {@code RDFResource} and deposits them into the triplestore.
+     *
+     * @param baseURI
+     * @param triplestore
+     * @param rmapObjects
+     */
+    private static void addTriplesFromResource(String baseURI, SesameTriplestore triplestore, Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects) {
+        rmapObjects.values().stream().flatMap(Set::stream)
+                .forEach(source -> {
+                    try (InputStream in = source.getInputStream();
+                         RepositoryConnection c = triplestore.getConnection();
+                    ) {
+                        assertTrue(c.isOpen());
+                        c.add(in, baseURI, source.getRdfFormat());
+                    } catch (IOException e) {
+                        e.printStackTrace(System.err);
+                        fail("Unexpected IOException");
+                    }
+                });
+    }
+
+    /**
+     * Creates additional agents found in {@code rmapObjects} using the request details of the
+     * {@link #systemAgentEventDetails system agent}.
+     *
+     * @param rmapObjects map of test objects that may contain agents
+     */
+    private void createAgents(Map<RMapObjectType, Set<TestUtils.RDFResource>> rmapObjects) {
+        List<RMapAgent> agents = getRmapObjects(rmapObjects, RMapObjectType.AGENT, rdfHandler);
+        assertNotNull(agents);
+        assertTrue(agents.size() > 0);
+        LOG.debug("Creating {} agents", agents.size());
+        agents.forEach(agent -> {
+            try {
+                rMapService.createAgent(agent, systemAgentEventDetails);
+            } catch (Exception e) {
+                LOG.debug("Error creating agent {}: {}", agent.getId().getStringValue(), e.getMessage(), e);
+            }
+        });
     }
 
 }
