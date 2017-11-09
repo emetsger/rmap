@@ -135,7 +135,7 @@ public class SaveOffsetOnRebalanceTest {
         underTest.onPartitionsAssigned(Collections.singleton(tp));
 
         verify(lookup).lookupOffset(topic, partition, Seek.LATEST);
-        verify(consumer).seek(tp, offset);
+        verify(consumer).seek(tp, offset + 1);
         verify(consumer).position(tp);
     }
 }
