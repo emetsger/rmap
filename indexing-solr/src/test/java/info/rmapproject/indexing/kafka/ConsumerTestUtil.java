@@ -69,6 +69,16 @@ public class ConsumerTestUtil {
         };
     }
 
+    static Runnable newConsumerRunnable(IndexingConsumer indexer, String topic, Seek seekBehavior, AtomicReference<Exception> caughtExeption) {
+        return () -> {
+            try {
+                indexer.consume(topic, seekBehavior);
+            } catch (Exception e) {
+                caughtExeption.set(e);
+            }
+        };
+    }
+
     /**
      * Instantiate an {@link ORMapAgent} to represent a System agent, and use the {@link RMapService} to create the
      * agent.  Verifies the agent was created using {@link RMapService#isAgentId(URI)}
