@@ -15,6 +15,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFFormat;
@@ -151,6 +152,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
      */
     @Test
     @SuppressWarnings("unchecked")
+    @Ignore("TODO: pending using two partitions in the test broker")
     public void testPartitionsRevokedAndAssignedInvokedOnConsumerJoin() throws InterruptedException {
         CountDownLatch initialLatch2 = new CountDownLatch(2);
         CountDownLatch initialLatch4 = new CountDownLatch(4);
@@ -244,6 +246,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
      */
     @Test
     @SuppressWarnings({"unchecked", "rawtypes", "serial"})
+    @Ignore("TODO: pending use of two partitions in test broker")
     public void testPartitionsRevokedAndAssignedInvokedOnStart() throws InterruptedException {
         ConsumerAwareRebalanceListener underTest = mock(ConsumerAwareRebalanceListener.class);
         indexer.setRebalanceListener(underTest);
