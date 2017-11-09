@@ -279,42 +279,37 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         String expectedDiscoUri = "rmap:rmd18mddcw";
         String expectedEventUri = "rmap:rmd18mdddd";
         String expectedAgentUri = "rmap:rmd18m7mj4";
-        String expectedLineageProgenitorUri = "rmap:rmd18m7mr7";
+        String expectedLineageUri = "rmap:rmd18m7mr7";
+        deleteLineageFromIndex(expectedLineageUri);
 
-        // Remove documents from the index that may be created by this test invocation
-        Set<DiscoSolrDocument> existingDocs = discoRepository.findDiscoSolrDocumentsByDiscoUri(expectedDiscoUri);
-        if (!existingDocs.isEmpty()) {
-            discoRepository.deleteAll(existingDocs);
-        }
-        assertEquals(0, discoRepository.findDiscoSolrDocumentsByDiscoUri(expectedDiscoUri).size());
-
-        // Produce some events, so they're waiting for the consumer when it starts.
+        // Produce some events
         LOG.debug("Producing events.");
         events.forEach(event -> {
-                    assertEquals("Unexpected lineage progenitor URI", expectedLineageProgenitorUri, event.getLineageProgenitor().getStringValue());
+                    assertEquals("Unexpected lineage progenitor URI", expectedLineageUri, event.getLineageProgenitor().getStringValue());
                     producer.send(topic, event);
                 }
         );
-
         producer.flush();
 
+        // Boot up the indexer in its own thread, and consume some events.
         LOG.debug("Starting indexer.");
         AtomicReference<Exception> exceptionHolder = new AtomicReference<>();
-        // Boot up the first indexing consumer, and consume some events.
         Thread initialIndexerThread = new Thread(ConsumerTestUtil.newConsumerRunnable(indexer, topic, exceptionHolder), "Initial Indexer");
         initialIndexerThread.start();
+
+        // sleep to let the indexer do its job
         Thread.sleep(30000);
 
-        // clean up
+        // clean up indexer thread
         indexer.getConsumer().wakeup();
         initialIndexerThread.join();
 
         assertExceptionHolderEmpty("Consumer threw an unexpected exception.", exceptionHolder);
 
         final Set<DiscoSolrDocument> inactiveDocuments = discoRepository
-                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageProgenitorUri, "INACTIVE");
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "INACTIVE");
         final Set<DiscoSolrDocument> activeDocuments = discoRepository
-                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageProgenitorUri, "ACTIVE");
+                .findDiscoSolrDocumentsByEventLineageProgenitorUriAndDiscoStatus(expectedLineageUri, "ACTIVE");
 
         assertEquals(4, inactiveDocuments.size());
         assertEquals(1, activeDocuments.size());
@@ -323,7 +318,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         assertEquals(expectedDiscoUri, activeDocument.getDiscoUri());
         assertEquals(TARGET.name(), activeDocument.getDiscoEventDirection());
         assertEquals(expectedDiscoUri, activeDocument.getEventTargetObjectUris().get(0));
-        assertEquals(expectedLineageProgenitorUri, activeDocument.getEventLineageProgenitorUri());
+        assertEquals(expectedLineageUri, activeDocument.getEventLineageProgenitorUri());
 
         assertEquals(expectedEventUri, activeDocument.getEventUri());
         assertEquals(expectedAgentUri, activeDocument.getAgentUri());
@@ -334,7 +329,7 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         inactiveDocuments.forEach(inactiveDoc -> {
             assertNotEquals(expectedDiscoUri, inactiveDoc.getDiscoUri());
             assertEquals("INACTIVE", inactiveDoc.getDiscoStatus());
-            assertEquals(expectedLineageProgenitorUri, inactiveDoc.getEventLineageProgenitorUri());
+            assertEquals(expectedLineageUri, inactiveDoc.getEventLineageProgenitorUri());
         });
 
     }
@@ -421,4 +416,17 @@ public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
         });
     }
 
+    /**
+     * Removes all documents from the index that reference the supplied {@code lineageUri}.
+     *
+     * @param lineageUri the lineage uri
+     */
+    private void deleteLineageFromIndex(String lineageUri) {
+        // Remove documents from the index that may be created by this test invocation
+        Set<DiscoSolrDocument> existingDocs = discoRepository.findDiscoSolrDocumentsByEventLineageProgenitorUri(lineageUri);
+        if (!existingDocs.isEmpty()) {
+            discoRepository.deleteAll(existingDocs);
+        }
+        assertEquals(0, discoRepository.findDiscoSolrDocumentsByEventLineageProgenitorUri(lineageUri).size());
+    }
 }
