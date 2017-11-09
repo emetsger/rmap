@@ -132,8 +132,9 @@ public class SaveOffsetOnRebalance<K, V> implements ConsumerAwareRebalanceListen
             // determine latest offset
             long off = offsetLookup.lookupOffset(tp.topic(), tp.partition(), Seek.LATEST);
 
-            // seek to offset
             if (off > -1) {
+                // seek to offset + 1 so we don't re-read events on the next poll()
+                off += 1;
                 consumer.seek(tp, off);
             } else {
                 LOG.debug("OffsetLookup could not determine offset, seeking to the {} offset for topic/partition {}/{}",
