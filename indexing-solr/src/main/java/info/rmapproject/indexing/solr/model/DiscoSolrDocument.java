@@ -53,6 +53,11 @@ public class DiscoSolrDocument implements KafkaMetadata {
      */
     public static final String DISCO_URI = "disco_uri";
 
+    /**
+     * Field name containing the uri of the lineage of the DiSCO
+     */
+    public static final String EVENT_LINEAGE_PROGENITOR_URI = "event_lineage_progenitor_uri";
+
     @Id
     @Field(DOC_ID)
     private String docId;
@@ -111,6 +116,9 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
     @Field("event_target_object_uris")
     private List<String> eventTargetObjectUris;
+
+    @Field(EVENT_LINEAGE_PROGENITOR_URI)
+    private String eventLineageProgenitorUri;
 
 
     @Field("agent_uri")
@@ -181,6 +189,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.eventType = prototype.eventType;
         this.eventSourceObjectUris = (prototype.eventSourceObjectUris != null) ? new ArrayList<>(prototype.eventSourceObjectUris) : null;
         this.eventTargetObjectUris = (prototype.eventTargetObjectUris != null) ? new ArrayList<>(prototype.eventTargetObjectUris) : null;
+        this.eventLineageProgenitorUri = prototype.eventLineageProgenitorUri;
 
         this.agentUri = prototype.agentUri;
         this.agentProviderUri = prototype.agentProviderUri;
@@ -352,6 +361,14 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
     public void setDiscoEventDirection(String discoEventDirection) {
         this.discoEventDirection = discoEventDirection;
+    }
+
+    public String getEventLineageProgenitorUri() {
+        return eventLineageProgenitorUri;
+    }
+
+    public void setEventLineageProgenitorUri(String eventLineageProgenitorUri) {
+        this.eventLineageProgenitorUri = eventLineageProgenitorUri;
     }
 
     public String getAgentUri() {
@@ -548,6 +565,12 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return this;
         }
 
+        public Builder eventLineageUri(String eventLineageUri) {
+            instantiateIfNull();
+            instance.setEventLineageProgenitorUri(eventLineageUri);
+            return this;
+        }
+
         public Builder agentUri(String agentUri) {
             instantiateIfNull();
             instance.setAgentUri(agentUri);
@@ -628,6 +651,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
                 ", eventType='" + eventType + '\'' +
                 ", eventSourceObjectUris=" + eventSourceObjectUris +
                 ", eventTargetObjectUris=" + eventTargetObjectUris +
+                ", eventLineageProgenitorUri='" + eventLineageProgenitorUri + '\'' +
                 ", agentUri='" + agentUri + '\'' +
                 ", agentProviderUri='" + agentProviderUri + '\'' +
                 ", agentDescription='" + agentDescription + '\'' +
@@ -663,6 +687,8 @@ public class DiscoSolrDocument implements KafkaMetadata {
         if (discoRelatedStatements != null ? !discoRelatedStatements.equals(that.discoRelatedStatements) : that.discoRelatedStatements != null)
             return false;
         if (discoStatus != null ? !discoStatus.equals(that.discoStatus) : that.discoStatus != null) return false;
+        if (discoEventDirection != null ? !discoEventDirection.equals(that.discoEventDirection) : that.discoEventDirection != null)
+            return false;
         if (eventUri != null ? !eventUri.equals(that.eventUri) : that.eventUri != null) return false;
         if (eventAgentUri != null ? !eventAgentUri.equals(that.eventAgentUri) : that.eventAgentUri != null)
             return false;
@@ -676,7 +702,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return false;
         if (eventTargetObjectUris != null ? !eventTargetObjectUris.equals(that.eventTargetObjectUris) : that.eventTargetObjectUris != null)
             return false;
-        if (discoEventDirection != null ? !discoEventDirection.equals(that.discoEventDirection) : that.discoEventDirection != null)
+        if (eventLineageProgenitorUri != null ? !eventLineageProgenitorUri.equals(that.eventLineageProgenitorUri) : that.eventLineageProgenitorUri != null)
             return false;
         if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
         if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
@@ -699,6 +725,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         result = 31 * result + (discoProvenanceUri != null ? discoProvenanceUri.hashCode() : 0);
         result = 31 * result + (discoRelatedStatements != null ? discoRelatedStatements.hashCode() : 0);
         result = 31 * result + (discoStatus != null ? discoStatus.hashCode() : 0);
+        result = 31 * result + (discoEventDirection != null ? discoEventDirection.hashCode() : 0);
         result = 31 * result + (eventUri != null ? eventUri.hashCode() : 0);
         result = 31 * result + (eventAgentUri != null ? eventAgentUri.hashCode() : 0);
         result = 31 * result + (eventStartTime != null ? eventStartTime.hashCode() : 0);
@@ -707,7 +734,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (eventSourceObjectUris != null ? eventSourceObjectUris.hashCode() : 0);
         result = 31 * result + (eventTargetObjectUris != null ? eventTargetObjectUris.hashCode() : 0);
-        result = 31 * result + (discoEventDirection != null ? discoEventDirection.hashCode() : 0);
+        result = 31 * result + (eventLineageProgenitorUri != null ? eventLineageProgenitorUri.hashCode() : 0);
         result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
         result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
