@@ -114,6 +114,16 @@ class UpdateAssertions {
                 });
     }
 
+    private static void assertDeleteMustContainId(String discoDocumentId, CompositeAnswer<?> compositeAnswer) {
+        compositeAnswer.andAnswer((inv) -> {
+            Collection<String> idsBeingDeleted = inv.getArgument(1);
+
+            assertTrue("No DiscoIRIs matched.", idsBeingDeleted.stream().anyMatch(discoDocumentId::equals));
+
+            return null;
+        });
+    }
+
     private static void assertUpdateMustContain(Predicate<DiscoPartialUpdate> mustContain,
                                                 CompositeAnswer<DiscoPartialUpdate> compositeAnswer) {
         compositeAnswer.andAnswer((inv) -> {
@@ -184,6 +194,12 @@ class UpdateAssertions {
         Builder updateMustContainHavingStatus(Predicate<DiscoPartialUpdate> mustContain, RMapStatus status) {
             checkConstraints();
             assertUpdateMustContainHavingStatus(mustContain, status, compositeAnswer);
+            return this;
+        }
+
+        Builder deleteMustContain(String discoDocumentId) {
+            checkConstraints();
+            assertDeleteMustContainId(discoDocumentId, compositeAnswer);
             return this;
         }
 

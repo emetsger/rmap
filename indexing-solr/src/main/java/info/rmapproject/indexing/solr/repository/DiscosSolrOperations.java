@@ -9,6 +9,8 @@ import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.PartialUpdate;
 import org.springframework.data.solr.core.query.SimpleQuery;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -18,6 +20,8 @@ import java.util.stream.Stream;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DISCO_STATUS;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_ID;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.DOC_LAST_UPDATED;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -87,6 +91,25 @@ class DiscosSolrOperations {
         }    
     }
 
+    void deleteDocumentsForLineage(String lineageUri) {
+        Page<DiscoSolrDocument> results = template.query(coreName,
+                new SimpleQuery(prepareDiscoLineageUriQuery(lineageUri)), DiscoSolrDocument.class);
+
+        Set<String> idsToDelete;
+        try (Stream<DiscoSolrDocument> documentStream =
+                     results.stream()) {
+            idsToDelete = documentStream.map(DiscoSolrDocument::getDocId).collect(toSet());
+        }
+
+        LOG.debug("Deleting the following documents with lineage progenitor uri {}: {}", lineageUri,
+                idsToDelete.stream().collect(joining(",")));
+
+        if (idsToDelete.size() > 0) {
+            template.deleteByIds(coreName, idsToDelete);
+            template.commit(coreName);
+        }
+    }
+
     /**
      * Creates a {@link PartialUpdate} instance for each {@code DiscoSolrDocument}. The supplied {@code Consumer} is
      * applied to each {@code PartialUpdate}, setting the state of each update in preparation for being sent to the
@@ -101,7 +124,7 @@ class DiscosSolrOperations {
                                                                       Consumer<DiscoPartialUpdate> updater) {
         return documents.map(doc -> new DiscoPartialUpdate(DOC_ID, doc.getDocId(), doc.getDiscoUri()))
                 .peek(updater)
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     /**
@@ -112,5 +135,9 @@ class DiscosSolrOperations {
      */
     static String prepareDiscoUriQuery(String discoUri) {
         return DiscoSolrDocument.DISCO_URI + ":" + discoUri.replaceAll(":", "\\\\:");
+    }
+
+    static String prepareDiscoLineageUriQuery(String lineageUri) {
+        return DiscoSolrDocument.EVENT_LINEAGE_PROGENITOR_URI + ":" + lineageUri.replaceAll(":", "\\\\:");
     }
 }
