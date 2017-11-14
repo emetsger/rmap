@@ -127,8 +127,8 @@ public class DiscoSolrDocument implements KafkaMetadata {
     @Field("agent_provider_uri")
     private String agentProviderUri;
 
-    @Field("agent_description")
-    private String agentDescription;
+    @Field("agent_name")
+    private String agentName;
 
 
     @Field("md_*")
@@ -193,7 +193,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
         this.agentUri = prototype.agentUri;
         this.agentProviderUri = prototype.agentProviderUri;
-        this.agentDescription = prototype.agentDescription;
+        this.agentName = prototype.agentName;
 
         this.metadata = (prototype.metadata != null) ? new HashMap<>(prototype.metadata) : null;
 
@@ -389,12 +389,12 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.agentProviderUri = agentProviderUri;
     }
 
-    public String getAgentDescription() {
-        return agentDescription;
+    public String getAgentName() {
+        return agentName;
     }
 
-    public void setAgentDescription(String agentDescription) {
-        this.agentDescription = agentDescription;
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     public Map<String, String> getMetadata() {
@@ -583,9 +583,9 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return this;
         }
 
-        public Builder agentDescription(String agentDescription) {
+        public Builder agentName(String agentName) {
             instantiateIfNull();
-            instance.setAgentDescription(agentDescription);
+            instance.setAgentName(agentName);
             return this;
         }
 
@@ -654,7 +654,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
                 ", eventLineageProgenitorUri='" + eventLineageProgenitorUri + '\'' +
                 ", agentUri='" + agentUri + '\'' +
                 ", agentProviderUri='" + agentProviderUri + '\'' +
-                ", agentDescription='" + agentDescription + '\'' +
+                ", agentName='" + agentName + '\'' +
                 ", metadata=" + metadata +
                 ", kafkaTopic='" + kafkaTopic + '\'' +
                 ", kafkaPartition=" + kafkaPartition +
@@ -707,7 +707,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         if (agentUri != null ? !agentUri.equals(that.agentUri) : that.agentUri != null) return false;
         if (agentProviderUri != null ? !agentProviderUri.equals(that.agentProviderUri) : that.agentProviderUri != null)
             return false;
-        if (agentDescription != null ? !agentDescription.equals(that.agentDescription) : that.agentDescription != null)
+        if (agentName != null ? !agentName.equals(that.agentName) : that.agentName != null)
             return false;
         if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
         return kafkaTopic != null ? kafkaTopic.equals(that.kafkaTopic) : that.kafkaTopic == null;
@@ -737,7 +737,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         result = 31 * result + (eventLineageProgenitorUri != null ? eventLineageProgenitorUri.hashCode() : 0);
         result = 31 * result + (agentUri != null ? agentUri.hashCode() : 0);
         result = 31 * result + (agentProviderUri != null ? agentProviderUri.hashCode() : 0);
-        result = 31 * result + (agentDescription != null ? agentDescription.hashCode() : 0);
+        result = 31 * result + (agentName != null ? agentName.hashCode() : 0);
         result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
         result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
         result = 31 * result + kafkaPartition;

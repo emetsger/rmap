@@ -109,7 +109,6 @@
     <field name="agent_uri" type="uri"/>
     <field name="agent_provider_uri" type="uri"/>
     <field name="agent_name" type="description"/>
-    <field name="agent_description" type="description"/>
     <!-- auth id? -->
 
     <field name="kafka_topic" type="string"/>

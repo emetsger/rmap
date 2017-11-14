@@ -27,7 +27,7 @@ class SimpleAgentMapper implements AgentMapper {
             doc.setAgentUri(agent.getId().getStringValue());
         }
         if (notNull(agent.getName())) {
-            doc.setAgentDescription(agent.getName().getStringValue());
+            doc.setAgentName(agent.getName().getStringValue());
         }
         if (notNull(agent.getIdProvider())) {
             doc.setAgentProviderUri(agent.getIdProvider().getStringValue());
