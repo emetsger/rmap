@@ -38,6 +38,8 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
+import org.openrdf.rio.WriterConfig;
+import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.helpers.StatementCollector;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -97,7 +99,9 @@ public class RioRDFHandler implements RDFHandler {
 		OutputStream bOut = new ByteArrayOutputStream();
 		try {
 			rdfFormat = this.getRDFFormatConstant(rdfType);
-			Rio.write(model, bOut, rdfFormat);
+			WriterConfig settings = new WriterConfig();
+			settings.set(BasicWriterSettings.PRETTY_PRINT, true);
+			Rio.write(model, bOut, rdfFormat, settings);
 		} catch (Exception e) {
 			throw new RMapException("Exception thrown creating RDF from statement list",e);
 		}

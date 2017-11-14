@@ -9,6 +9,7 @@ import info.rmapproject.core.model.event.RMapEventDerivation;
 import info.rmapproject.core.model.event.RMapEventUpdate;
 import info.rmapproject.core.model.event.RMapEventWithNewObjects;
 import info.rmapproject.core.rdfhandler.RDFHandler;
+import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
@@ -51,6 +52,7 @@ import static info.rmapproject.core.model.RMapStatus.ACTIVE;
 import static info.rmapproject.core.model.RMapStatus.INACTIVE;
 import static info.rmapproject.core.model.RMapStatus.TOMBSTONED;
 import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
+import static info.rmapproject.indexing.solr.repository.MappingUtils.triplesToRDF;
 import static java.lang.Long.parseLong;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -507,7 +509,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                     DiscoSolrDocument doc = new DiscoSolrDocument();
 
                     doc.setDocId(String.valueOf(idCounter.getAndIncrement()));
-                    doc.setDiscoRelatedStatements(toIndex.disco.getRelatedStatements().stream().map(t -> t.getSubject().getStringValue() + " " + t.getPredicate().getStringValue() + " " + t.getObject().getStringValue()).collect(Collectors.toList()));
+                    doc.setDiscoRelatedStatements(triplesToRDF(toIndex.disco.getRelatedStatements(), rdfHandler, RDFType.NQUADS));
                     doc.setDiscoUri(toIndex.disco.getId().getStringValue());
                     doc.setDiscoCreatorUri(toIndex.disco.getCreator().getStringValue());               // TODO: Resolve creator and index creator properties?
                     doc.setDiscoAggregatedResourceUris(toIndex.disco.getAggregatedResources()
@@ -615,11 +617,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
             }
         });
         doc.setDiscoProvenanceUri("http://rmapproject.org/prov/5678");
-        doc.setDiscoRelatedStatements(new ArrayList<String>() {
-            {
-                add("TODO n3 triples");
-            }
-        });
+        doc.setDiscoRelatedStatements("TODO n3 triples");
         return doc;
     }
 

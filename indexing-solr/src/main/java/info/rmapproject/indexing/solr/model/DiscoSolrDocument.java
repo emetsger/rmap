@@ -84,7 +84,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
     private String discoProvenanceUri;
 
     @Field("disco_related_statements")
-    private List<String> discoRelatedStatements;
+    private String discoRelatedStatements;
 
     @Field(DISCO_STATUS)
     private String discoStatus;
@@ -177,7 +177,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.discoProviderid = prototype.discoProviderid;
         this.discoAggregatedResourceUris = (prototype.discoAggregatedResourceUris != null) ? new ArrayList<>(prototype.discoAggregatedResourceUris) : null;
         this.discoProvenanceUri = prototype.discoProvenanceUri;
-        this.discoRelatedStatements = (prototype.discoRelatedStatements != null) ? new ArrayList<>(prototype.discoRelatedStatements) : null;
+        this.discoRelatedStatements = prototype.discoRelatedStatements;
         this.discoStatus = prototype.discoStatus;
         this.discoEventDirection = prototype.discoEventDirection;
 
@@ -271,11 +271,11 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.discoProvenanceUri = discoProvenanceUri;
     }
 
-    public List<String> getDiscoRelatedStatements() {
+    public String getDiscoRelatedStatements() {
         return discoRelatedStatements;
     }
 
-    public void setDiscoRelatedStatements(List<String> discoRelatedStatements) {
+    public void setDiscoRelatedStatements(String discoRelatedStatements) {
         this.discoRelatedStatements = discoRelatedStatements;
     }
 
@@ -499,7 +499,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return this;
         }
 
-        public Builder discoRelatedStatements(List<String> discoRelatedStatements) {
+        public Builder discoRelatedStatements(String discoRelatedStatements) {
             instantiateIfNull();
             instance.setDiscoRelatedStatements(discoRelatedStatements);
             return this;
