@@ -178,6 +178,12 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>info.rmapproject</groupId>
+            <artifactId>rmap-indexing-solr</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
     </dependencies>
     
     <build>
