@@ -31,7 +31,7 @@ public class DiscoSolrDocumentTest {
                 .discoProviderid(A_URI + "/3")
                 .discoAggregatedResourceUris(singletonList(A_URI + "/9"))
                 .discoProvenanceUri(A_URI + "/4")
-                .discoRelatedStatements(singletonList(A_URI + "/10"))
+                .discoRelatedStatements(":a :b :c")
                 .discoStatus("ACTIVE")
                 .discoEventDirection("TARGET")
 
@@ -77,7 +77,7 @@ public class DiscoSolrDocumentTest {
                 .discoProviderid(A_URI + "/3")
                 .discoAggregatedResourceUris(singletonList(A_URI + "/9"))
                 .discoProvenanceUri(A_URI + "/4")
-                .discoRelatedStatements(singletonList(A_URI + "/10"))
+                .discoRelatedStatements(":a :b :c")
                 .discoStatus("ACTIVE")
                 .discoEventDirection("TARGET")
 

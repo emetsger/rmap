@@ -41,7 +41,7 @@
 
     <fieldType name="triple" class="solr.TextField"/> <!-- subject predicate object n3 format? -->
 
-    <fieldType name="triples" class="solr.TextField" multiValued="true"/> <!-- multiple triples -->
+    <fieldType name="triples" class="solr.TextField"/> <!-- single field containing multiple triples in n4 -->
 
     <fieldType name="datetime" class="solr.DatePointField"/>
 
@@ -54,8 +54,7 @@
     <!-- TODO: is this a URI or any string? -->
     <field name="disco_aggregated_resource_uris" type="uris"/>
     <field name="disco_provenance_uri" type="uri"/>         <!-- TODO: any literal values to index here? -->
-    <field name="disco_related_statements"
-           type="triples"/> <!-- TODO: could have a single field containing all triples -->
+    <field name="disco_related_statements" type="triples"/>
 
     <field name="disco_status" type="description"/>
 

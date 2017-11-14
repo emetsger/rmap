@@ -37,6 +37,14 @@ public class IndexUtils {
         return o != null;
     }
 
+    public static boolean notEmpty(Collection c) {
+        return !c.isEmpty();
+    }
+
+    public static boolean notEmpty(String s) {
+        return s.trim().length() != 0;
+    }
+
     /**
      * Abstracts the "direction" of an {@link RMapEvent}.
      * <p>
