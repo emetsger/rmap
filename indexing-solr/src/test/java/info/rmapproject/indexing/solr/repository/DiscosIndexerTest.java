@@ -23,8 +23,10 @@ import static info.rmapproject.core.model.event.RMapEventType.UPDATE;
 import static info.rmapproject.indexing.IndexUtils.EventDirection.SOURCE;
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
 import static info.rmapproject.indexing.solr.model.DiscoSolrDocument.CORE_NAME;
+import static info.rmapproject.indexing.solr.repository.DiscosSolrOperations.prepareDiscoLineageUriQuery;
 import static info.rmapproject.indexing.solr.repository.DiscosSolrOperations.prepareDiscoUriQuery;
 import static java.util.Arrays.asList;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -134,7 +136,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
 
         when(mockTemplate.query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class)))
         .thenReturn(queryResults);
 
@@ -148,7 +150,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // verify the expectations
         verify(mockTemplate).query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class));
         verify(mockTemplate).saveBeans(eq(CORE_NAME), anySet());
         verify(mockTemplate).commit(CORE_NAME);
@@ -184,7 +186,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // the document to be invalidated when this search occurs.
         when(mockTemplate.query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class)))
                 .thenReturn(new SolrResultPage<>(asList(inactivateDoc, existingAlreadyInactive, existingToBeInactivated)));
 
@@ -204,7 +206,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // verify the expectations
         verify(mockTemplate).query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class));
         verify(mockTemplate).saveBeans(eq(CORE_NAME), anySet());
         verify(mockTemplate).commit(CORE_NAME);
@@ -240,7 +242,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // the document to be invalidated when this search occurs.
         when(mockTemplate.query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class)))
                 .thenReturn(new SolrResultPage<>(asList(tombstoneDoc, existingToBeTombstoned_1, existingToBeTombstoned_2)));
 
@@ -259,7 +261,7 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // verify the expectations
         verify(mockTemplate).query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> discoQueryMatches(discoUri, query)),
                 eq(DiscoSolrDocument.class));
         verify(mockTemplate).saveBeans(eq(CORE_NAME), anySet());
         verify(mockTemplate).commit(CORE_NAME);
@@ -271,9 +273,11 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
      */
     @Test
     public void testIndexDelete() throws Exception {
+        String lineageUri = "http://progentior/lineage/id";
         String discoUri = "http://a/disco/to/be/deleted";
         DiscoSolrDocument tombstoneDoc = new DiscoSolrDocument.Builder()
                 .docId("justindexed")
+                .eventLineageUri(lineageUri)
                 .eventType(DELETION.name())
                 .discoEventDirection(SOURCE.name())
                 .discoUri(discoUri)
@@ -283,27 +287,30 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
                 .docId("tobedeleted_1")
                 .discoUri(discoUri)
                 .discoStatus(ACTIVE.name())
+                .eventLineageUri(lineageUri)
                 .build();
 
         DiscoSolrDocument existingToBeDeleted_2 = new DiscoSolrDocument.Builder()
                 .docId("tobedeleted_2")
                 .discoUri(discoUri)
                 .discoStatus(INACTIVE.name())
+                .eventLineageUri(lineageUri)
                 .build();
 
         // on update, the index will be searched for documents for the disco being invalidated; return
         // the document to be invalidated when this search occurs.
         when(mockTemplate.query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> lineageQueryMatches(lineageUri, query)),
                 eq(DiscoSolrDocument.class)))
                 .thenReturn(new SolrResultPage<>(asList(tombstoneDoc, existingToBeDeleted_1, existingToBeDeleted_2)));
 
-        when(mockTemplate.saveBeans(eq(CORE_NAME), anySet())).thenAnswer(inv -> {
+        when(mockTemplate.deleteByIds(eq(CORE_NAME), anyCollection())).thenAnswer(inv -> {
             UpdateAssertions.Builder builder = new UpdateAssertions.Builder();
             return builder
-                    .updateMustContainHavingStatus((partialUpdate) -> docIdMatches(partialUpdate, "tobedeleted_1"), DELETED)
-                    .updateMustContainHavingStatus((partialUpdate) -> docIdMatches(partialUpdate, "tobedeleted_2"), DELETED)
+                    .deleteMustContain("justindexed")
+                    .deleteMustContain("tobedeleted_1")
+                    .deleteMustContain("tobedeleted_2")
                     .build()
                     .answer(inv);
         });
@@ -314,9 +321,9 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         // verify the expectations
         verify(mockTemplate).query(
                 eq(CORE_NAME),
-                argThat(query -> queryMatches(discoUri, query)),
+                argThat(query -> lineageQueryMatches(lineageUri, query)),
                 eq(DiscoSolrDocument.class));
-        verify(mockTemplate).saveBeans(eq(CORE_NAME), anySet());
+        verify(mockTemplate).deleteByIds(eq(CORE_NAME), anyCollection());
         verify(mockTemplate).commit(CORE_NAME);
     }
 
@@ -327,10 +334,16 @@ public class DiscosIndexerTest extends AbstractSpringIndexingTest {
         return result;
     }
 
-    private static boolean queryMatches(String discoUri, Query query) {
+    private static boolean discoQueryMatches(String discoUri, Query query) {
         return ((QueryStringHolder) query.getCriteria())
                 .getQueryString()
                 .equals(prepareDiscoUriQuery(discoUri));
+    }
+
+    private static boolean lineageQueryMatches(String lineageUri, Query query) {
+        return ((QueryStringHolder) query.getCriteria())
+                .getQueryString()
+                .equals(prepareDiscoLineageUriQuery(lineageUri));
     }
 
 }
