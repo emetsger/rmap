@@ -6,12 +6,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
      http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-2.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <!--<context:property-placeholder location="classpath:/solr.properties" ignore-unresolvable="true"/>-->
-
-    <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
-
-
     <beans profile="http-solr">
+        <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
         <context:property-placeholder location="classpath*:/http-solr.properties" ignore-unresolvable="true"/>
         <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
     </beans>
