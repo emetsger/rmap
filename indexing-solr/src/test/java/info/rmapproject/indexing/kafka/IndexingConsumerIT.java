@@ -98,7 +98,10 @@ public class IndexingConsumerIT extends AbstractKafkaTest {
         Thread initialIndexerThread = new Thread(
                 newConsumerRunnable(indexer, topic, exceptionHolder), "Initial Indexer");
         initialIndexerThread.start();
-        Thread.sleep(30000);
+
+        Condition<Long> expectedDocCount = new Condition<>(() -> discoRepository.count(),
+                "DiscoRepository contains expected document count.");
+        assertTrue(expectedDocCount.verify((count) -> count == 5));
 
         // clean up
         indexer.getConsumer().wakeup();
@@ -108,7 +111,6 @@ public class IndexingConsumerIT extends AbstractKafkaTest {
 
         final Set<DiscoSolrDocument> inactive = discoRepository.findDiscoSolrDocumentsByDiscoStatus("INACTIVE");
         final Set<DiscoSolrDocument> active = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE");
-        assertEquals(5, discoRepository.count());
         assertEquals(4, inactive.size());
         assertEquals(1, active.size());
 
