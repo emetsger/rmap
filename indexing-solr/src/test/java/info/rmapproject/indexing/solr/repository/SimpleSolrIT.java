@@ -516,7 +516,7 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                     doc.setDiscoProvenanceUri(toIndex.disco.getProvGeneratedBy() != null ? toIndex.disco.getProvGeneratedBy().getStringValue() : null);
 
                     doc.setAgentUri(toIndex.agent.getId().getStringValue());
-                    doc.setAgentDescription(toIndex.agent.getName().getStringValue());
+                    doc.setAgentName(toIndex.agent.getName().getStringValue());
                     doc.setAgentProviderUri(toIndex.agent.getIdProvider().getStringValue());
                     // TODO? toIndex.agent.getAuthId()
 

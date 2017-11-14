@@ -46,7 +46,7 @@ public class DiscoSolrDocumentTest {
 
                 .agentUri(A_URI + "/7")
                 .agentProviderUri(A_URI + "/8")
-                .agentDescription("agentdesc")
+                .agentName("agentname")
 
                 .kafkaTopic("topic")
                 .kafkaPartition(0)
@@ -92,7 +92,7 @@ public class DiscoSolrDocumentTest {
 
                 .agentUri(A_URI + "/7")
                 .agentProviderUri(A_URI + "/8")
-                .agentDescription("agentdesc")
+                .agentName("agentname")
 
                 .kafkaTopic("topic")
                 .kafkaPartition(0)
