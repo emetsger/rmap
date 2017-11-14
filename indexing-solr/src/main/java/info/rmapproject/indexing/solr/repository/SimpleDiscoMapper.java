@@ -1,15 +1,20 @@
 package info.rmapproject.indexing.solr.repository;
 
 import info.rmapproject.core.model.disco.RMapDiSCO;
+import info.rmapproject.core.rdfhandler.RDFHandler;
+import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.stream.Collectors;
 
+import static info.rmapproject.indexing.IndexUtils.notEmpty;
 import static info.rmapproject.indexing.IndexUtils.notNull;
 import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToString;
+import static info.rmapproject.indexing.solr.repository.MappingUtils.triplesToRDF;
 
 /**
  * Maps the properties of an {@code RMapDiSCO} object to fields in a Solr {@code DiscoSolrDocument}.
@@ -18,6 +23,9 @@ import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToStr
  */
 @Component
 class SimpleDiscoMapper implements DiscoMapper {
+
+    @Autowired
+    private RDFHandler rdfHandler;
 
     @Override
     public DiscoSolrDocument apply(RMapDiSCO disco, DiscoSolrDocument doc) {
@@ -32,7 +40,7 @@ class SimpleDiscoMapper implements DiscoMapper {
             doc.setDiscoUri(disco.getId().getStringValue());
         }
 
-        if (notNull(disco.getAggregatedResources())) {
+        if (notNull(disco.getAggregatedResources()) && notEmpty(disco.getAggregatedResources())) {
             doc.setDiscoAggregatedResourceUris(
                     disco.getAggregatedResources()
                             .stream()
@@ -54,9 +62,7 @@ class SimpleDiscoMapper implements DiscoMapper {
         }
 
         if (notNull(disco.getRelatedStatements())) {
-            doc.setDiscoRelatedStatements(
-                    tripleToString(disco.getRelatedStatements().stream())
-                            .collect(Collectors.toList()));
+            doc.setDiscoRelatedStatements(triplesToRDF(disco.getRelatedStatements(), rdfHandler, RDFType.NQUADS));
         }
 
         if (notNull(disco.getProviderId())) {
