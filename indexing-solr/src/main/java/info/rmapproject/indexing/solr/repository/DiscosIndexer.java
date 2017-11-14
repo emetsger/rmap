@@ -113,9 +113,7 @@ public class DiscosIndexer extends AbstractEventTupleIndexer<DiscoSolrDocument, 
                 break;
 
             case DELETION:
-                // FIXME: DELETE all documents in the newly indexed document's lineage
-                // need to change the status flag on _all_ versions of the disco in the disco index
-                discoOperations.updateStatus(doc.getDiscoUri(), RMapStatus.DELETED, null);
+                discoOperations.deleteDocumentsForLineage(doc.getEventLineageProgenitorUri());
                 break;
 
             case TOMBSTONE:
