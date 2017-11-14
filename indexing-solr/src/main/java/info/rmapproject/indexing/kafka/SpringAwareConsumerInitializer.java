@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -69,24 +68,23 @@ public class SpringAwareConsumerInitializer<T> implements ApplicationContextAwar
         // http://localhost:8983/solr/<core-name>/admin/ping
         Request req = new Request.Builder().get().url(String.format("%s/%s/admin/ping", solrUrl, solrCoreName)).build();
 
-        Conditional<Boolean> solrStatus = new Conditional<>(
+        Condition<Integer> solrStatus = new Condition<>(
                 () -> {
                     try (Response response = httpClient.newCall(req).execute()) {
                         int status = response.code();
                         if (status == 200) {
                             LOG.trace("Successfully pinged Solr core {} (HTTP response code {})", req.url().toString(), status);
-                            return true;
                         } else {
                             LOG.trace("Failed to ping Solr core {} (HTTP response code {})", req.url().toString(), status);
-                            return false;
                         }
+                        return status;
                     } catch (Exception e) {
                         LOG.trace("Failed to ping Solr core {}: {}", req.url().toString(), e.getMessage(), e);
                         throw new RuntimeException(e.getMessage(), e);
                     }
-                });
+                }, (status) -> status == 200, "Ping Solr Core " + req.url());
 
-        Conditional<Boolean> kafkaBoostrapServersStatus = new Conditional<>(
+        Condition<Boolean> kafkaBoostrapServersStatus = new Condition<>(
                 () -> {
                     assertNotNullOrEmpty(getBrokerBootstrapServers(), ise("Kafka bootstrap.servers parameter was null or empty.  Was " + SpringAwareConsumerInitializer.class.getSimpleName() + ".setBrokerBootstrapServers(...) invoked?"));
                     String[] bootstrapServer = getBrokerBootstrapServers().split(",");
@@ -112,13 +110,11 @@ public class SpringAwareConsumerInitializer<T> implements ApplicationContextAwar
 
                     LOG.trace("Failed to connect to Kafka broker(s) {}", getBrokerBootstrapServers());
                     return false; // no socket successfully connected
-            });
+            }, (result) -> result, "Kafka broker '" + getBrokerBootstrapServers() + "'");
 
-        Condition solrCoreAvailable = new Condition(solrStatus, "Solr core status '" + req.url().toString() + "'", conditionExecutorSvc);
-        Condition kafkaBrokerTcpConnect = new Condition(kafkaBoostrapServersStatus, "Kafka broker '" + getBrokerBootstrapServers() + "'", conditionExecutorSvc);
         conditions = new HashSet<>();
-        conditions.add(solrCoreAvailable);
-        conditions.add(kafkaBrokerTcpConnect);
+        conditions.add(solrStatus);
+        conditions.add(kafkaBoostrapServersStatus);
     }
 
     @Override
@@ -223,7 +219,7 @@ public class SpringAwareConsumerInitializer<T> implements ApplicationContextAwar
         conditions.forEach(c -> {
             boolean result = c.verify();
             conditionsSatisfied.compareAndSet(true, result);
-            LOG.info("Condition {} {}", c.name, (result ? "satisfied." : "NOT satisfied."));
+            LOG.info("Condition {} {}", c.getName(), (result ? "satisfied." : "NOT satisfied."));
         });
 
         try {
@@ -236,105 +232,5 @@ public class SpringAwareConsumerInitializer<T> implements ApplicationContextAwar
         }
 
         return conditionsSatisfied.get();
-    }
-
-    class Condition {
-        private Logger log = LoggerFactory.getLogger(this.getClass());
-
-        private ExecutorService executorService;
-
-        // 0 = don't wait, -1 = wait indefinitely
-        private long timeoutMs = 60000L;
-
-        private float backoffFactor = 1.5F;
-
-        private long initialBackoffMs = 1000;
-
-        private Conditional<Boolean> condition;
-
-        private String name;
-
-        private Future<Boolean> conditionFuture;
-
-        private boolean result = false;
-
-        public Condition(Conditional<Boolean> condition, String name, ExecutorService executorService) {
-            this.executorService = executorService;
-            this.condition = condition;
-            this.name = name;
-        }
-
-        boolean verify() {
-            await();
-            return result;
-        }
-
-        void submit() {
-            conditionFuture = executorService.submit(condition.conditionalTask);
-        }
-
-        void await() {
-            long start = System.currentTimeMillis();
-            Boolean result = Boolean.FALSE;
-            long backoffMs = initialBackoffMs;
-            Exception failureException = null;
-
-            do {
-                try {
-                    log.debug("Checking condition {}", name);
-                    result = conditionFuture.get();
-                    if (result == null || !result) {
-                        log.debug("Condition {} failed, sleeping for {} ms before re-trying.", name, backoffMs);
-                        Thread.sleep(backoffMs);
-                        backoffMs = Math.round(backoffMs * backoffFactor);
-                        submit();
-                    }
-                } catch (InterruptedException ie) {
-                    log.debug("Condition {} was interrupted after {} ms; aborting.", name, System.currentTimeMillis() - start);
-                    result = false;
-                    failureException = ie;
-                    break;
-                } catch (Exception e) {
-                    log.debug("Condition {} threw exception; will re-try in {} ms: {}", name, backoffMs, e.getMessage());
-                    failureException = e;
-                    try {
-                        Thread.sleep(backoffMs);
-                    } catch (InterruptedException ie) {
-                        log.debug("Condition {} was interrupted after {} ms; aborting.", name, System.currentTimeMillis() - start);
-                        result = false;
-                        failureException = ie;
-                        break;
-                    }
-                    backoffMs = Math.round(backoffMs * backoffFactor);
-                }
-            } while ((System.currentTimeMillis() - start < timeoutMs) &&
-                    (result == null || !result));
-
-            if (result == null || !result) {
-                log.warn("Condition {} failed, elapsed time {} ms", name, System.currentTimeMillis() - start);
-                if (failureException != null) {
-                    log.warn("Condition {} failed with exception: {}",
-                            name, failureException.getMessage(), failureException);
-                }
-                this.result = false;
-            } else {
-                log.debug("Condition {} satisfied, elapsed time {} ms", name, System.currentTimeMillis() - start);
-                this.result = true;
-            }
-        }
-    }
-
-    class Conditional<T> {
-
-        private Callable<T> conditionalTask;
-
-        Conditional(Callable<T> conditionalTask) {
-            this.conditionalTask = conditionalTask;
-        }
-
-        Callable<T> getConditionalTask() {
-            return conditionalTask;
-        }
-
     }
 }

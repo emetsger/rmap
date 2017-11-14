@@ -12,21 +12,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import info.rmapproject.indexing.kafka.Condition;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import info.rmapproject.integration.fixtures.FixtureConfig;
-import info.rmapproject.spring.triplestore.support.TriplestoreManager;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,9 +39,10 @@ import okhttp3.Response;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {FixtureConfig.class})
-@TestPropertySource({"classpath:/rmap.properties", "classpath:/integration-db.properties"})
+@ContextConfiguration("classpath:/integration-context.xml")
 public class SmokeTestIT {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SmokeTestIT.class);
 
     private static String scheme = "http";
 
@@ -58,17 +59,17 @@ public class SmokeTestIT {
     private static URL appBaseUrl;
 
     @Autowired
-    private TriplestoreManager tsManager;
-
-    @Autowired
     private OkHttpClient http;
 
     @Autowired
     private DataSource ds;
 
+    @Autowired
+    private DiscoRepository discoRepository;
+
     @BeforeClass
     public static void setUpBaseUrls() throws Exception {
-        Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
+        java.util.logging.Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
         assertNotNull("System property 'rmap.webapp.test.port' must be specified.", port);
         assertTrue("System property 'rmap.webapp.test.port' must be an integer greater than 0",
                 Integer.parseInt(port) > 0);
@@ -125,7 +126,12 @@ public class SmokeTestIT {
      * @throws IOException
      */
     @Test
-    public void testAuthenticatedRequest() throws IOException {
+    public void testAuthenticatedRequest() throws IOException, InterruptedException {
+
+        // Bypass the RMap webapps, and directly ask Solr how many documents are in the index.
+        // This IT should create documents in the index when DiSCOs are deposited
+        long initialDocumentCount = discoRepository.count();
+
         String accessKey = "uah2CKDaBsEw3cEQ";
         String secret = "NSbdzctrP46ZvhTi";
         URL url = new URL(apiBaseUrl, apiCtxPath + "/discos");
@@ -174,6 +180,19 @@ public class SmokeTestIT {
             assertEquals(url.toString() + " failed with: '" + res.code() + "', '" + res.message() + "'",
                     401, res.code());
         }
+
+
+        // Bypass the RMap webapps and check to see that there are documents in the index.
+        Condition<Long> docsHaveAppeared = new Condition<>(() -> {
+            long count = discoRepository.count();
+            LOG.trace("Current document count: {}", count);
+            return count;
+        },
+                "Solr documents in repo greater than " + initialDocumentCount);
+        assertTrue(docsHaveAppeared.awaitAndVerify((count) -> {
+            LOG.trace("Verifying that {} current docs is greater than {} initial docs", count, initialDocumentCount);
+            return count > initialDocumentCount;
+        }));
     }
 
     private static String encodeAuthCreds(String accessKey, String secret) {

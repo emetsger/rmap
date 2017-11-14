@@ -33,7 +33,7 @@ services:
 
   solrintegration:
      container_name: solrintegration
-     image: solr:6.6.0-alpine
+     image: solr:6.6.2-alpine
      user: root
      env_file: .env
      ports:
