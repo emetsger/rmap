@@ -197,7 +197,7 @@
                 <executions>
                     <execution>
                         <id>start-derby</id>
-                        <phase>validate</phase>
+                        <phase>pre-integration-test</phase>
                         <configuration>
                             <target>
                                 <taskdef name="startDerby" classname="info.rmapproject.integration.util.StartDerbyTask"
