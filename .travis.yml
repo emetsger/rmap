@@ -6,7 +6,7 @@ jdk:
   - oraclejdk8
 
 # - this is the default value assigned by Travis, but included for clarity
-install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.antrun.skip=true -B -V
 
 script:
   - sudo service mysql stop
