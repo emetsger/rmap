@@ -1,21 +1,21 @@
 package info.rmapproject.indexing.solr.repository;
 
-import info.rmapproject.indexing.kafka.OffsetLookup;
-import info.rmapproject.indexing.kafka.Seek;
-import info.rmapproject.indexing.solr.AbstractKafkaTest;
-import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
-import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.HashSet;
-import java.util.Set;
+import info.rmapproject.indexing.kafka.OffsetLookup;
+import info.rmapproject.indexing.kafka.Seek;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 
-import static org.junit.Assert.assertEquals;
-
-public class SolrOffsetLookupIT extends AbstractKafkaTest {
+public class SolrOffsetLookupIT extends AbstractSpringIndexingTest {
 
     private static boolean initialized = false;
 

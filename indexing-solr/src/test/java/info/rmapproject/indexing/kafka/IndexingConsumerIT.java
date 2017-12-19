@@ -1,38 +1,5 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.core.model.RMapObjectType;
-import info.rmapproject.core.model.agent.RMapAgent;
-import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.core.model.request.RequestEventDetails;
-import info.rmapproject.core.rdfhandler.RDFHandler;
-import info.rmapproject.core.rmapservice.RMapService;
-import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
-import info.rmapproject.indexing.IndexUtils;
-import info.rmapproject.indexing.solr.AbstractKafkaTest;
-import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
-import info.rmapproject.indexing.solr.TestUtils;
-import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import info.rmapproject.indexing.solr.repository.DiscoRepository;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.rio.RDFFormat;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
 import static info.rmapproject.indexing.kafka.ConsumerTestUtil.assertExceptionHolderEmpty;
 import static info.rmapproject.indexing.kafka.ConsumerTestUtil.createSystemAgent;
@@ -47,9 +14,39 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.Test;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.rio.RDFFormat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+
+import info.rmapproject.core.model.RMapObjectType;
+import info.rmapproject.core.model.agent.RMapAgent;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.request.RequestEventDetails;
+import info.rmapproject.core.rdfhandler.RDFHandler;
+import info.rmapproject.core.rmapservice.RMapService;
+import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.TestUtils;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
+
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration("classpath:/spring-rmapauth-context.xml")
-public class IndexingConsumerIT extends AbstractKafkaTest {
+public class IndexingConsumerIT extends AbstractSpringIndexingTest {
 
     @Autowired
     private IndexingConsumer indexer;
