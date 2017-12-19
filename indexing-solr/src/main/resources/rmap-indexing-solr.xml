@@ -11,6 +11,11 @@
         <context:property-placeholder location="classpath*:/http-solr.properties" ignore-unresolvable="true"/>
         <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
     </beans>
+    
+    <beans profile="embedded-solr">
+        <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
+  		<solr:embedded-solr-server id="solrClient" solrHome="classpath:"/>
+    </beans>
 
     <!-- production kafka config, from rmap-kafka-shared module -->
     <beans profile="prod-kafka">

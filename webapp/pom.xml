@@ -93,7 +93,6 @@
             <groupId>info.rmapproject</groupId>
             <artifactId>rmap-indexing-solr</artifactId>
             <version>${project.parent.version}</version>
-            <scope>runtime</scope>
         </dependency>
         
         <!-- Test -->
@@ -108,6 +107,12 @@
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
+		<dependency>
+		   	<groupId>org.apache.solr</groupId>
+		    <artifactId>solr-test-framework</artifactId>
+		    <version>${solr.version}</version>
+		    <scope>test</scope>
+		</dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
@@ -151,7 +156,7 @@
                 <configuration>
                     <systemProperties>
                         <derby.system.home>${project.build.testOutputDirectory}/derby</derby.system.home>
-                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore,http-solr</spring.profiles.active>
+                        <spring.profiles.active>default,inmemory-db,inmemory-idservice,inmemory-triplestore,embedded-solr</spring.profiles.active>
                         <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
                     </systemProperties>
                 </configuration>

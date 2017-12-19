@@ -14,174 +14,6 @@
     <description>Solr indexing implementation</description>
     <packaging>jar</packaging>
 
-    <properties>
-        <!-- Kafka doesn't like the mix of C:\ and / in paths -->
-        <kafka.broker.logs-dir>target/classes/kafka-broker</kafka.broker.logs-dir>
-        <kafka.broker.host>localhost</kafka.broker.host>
-        <kafka.broker.topics>rmap-event-topic</kafka.broker.topics>
-        <derby.home>${project.build.testOutputDirectory}/derby</derby.home>
-
-        <RMAP_KAFKA_PORT>29092</RMAP_KAFKA_PORT>
-        <KAFKA_ADVERTISED_LISTENERS>PLAINTEXT://${docker.host.address}:29092</KAFKA_ADVERTISED_LISTENERS>
-        <ZOOKEEPER_CLIENT_PORT>32181</ZOOKEEPER_CLIENT_PORT>
-        <KAFKA_ZOOKEEPER_CONNECT>zookeeper:32181</KAFKA_ZOOKEEPER_CONNECT>
-        <KAFKA_BROKER_ID>1</KAFKA_BROKER_ID>
-        <KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>1</KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR>
-        <ZOOKEEPER_TICK_TIME>2000</ZOOKEEPER_TICK_TIME>
-        <SOLR_PORT>8983</SOLR_PORT>
-        <SOLR_DEBUG_PORT>5005</SOLR_DEBUG_PORT>
-    </properties>
-
-    <build>
-
-        <plugins>
-
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <configuration>
-                    <images>
-                        <image>
-                            <alias>solrindexing</alias>
-                            <run>
-                                <wait>
-                                    <http>
-                                        <url>http://${docker.host.address}:${SOLR_PORT}/solr/discos/admin/ping</url>
-                                    </http>
-                                    <time>60000</time>
-                                </wait>
-                            </run>
-                            <external>
-                                <type>compose</type>
-                                <basedir>target/test-classes/docker</basedir>
-                                <composeFile>docker-compose.yaml</composeFile>
-                            </external>
-                        </image>
-                    </images>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start-docker-its</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-docker-its</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>reserve-port</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>reserve-network-port</goal>
-                        </goals>
-                        <configuration>
-                            <portNames>
-                                <portName>kafka.broker.port</portName>
-                            </portNames>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
-                <executions>
-                    <execution>
-                        <id>start-derby</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            <target>
-                                <taskdef name="startDerby" classname="info.rmapproject.integration.util.StartDerbyTask"
-                                         classpathref="maven.plugin.classpath"/>
-                                <startDerby derbyHome="${derby.home}"/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>info.rmapproject</groupId>
-                        <artifactId>rmap-integration-util</artifactId>
-                        <version>${project.parent.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.derby</groupId>
-                        <artifactId>derby</artifactId>
-                        <version>${derby.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.derby</groupId>
-                        <artifactId>derbyclient</artifactId>
-                        <version>${derby.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.derby</groupId>
-                        <artifactId>derbynet</artifactId>
-                        <version>${derby.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
-                        <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
-                        <derby.home>${derby.home}</derby.home>
-                        <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
-                    </systemProperties>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <logback.configurationFile>src/test/resources/logback-test.xml</logback.configurationFile>
-                        <kafka.broker.host>${kafka.broker.host}</kafka.broker.host>
-                        <kafka.broker.port>${kafka.broker.port}</kafka.broker.port>
-                        <bootstrap.servers>${kafka.broker.host}:${kafka.broker.port}</bootstrap.servers>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-
-        </plugins>
-
-    </build>
-
     <dependencies>
 
         <dependency>
@@ -191,9 +23,16 @@
 
         <dependency>
             <groupId>org.apache.solr</groupId>
-            <artifactId>solr-core</artifactId>
+            <artifactId>solr-core</artifactId>            
         </dependency>
-
+        
+	<dependency>
+   		<groupId>org.apache.solr</groupId>
+		<artifactId>solr-test-framework</artifactId>
+		<version>${solr.version}</version>
+		<scope>test</scope>
+	</dependency>
+	        
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-solr</artifactId>
