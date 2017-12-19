@@ -187,9 +187,7 @@
     </dependencies>
     
     <build>
-
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -341,7 +339,7 @@
                             <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                             <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                             <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
-                            <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
+                            <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
                             <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                             <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
@@ -464,7 +462,7 @@
                             <container>
                                 <systemProperties>
                                     <derby.system.home>${derby.home}</derby.system.home>
-                                    <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
+                                    <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
                                     <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
                                     <logback.configurationFile>${project.basedir}/src/main/resources/logback.xml</logback.configurationFile>
                                     <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
@@ -493,7 +491,7 @@
                         <sesame.http.context>${sesame.http.context}</sesame.http.context>
                         <sesame.workbench.context>${sesame.workbench.context}</sesame.workbench.context>
                         <rmap.configFile>file:///${project.basedir}/src/main/resources/rmap.properties</rmap.configFile>
-                        <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,persistent-userservice,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
+                        <spring.profiles.active>default,persistent-db,inmemory-idservice,integration-triplestore,http-solr,prod-kafka,auto-start-indexing</spring.profiles.active>
                         <sesamehttp.repository.name>${sesamehttp.repository.name}</sesamehttp.repository.name>
                         <sesamehttp.repository.url>http://localhost:${rmap.webapp.test.port}/openrdf-sesame</sesamehttp.repository.url>
                         <sesamehttp.workbench.url>http://localhost:${rmap.webapp.test.port}/openrdf-workbench</sesamehttp.workbench.url>
@@ -510,7 +508,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 </project>
