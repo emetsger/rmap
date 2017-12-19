@@ -1,28 +1,19 @@
 package info.rmapproject.indexing.kafka;
 
-import info.rmapproject.core.model.RMapObjectType;
-import info.rmapproject.core.model.agent.RMapAgent;
-import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.core.model.request.RequestEventDetails;
-import info.rmapproject.core.rmapservice.RMapService;
-import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
-import info.rmapproject.indexing.solr.AbstractKafkaTest;
-import info.rmapproject.indexing.solr.TestUtils;
-import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import info.rmapproject.indexing.solr.repository.DiscoRepository;
-import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.TopicPartition;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.rio.RDFFormat;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.annotation.DirtiesContext;
+import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
+import static info.rmapproject.indexing.kafka.ConsumerTestUtil.assertExceptionHolderEmpty;
+import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
+import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
+import static java.util.Comparator.comparing;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,23 +32,33 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static info.rmapproject.indexing.IndexUtils.EventDirection.TARGET;
-import static info.rmapproject.indexing.kafka.ConsumerTestUtil.assertExceptionHolderEmpty;
-import static info.rmapproject.indexing.solr.TestUtils.getRmapObjects;
-import static info.rmapproject.indexing.solr.TestUtils.getRmapResources;
-import static java.util.Comparator.comparing;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.withSettings;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.rio.RDFFormat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+
+import info.rmapproject.core.model.RMapObjectType;
+import info.rmapproject.core.model.agent.RMapAgent;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.request.RequestEventDetails;
+import info.rmapproject.core.rmapservice.RMapService;
+import info.rmapproject.core.rmapservice.impl.openrdf.triplestore.SesameTriplestore;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.TestUtils;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
+import info.rmapproject.kafka.shared.SpringKafkaConsumerFactory;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
-public class SaveOffsetOnRebalanceIT extends AbstractKafkaTest {
+public class SaveOffsetOnRebalanceIT extends AbstractSpringIndexingTest {
 
     @Autowired
     private IndexingConsumer indexer;
