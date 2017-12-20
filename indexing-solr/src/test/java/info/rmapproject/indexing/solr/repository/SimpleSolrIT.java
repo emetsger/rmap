@@ -14,7 +14,6 @@ import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
 import info.rmapproject.indexing.solr.TestUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import info.rmapproject.indexing.solr.model.DiscoVersionDocument;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.util.JavaBinCodec;
@@ -386,35 +385,36 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
     }
 
     @Test
-    public void writeAndUpdateVersionUsingPartialUpdate() throws Exception {
-
-        DiscoVersionDocument doc = new DiscoVersionDocument.Builder()
-                .id(200L)
+    public void writeAndUpdateDiscoDocUsingPartialUpdate() throws Exception {
+        String solrCore = "discos";
+        long expectedDocId = 200L;
+        DiscoSolrDocument doc = new DiscoSolrDocument.Builder()
+                .docId(String.valueOf(expectedDocId))
                 .discoUri("http://doi.org/10.1109/disco/2")
-                .addPastUri("http://doi.org/10.1109/disco/1")
-                .status("ACTIVE")
+                .discoStatus("ACTIVE")
                 .build();
 
-        UpdateResponse res = solrTemplate.saveBean("versions", doc);
+        UpdateResponse res = solrTemplate.saveBean(solrCore, doc);
         assertNotNull(res);
         assertEquals(0, res.getStatus());
-        solrTemplate.commit("versions");
+        solrTemplate.commit(solrCore);
 
-        assertEquals(doc, solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
+
+        assertEquals(doc, solrTemplate.getById(solrCore, expectedDocId, DiscoSolrDocument.class)
                 .orElseThrow(() -> new RuntimeException(
-                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersionId() + " in the index.")));
+                        "Expected to find a DiscoSolrDocument with ID " + doc.getDocId() + " in the index.")));
 
         // Update using Solr Atomic Updates (requires <updateLog/>)
-        PartialUpdate update = new PartialUpdate("version_id", doc.getVersionId());
-        update.setValueOfField("disco_status", "INACTIVE");
-        res = solrTemplate.saveBean("versions", update);
+        PartialUpdate update = new PartialUpdate(DiscoSolrDocument.DOC_ID, doc.getDocId());
+        update.setValueOfField(DiscoSolrDocument.DISCO_STATUS, "INACTIVE");
+        res = solrTemplate.saveBean(solrCore, update);
         assertNotNull(res);
         assertEquals(0, res.getStatus());
-        solrTemplate.commit("versions");
+        solrTemplate.commit(solrCore);
 
-        assertEquals("INACTIVE", solrTemplate.getById("versions", 200L, DiscoVersionDocument.class)
+        assertEquals("INACTIVE", solrTemplate.getById(solrCore, expectedDocId, DiscoSolrDocument.class)
                 .orElseThrow(() -> new RuntimeException(
-                        "Expected to find a DiscoVersionDocument with ID " + doc.getVersionId() + " in the index."))
+                        "Expected to find a DiscoSolrDocument with ID " + doc.getDocId() + " in the index."))
                 .getDiscoStatus());
     }
 
