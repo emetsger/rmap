@@ -11,7 +11,6 @@ import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.core.rdfhandler.impl.openrdf.RioRDFHandler;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.repository.IndexDTO;
-import info.rmapproject.indexing.solr.repository.SimpleSolrTest;
 import org.openrdf.model.IRI;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
@@ -79,7 +78,7 @@ public class TestUtils {
     public static void getRmapResources(String resourcePath, RDFHandler rdfHandler, RDFFormat format, Map<RMapObjectType,
             Set<RDFResource>> rmapObjects) {
 
-        URL base = SimpleSolrTest.class.getResource(resourcePath);
+        URL base = TestUtils.class.getResource(resourcePath);
         assertNotNull("Base resource directory " + resourcePath + " does not exist, or cannot be resolved.",
                 base);
         File baseDir = null;
