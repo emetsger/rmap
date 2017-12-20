@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,8 +16,6 @@ import java.util.logging.Level;
 
 import javax.sql.DataSource;
 
-import info.rmapproject.indexing.kafka.Condition;
-import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import info.rmapproject.indexing.kafka.Condition;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -198,5 +199,72 @@ public class SmokeTestIT {
     private static String encodeAuthCreds(String accessKey, String secret) {
         return Base64.getEncoder().encodeToString(String.valueOf(accessKey + ":" + secret).getBytes());
     }
+
+    /**
+     * The user creates a new DiSCO, once indexed they then delete it. The index should remove the DiSCO content and
+     * display as deleted.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testCreateDeleteDiSCOWithIndexer() throws IOException, InterruptedException {
+
+        // Bypass the RMap webapps, and directly ask Solr how many documents are in the index.
+        // This IT should create documents in the index when DiSCOs are deposited
+        long initialDocumentCount = discoRepository.count();
+
+        String accessKey = "uah2CKDaBsEw3cEQ";
+        String secret = "NSbdzctrP46ZvhTi";
+        URL url = new URL(apiBaseUrl, apiCtxPath + "/discos");
+        String sampleDisco = IOUtils.toString(this.getClass().getResourceAsStream("/discos/discoA.ttl"));
+        String discoUri;
+        
+        try (Response res =
+                     http.newCall(new Request.Builder()
+                             .post(RequestBody.create(MediaType.parse("text/turtle"), sampleDisco))
+                             .url(url).addHeader("Authorization", "Basic " + encodeAuthCreds(accessKey, secret))
+                             .build())
+                             .execute()) {
+            assertEquals(url.toString() + " failed with: '" + res.code() + "', '" + res.message() + "'",
+                    201, res.code());
+            discoUri = res.body().string();
+        }
+        
+        // Bypass the RMap webapps and check to see that there are documents in the index.
+        Condition<Long> docsHaveAppeared = new Condition<>(() -> {
+            long count = discoRepository.count();
+            LOG.trace("Current document count: {}", count);
+            return count;
+        },
+                "Solr documents in repo greater than " + initialDocumentCount);
+        assertTrue(docsHaveAppeared.awaitAndVerify((count) -> {
+            LOG.trace("Verifying that {} current docs is greater than {} initial docs", count, initialDocumentCount);
+            return count > initialDocumentCount;
+        }));
+
+        String delUrl = url + "/" + URLEncoder.encode(discoUri, "UTF-8");
+        try (Response res =
+                     http.newCall(new Request.Builder()
+                             .delete()
+                             .url(delUrl).addHeader("Authorization", "Basic " + encodeAuthCreds(accessKey, secret))
+                             .build())
+                             .execute()) {
+            assertEquals(url.toString() + " failed with: '" + res.code() + "', '" + res.message() + "'",
+                    200, res.code());
+        }
+
+        // Bypass the RMap webapps and check to see that there are documents in the index.
+        Condition<Long> docHasDisappeared = new Condition<>(() -> {
+            long count = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE").size();
+            LOG.trace("Current document count: {}", count);
+            return count;
+        },
+                "Solr documents in repo greater than " + initialDocumentCount);
+        assertTrue(docHasDisappeared.awaitAndVerify((count) -> {
+            LOG.trace("Verifying that {} current docs is zero", count, 0);
+            return (count == 0);
+        }));        
+    }
+    
 
 }
