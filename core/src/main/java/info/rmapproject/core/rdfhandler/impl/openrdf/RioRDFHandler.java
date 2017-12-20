@@ -38,8 +38,6 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
-import org.openrdf.rio.WriterConfig;
-import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.helpers.StatementCollector;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -67,7 +65,8 @@ import info.rmapproject.core.rdfhandler.RDFType;
 /**
  * Class to convert linked data objects in RMap (RMapDiSCO, RMapTriple etc) to raw RDF
  * Implementation of RDFHandler using openrdf's Rio RDF handler.
- * @author smorrissey, khanson
+ * @author smorrissey
+ * @author khanson
  */
 public class RioRDFHandler implements RDFHandler {
 
@@ -99,9 +98,7 @@ public class RioRDFHandler implements RDFHandler {
 		OutputStream bOut = new ByteArrayOutputStream();
 		try {
 			rdfFormat = this.getRDFFormatConstant(rdfType);
-			WriterConfig settings = new WriterConfig();
-			settings.set(BasicWriterSettings.PRETTY_PRINT, true);
-			Rio.write(model, bOut, rdfFormat, settings);
+			Rio.write(model, bOut, rdfFormat);
 		} catch (Exception e) {
 			throw new RMapException("Exception thrown creating RDF from statement list",e);
 		}
@@ -180,7 +177,30 @@ public class RioRDFHandler implements RDFHandler {
 		RMapEvent event = OStatementsAdapter.asEvent(stmts);
 		return event;
 	}
-
+	
+	/* (non-Javadoc)
+     * @see info.rmapproject.core.rdfhandler.RDFHandler#triple2Rdf(info.rmapproject.core.model.RMapTriple, info.rmapproject.core.rdfhandler.RDFType)
+     */
+	public OutputStream triple2Rdf(RMapTriple triple, RDFType rdfType) throws RMapException, RMapDefectiveArgumentException {
+		if (triple == null){
+			throw new RMapException("Null triple");			
+		}
+		if (rdfType==null){
+			throw new RMapException("null rdf format name");
+		}
+		Statement stmt = ORAdapter.rmapTriple2OpenRdfStatement(triple);
+		
+		RDFFormat rdfFormat = null;
+		OutputStream bOut = new ByteArrayOutputStream();
+		try {
+			rdfFormat = this.getRDFFormatConstant(rdfType);
+			Rio.write(stmt, bOut, rdfFormat);
+		} catch (Exception e) {
+			throw new RMapException("Exception thrown creating RDF from statement",e);
+		}
+		return bOut;
+	}
+	
 	/* (non-Javadoc)
          * @see info.rmapproject.core.rdfhandler.RDFHandler#triples2Rdf(java.util.List, info.rmapproject.core.rdfhandler.RDFType)
          */
@@ -301,17 +321,16 @@ public class RioRDFHandler implements RDFHandler {
 		RDFFormat rdfFormat = null;		
         switch (rdfType) {
             case RDFXML:  rdfFormat = RDFFormat.RDFXML;
-                     break;
+                break;
             case TURTLE:  rdfFormat = RDFFormat.TURTLE;
-                     break;
+                break;
             case JSONLD:  rdfFormat = RDFFormat.JSONLD;
-                     break;
+                break;
             case NQUADS:  rdfFormat = RDFFormat.NQUADS;
-                     break;
+            	break;
             default: rdfFormat = RDFFormat.TURTLE;
-                     break;
+                break;
         }
         return rdfFormat;
-	
 	}
 }

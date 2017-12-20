@@ -509,7 +509,12 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                     DiscoSolrDocument doc = new DiscoSolrDocument();
 
                     doc.setDocId(String.valueOf(idCounter.getAndIncrement()));
-                    doc.setDiscoRelatedStatements(triplesToRDF(toIndex.disco.getRelatedStatements(), rdfHandler, RDFType.NQUADS));
+
+                	List<String> stmts = new ArrayList<String>();
+                	toIndex.disco.getRelatedStatements().forEach(t 
+                			-> stmts.add(tripleToRDF(t,rdfHandler,RDFType.NQUADS)));        	
+                	doc.setDiscoRelatedStatements(stmts);
+                    
                     doc.setDiscoUri(toIndex.disco.getId().getStringValue());
                     doc.setDiscoCreatorUri(toIndex.disco.getCreator().getStringValue());               // TODO: Resolve creator and index creator properties?
                     doc.setDiscoAggregatedResourceUris(toIndex.disco.getAggregatedResources()
@@ -617,7 +622,11 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
             }
         });
         doc.setDiscoProvenanceUri("http://rmapproject.org/prov/5678");
-        doc.setDiscoRelatedStatements("TODO n3 triples");
+        doc.setDiscoRelatedStatements(new ArrayList<String>() {
+        	{
+        		add("TODO n3 triples");
+        	}
+        });
         return doc;
     }
 
