@@ -1,13 +1,13 @@
 package info.rmapproject.indexing.solr.model;
 
-import org.junit.Test;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 import java.util.HashMap;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import org.junit.Test;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -31,7 +31,7 @@ public class DiscoSolrDocumentTest {
                 .discoProviderid(A_URI + "/3")
                 .discoAggregatedResourceUris(singletonList(A_URI + "/9"))
                 .discoProvenanceUri(A_URI + "/4")
-                .discoRelatedStatements(":a :b :c")
+                .discoRelatedStatements(singletonList(A_URI + "/10"))
                 .discoStatus("ACTIVE")
                 .discoEventDirection("TARGET")
 
@@ -77,7 +77,7 @@ public class DiscoSolrDocumentTest {
                 .discoProviderid(A_URI + "/3")
                 .discoAggregatedResourceUris(singletonList(A_URI + "/9"))
                 .discoProvenanceUri(A_URI + "/4")
-                .discoRelatedStatements(":a :b :c")
+                .discoRelatedStatements(singletonList(A_URI + "/10"))
                 .discoStatus("ACTIVE")
                 .discoEventDirection("TARGET")
 
@@ -93,6 +93,7 @@ public class DiscoSolrDocumentTest {
                 .agentUri(A_URI + "/7")
                 .agentProviderUri(A_URI + "/8")
                 .agentName("agentname")
+
 
                 .kafkaTopic("topic")
                 .kafkaPartition(0)

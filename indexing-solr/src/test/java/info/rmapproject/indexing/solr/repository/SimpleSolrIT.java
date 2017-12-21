@@ -1,34 +1,14 @@
 package info.rmapproject.indexing.solr.repository;
 
-import info.rmapproject.core.model.RMapIri;
-import info.rmapproject.core.model.RMapObjectType;
-import info.rmapproject.core.model.agent.RMapAgent;
-import info.rmapproject.core.model.disco.RMapDiSCO;
-import info.rmapproject.core.model.event.RMapEvent;
-import info.rmapproject.core.model.event.RMapEventDerivation;
-import info.rmapproject.core.model.event.RMapEventUpdate;
-import info.rmapproject.core.model.event.RMapEventWithNewObjects;
-import info.rmapproject.core.rdfhandler.RDFHandler;
-import info.rmapproject.core.rdfhandler.RDFType;
-import info.rmapproject.indexing.IndexUtils;
-import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
-import info.rmapproject.indexing.solr.TestUtils;
-import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import org.apache.solr.client.solrj.response.SolrPingResponse;
-import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.apache.solr.common.util.JavaBinCodec;
-import org.apache.solr.common.util.NamedList;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openrdf.rio.RDFFormat;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.solr.core.DefaultQueryParser;
-import org.springframework.data.solr.core.SolrTemplate;
-import org.springframework.data.solr.core.query.PartialUpdate;
-import org.springframework.data.solr.core.query.Query;
-import org.springframework.lang.Nullable;
+import static info.rmapproject.core.model.RMapStatus.ACTIVE;
+import static info.rmapproject.core.model.RMapStatus.INACTIVE;
+import static info.rmapproject.core.model.RMapStatus.TOMBSTONED;
+import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
+import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToRDF;
+import static java.lang.Long.parseLong;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -47,15 +27,36 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static info.rmapproject.core.model.RMapStatus.ACTIVE;
-import static info.rmapproject.core.model.RMapStatus.INACTIVE;
-import static info.rmapproject.core.model.RMapStatus.TOMBSTONED;
-import static info.rmapproject.indexing.solr.TestUtils.prepareIndexableDtos;
-import static info.rmapproject.indexing.solr.repository.MappingUtils.triplesToRDF;
-import static java.lang.Long.parseLong;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.solr.client.solrj.response.SolrPingResponse;
+import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.util.JavaBinCodec;
+import org.apache.solr.common.util.NamedList;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.openrdf.rio.RDFFormat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.solr.core.DefaultQueryParser;
+import org.springframework.data.solr.core.SolrTemplate;
+import org.springframework.data.solr.core.query.PartialUpdate;
+import org.springframework.data.solr.core.query.Query;
+import org.springframework.lang.Nullable;
+
+import info.rmapproject.core.model.RMapIri;
+import info.rmapproject.core.model.RMapObjectType;
+import info.rmapproject.core.model.agent.RMapAgent;
+import info.rmapproject.core.model.disco.RMapDiSCO;
+import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.event.RMapEventDerivation;
+import info.rmapproject.core.model.event.RMapEventUpdate;
+import info.rmapproject.core.model.event.RMapEventWithNewObjects;
+import info.rmapproject.core.rdfhandler.RDFHandler;
+import info.rmapproject.core.rdfhandler.RDFType;
+import info.rmapproject.indexing.IndexUtils;
+import info.rmapproject.indexing.solr.AbstractSpringIndexingTest;
+import info.rmapproject.indexing.solr.TestUtils;
+import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -509,7 +510,12 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
                     DiscoSolrDocument doc = new DiscoSolrDocument();
 
                     doc.setDocId(String.valueOf(idCounter.getAndIncrement()));
-                    doc.setDiscoRelatedStatements(triplesToRDF(toIndex.disco.getRelatedStatements(), rdfHandler, RDFType.NQUADS));
+
+                	List<String> stmts = new ArrayList<String>();
+                	toIndex.disco.getRelatedStatements().forEach(t 
+                			-> stmts.add(tripleToRDF(t,rdfHandler,RDFType.NQUADS)));        	
+                	doc.setDiscoRelatedStatements(stmts);
+                    
                     doc.setDiscoUri(toIndex.disco.getId().getStringValue());
                     doc.setDiscoCreatorUri(toIndex.disco.getCreator().getStringValue());               // TODO: Resolve creator and index creator properties?
                     doc.setDiscoAggregatedResourceUris(toIndex.disco.getAggregatedResources()
@@ -617,7 +623,11 @@ public class SimpleSolrIT extends AbstractSpringIndexingTest {
             }
         });
         doc.setDiscoProvenanceUri("http://rmapproject.org/prov/5678");
-        doc.setDiscoRelatedStatements("TODO n3 triples");
+        doc.setDiscoRelatedStatements(new ArrayList<String>() {
+        	{
+        		add("TODO n3 triples");
+        	}
+        });
         return doc;
     }
 

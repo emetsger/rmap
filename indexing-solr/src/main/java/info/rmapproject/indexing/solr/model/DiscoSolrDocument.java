@@ -1,15 +1,15 @@
 package info.rmapproject.indexing.solr.model;
 
-import org.apache.solr.client.solrj.beans.Field;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.solr.core.mapping.SolrDocument;
+import static info.rmapproject.indexing.IndexUtils.assertValidUri;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static info.rmapproject.indexing.IndexUtils.assertValidUri;
+import org.apache.solr.client.solrj.beans.Field;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 
 /**
  * Domain object that represents Solr documents managed by the {@code discos} core.  See the Solr schema for the
@@ -84,7 +84,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
     private String discoProvenanceUri;
 
     @Field("disco_related_statements")
-    private String discoRelatedStatements;
+    private List<String> discoRelatedStatements;
 
     @Field(DISCO_STATUS)
     private String discoStatus;
@@ -129,7 +129,6 @@ public class DiscoSolrDocument implements KafkaMetadata {
 
     @Field("agent_name")
     private String agentName;
-
 
     @Field("md_*")
     private Map<String, String> metadata;
@@ -177,7 +176,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.discoProviderid = prototype.discoProviderid;
         this.discoAggregatedResourceUris = (prototype.discoAggregatedResourceUris != null) ? new ArrayList<>(prototype.discoAggregatedResourceUris) : null;
         this.discoProvenanceUri = prototype.discoProvenanceUri;
-        this.discoRelatedStatements = prototype.discoRelatedStatements;
+        this.discoRelatedStatements = (prototype.discoRelatedStatements != null) ? new ArrayList<>(prototype.discoRelatedStatements) : null;
         this.discoStatus = prototype.discoStatus;
         this.discoEventDirection = prototype.discoEventDirection;
 
@@ -271,11 +270,11 @@ public class DiscoSolrDocument implements KafkaMetadata {
         this.discoProvenanceUri = discoProvenanceUri;
     }
 
-    public String getDiscoRelatedStatements() {
+    public List<String> getDiscoRelatedStatements() {
         return discoRelatedStatements;
     }
 
-    public void setDiscoRelatedStatements(String discoRelatedStatements) {
+    public void setDiscoRelatedStatements(List<String> discoRelatedStatements) {
         this.discoRelatedStatements = discoRelatedStatements;
     }
 
@@ -499,7 +498,7 @@ public class DiscoSolrDocument implements KafkaMetadata {
             return this;
         }
 
-        public Builder discoRelatedStatements(String discoRelatedStatements) {
+        public Builder discoRelatedStatements(List<String> discoRelatedStatements) {
             instantiateIfNull();
             instance.setDiscoRelatedStatements(discoRelatedStatements);
             return this;

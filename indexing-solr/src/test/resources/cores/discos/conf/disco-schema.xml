@@ -39,10 +39,8 @@
 
     <fieldType name="description" class="solr.TextField"/>
 
-    <fieldType name="triple" class="solr.TextField"/> <!-- subject predicate object n3 format? -->
-
-    <fieldType name="triples" class="solr.TextField"/> <!-- single field containing multiple triples in n4 -->
-
+    <fieldType name="triples" class="solr.TextField" multiValued="true"/>     
+    
     <fieldType name="datetime" class="solr.DatePointField"/>
 
     <!-- DiSCO state as a Solr document -->

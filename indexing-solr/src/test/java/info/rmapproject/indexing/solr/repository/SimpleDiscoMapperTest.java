@@ -164,7 +164,7 @@ public class SimpleDiscoMapperTest extends AbstractSpringIndexingTest {
         Collection<Statement> statements = new HashSet<>();
         RDFParser parser = Rio.createParser(RDFFormat.NQUADS);
         parser.setRDFHandler(new StatementCollector(statements));
-        parser.parse(new ByteArrayInputStream(doc.getDiscoRelatedStatements().getBytes()), "");
+        parser.parse(new ByteArrayInputStream(doc.getDiscoRelatedStatements().get(0).getBytes()), "");
         assertEquals(1, statements.size());
 
         return openRdfStatement2RMapTriple(statements.iterator().next());
