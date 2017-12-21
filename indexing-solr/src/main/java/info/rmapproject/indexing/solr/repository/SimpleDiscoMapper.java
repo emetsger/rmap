@@ -1,20 +1,22 @@
 package info.rmapproject.indexing.solr.repository;
 
+import static info.rmapproject.indexing.IndexUtils.notEmpty;
+import static info.rmapproject.indexing.IndexUtils.notNull;
+import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToRDF;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rdfhandler.RDFType;
 import info.rmapproject.indexing.IndexUtils;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.net.URI;
-import java.util.stream.Collectors;
-
-import static info.rmapproject.indexing.IndexUtils.notEmpty;
-import static info.rmapproject.indexing.IndexUtils.notNull;
-import static info.rmapproject.indexing.solr.repository.MappingUtils.tripleToString;
-import static info.rmapproject.indexing.solr.repository.MappingUtils.triplesToRDF;
 
 /**
  * Maps the properties of an {@code RMapDiSCO} object to fields in a Solr {@code DiscoSolrDocument}.
@@ -62,7 +64,10 @@ class SimpleDiscoMapper implements DiscoMapper {
         }
 
         if (notNull(disco.getRelatedStatements())) {
-            doc.setDiscoRelatedStatements(triplesToRDF(disco.getRelatedStatements(), rdfHandler, RDFType.NQUADS));
+        	List<String> stmts = new ArrayList<String>();
+        	disco.getRelatedStatements().forEach(t 
+        			-> stmts.add(tripleToRDF(t,rdfHandler,RDFType.NQUADS)));        	
+        	doc.setDiscoRelatedStatements(stmts);
         }
 
         if (notNull(disco.getProviderId())) {

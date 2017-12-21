@@ -1,15 +1,12 @@
 package info.rmapproject.indexing.solr.repository;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.util.stream.Stream;
+
 import info.rmapproject.core.model.RMapTriple;
 import info.rmapproject.core.rdfhandler.RDFHandler;
 import info.rmapproject.core.rdfhandler.RDFType;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
@@ -25,8 +22,8 @@ class MappingUtils {
                         t.getObject().getStringValue()));
     }
 
-    static String triplesToRDF(List<RMapTriple> triples, RDFHandler rdfHandler, RDFType rdfType) {
-        OutputStream out = rdfHandler.triples2Rdf(triples, rdfType);
+    static String tripleToRDF(RMapTriple triple, RDFHandler rdfHandler, RDFType rdfType) {
+    	OutputStream out = rdfHandler.triple2Rdf(triple, rdfType);
         if (!(out instanceof ByteArrayOutputStream)) {
             throw new RuntimeException("Unexpected OutputStream sub-type.  Wanted " +
                     ByteArrayOutputStream.class.getName() + " but was: " + out.getClass().getName());
