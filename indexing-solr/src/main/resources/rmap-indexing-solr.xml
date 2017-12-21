@@ -4,16 +4,16 @@
        xmlns:solr="http://www.springframework.org/schema/data/solr"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-     http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-2.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+     http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <beans profile="http-solr">
-        <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
+        <solr:repositories base-package="info.rmapproject.indexing.solr"/>
         <context:property-placeholder location="classpath*:/http-solr.properties" ignore-unresolvable="true"/>
         <solr:solr-client id="solrClient" url="${rmap.solr.url}"/>
     </beans>
     
     <beans profile="embedded-solr">
-        <solr:repositories base-package="info.rmapproject.indexing.solr" multicore-support="true"/>
+        <solr:repositories base-package="info.rmapproject.indexing.solr"/>
   		<solr:embedded-solr-server id="solrClient" solrHome="classpath:"/>
     </beans>
 
