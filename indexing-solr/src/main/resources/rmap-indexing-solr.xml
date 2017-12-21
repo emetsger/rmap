@@ -17,6 +17,7 @@
   		<solr:embedded-solr-server id="solrClient" solrHome="classpath:"/>
     </beans>
 
+
     <!-- production kafka config, from rmap-kafka-shared module -->
     <beans profile="prod-kafka">
         <import resource="classpath*:/rmap-kafka-shared.xml"/>
@@ -38,6 +39,7 @@
         <bean id="retryHandler" class="info.rmapproject.indexing.kafka.DefaultIndexRetryHandler">
             <constructor-arg ref="discosIndexer"/>
             <constructor-arg ref="indexDTOMapper"/>
+            <constructor-arg ref="discosSolrOperations"/>
             <constructor-arg value="1000"/>
             <constructor-arg value="60000"/>
             <constructor-arg value="1.5"/>
@@ -79,6 +81,14 @@
           Maps IndexDTO objects to EventDiscoTuple objects.
         -->
         <bean id="indexDTOMapper" class="info.rmapproject.indexing.solr.repository.SimpleIndexDTOMapper"/>
+
+        <!--
+          Provides low-level Solr operations against the "discos" core
+        -->
+        <bean id="discosSolrOperations" class="info.rmapproject.indexing.solr.repository.DiscosSolrOperations">
+            <constructor-arg ref="solrTemplate"/>
+            <constructor-arg value="${rmap.solr.cores.discos.name}"/>
+        </bean>
 
         <!--
           Shared instance of the "discos" core Solr indexer; indexes the DiscoSolrDocument domain object.

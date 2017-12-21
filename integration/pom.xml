@@ -343,7 +343,7 @@
                             <info.aduna.platform.appdata.basedir>${project.build.testOutputDirectory}/sesame</info.aduna.platform.appdata.basedir>
                             <rmap.solr.url>http://${docker.host.address}:8983/solr</rmap.solr.url>
                             <bootstrap.servers>${docker.host.address}:29092</bootstrap.servers>
-                            <logback.configurationFile>src/main/resources/logback.xml</logback.configurationFile>
+                            <logback.configurationFile>${project.basedir}/src/main/resources/logback.xml</logback.configurationFile>
                         </systemProperties>
                         <dependencies>
                             <dependency>

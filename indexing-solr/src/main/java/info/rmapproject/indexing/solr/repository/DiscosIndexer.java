@@ -34,6 +34,13 @@ public class DiscosIndexer extends AbstractEventTupleIndexer<DiscoSolrDocument, 
     public DiscosIndexer(Function<EventDiscoTuple, DiscoSolrDocument> documentMapper,
                          SolrCrudRepository<DiscoSolrDocument, Long> repository, SolrTemplate template) {
         super(documentMapper, repository, template);
+
+        // There *is* a Spring Bean definition for DiscoSolrOperations that *ought* to be injected by this constructor.
+        // However, DiscoSolrOperations test coverage is nill.  Testing of DiscoSolrOperations is indirectly
+        // accomplished by the DiscosIndexerTest, whereby expectations on the SolrTemplate are verified.
+        // If DiscoSolrOperations is injected into this constructor, then the DiscoIndexerTest would need to be
+        // re-written with expectations against DiscoSolrOperations, not the SolrTemplate.  And DiscoSolrOperations
+        // would need its own test.  All good things, but due to lack of time, leaving this as a TODO.
         this.discoOperations = new DiscosSolrOperations(template, CORE_NAME);
     }
 

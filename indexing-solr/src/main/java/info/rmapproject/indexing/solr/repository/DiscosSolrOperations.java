@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toSet;
 /**
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-class DiscosSolrOperations {
+public class DiscosSolrOperations {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscosSolrOperations.class);
     
@@ -62,7 +62,7 @@ class DiscosSolrOperations {
      * @param status the status matching DiSCOs will be updated to
      * @param matching    an optional {@code Predicate} used to selectively apply status updates, may be {@code null}
      */
-    void updateStatus(String discoUri, RMapStatus status, Predicate<DiscoSolrDocument> matching) {
+    public void updateStatus(String discoUri, RMapStatus status, Predicate<DiscoSolrDocument> matching) {
         LOG.debug("Updating the status of the following documents with DiSCO iri {} to {}", discoUri, status);
 
         Set<DiscoPartialUpdate> statusUpdates;
@@ -91,7 +91,14 @@ class DiscosSolrOperations {
         }    
     }
 
-    void deleteDocumentsForLineage(String lineageUri) {
+    /**
+     * Removes {@link DiscoSolrDocument documents} from the index that participate in the specified lineage. All
+     * documents with a {@link DiscoSolrDocument#EVENT_LINEAGE_PROGENITOR_URI lineage URI} equal to {@code lineageUri}
+     * will be deleted from the index, regardless of the document {@link DiscoSolrDocument#DISCO_STATUS status}.
+     *
+     * @param lineageUri the lineage to delete from the index
+     */
+    public void deleteDocumentsForLineage(String lineageUri) {
         Page<DiscoSolrDocument> results = template.query(coreName,
                 new SimpleQuery(prepareDiscoLineageUriQuery(lineageUri)), DiscoSolrDocument.class);
 

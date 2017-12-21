@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,8 +16,6 @@ import java.util.logging.Level;
 
 import javax.sql.DataSource;
 
-import info.rmapproject.indexing.kafka.Condition;
-import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import info.rmapproject.indexing.kafka.Condition;
+import info.rmapproject.indexing.solr.repository.DiscoRepository;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -197,6 +198,75 @@ public class SmokeTestIT {
 
     private static String encodeAuthCreds(String accessKey, String secret) {
         return Base64.getEncoder().encodeToString(String.valueOf(accessKey + ":" + secret).getBytes());
+    }
+
+    /**
+     * The user creates a new DiSCO, once indexed they then delete it. The index should remove the DiSCO content and
+     * display as deleted.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testCreateDeleteDiSCOWithIndexer() throws IOException, InterruptedException {
+
+        // Bypass the RMap webapps, and directly ask Solr how many ACTIVE documents are in the index at the start of
+        // this test.
+        long initialActiveDocumentCount = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE").size();
+
+        // Re-usable logic which asks Solr how many ACTIVE documents are in the index.
+        Condition<Long> activeCountCondition = new Condition<>(() -> {
+            long activeCount = discoRepository.findDiscoSolrDocumentsByDiscoStatus("ACTIVE").size();
+            LOG.trace("Current ACTIVE document count: {}", activeCount);
+            return activeCount;
+        }, "Count of ACTIVE documents.");
+
+        String accessKey = "uah2CKDaBsEw3cEQ";
+        String secret = "NSbdzctrP46ZvhTi";
+        URL url = new URL(apiBaseUrl, apiCtxPath + "/discos");
+        String sampleDisco = IOUtils.toString(this.getClass().getResourceAsStream("/discos/discoA.ttl"));
+        String discoUri;
+
+        // Deposit a DiSCO; expect the DiSCO to be indexed.
+        try (Response res =
+                     http.newCall(new Request.Builder()
+                             .post(RequestBody.create(MediaType.parse("text/turtle"), sampleDisco))
+                             .url(url).addHeader("Authorization", "Basic " + encodeAuthCreds(accessKey, secret))
+                             .build())
+                             .execute()) {
+            assertEquals(url.toString() + " failed with: '" + res.code() + "', '" + res.message() + "'",
+                    201, res.code());
+            discoUri = res.body().string();
+        }
+
+        // Verify that the DiSCO is indexed, inferred by the increase in the number of active Solr documents in the
+        // index
+        assertTrue(activeCountCondition.awaitAndVerify((currentActiveCount) -> {
+            LOG.trace("Verifying that the number of current docs ({}) with ACTIVE status is greater than the initial " +
+                    "count of documents with ACTIVE status ({})", currentActiveCount, initialActiveDocumentCount);
+            return currentActiveCount > initialActiveDocumentCount;
+        }));
+
+        // Delete the DiSCO that was just deposited.  Expect that the documents present in the index for this DiSCO be
+        // removed.
+        String delUrl = url + "/" + URLEncoder.encode(discoUri, "UTF-8");
+        try (Response res =
+                     http.newCall(new Request.Builder()
+                             .delete()
+                             .url(delUrl).addHeader("Authorization", "Basic " + encodeAuthCreds(accessKey, secret))
+                             .build())
+                             .execute()) {
+            assertEquals(url.toString() + " failed with: '" + res.code() + "', '" + res.message() + "'",
+                    200, res.code());
+        }
+
+        // Verify that the number of active Solr documents in the index is now equal to the number of documents present
+        // when the test started; i.e. the documents that were added when the DiSCO was indexed have been deleted when
+        // the DELETE HTTP request was received.
+        assertTrue(activeCountCondition.awaitAndVerify((currentActiveCount) -> {
+            LOG.trace("Verifying that the count of current ACTIVE docs ({}) is the same as the number of ACTIVE " +
+                    "documents before this test started ({}).", currentActiveCount, initialActiveDocumentCount);
+            return (currentActiveCount == initialActiveDocumentCount);
+        }));
     }
 
 }

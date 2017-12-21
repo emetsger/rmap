@@ -4,11 +4,15 @@ import info.rmapproject.core.model.RMapIri;
 import info.rmapproject.core.model.agent.RMapAgent;
 import info.rmapproject.core.model.disco.RMapDiSCO;
 import info.rmapproject.core.model.event.RMapEvent;
+import info.rmapproject.core.model.event.RMapEventType;
+import info.rmapproject.core.model.impl.openrdf.ORMapEventDeletion;
+import info.rmapproject.core.model.impl.openrdf.ORMapEventTombstone;
 import info.rmapproject.core.rmapservice.RMapService;
 import info.rmapproject.indexing.IndexingInterruptedException;
 import info.rmapproject.indexing.IndexingTimeoutException;
 import info.rmapproject.indexing.solr.model.DiscoSolrDocument;
 import info.rmapproject.indexing.solr.model.KafkaMetadata;
+import info.rmapproject.indexing.solr.repository.DiscosSolrOperations;
 import info.rmapproject.indexing.solr.repository.EventDiscoTuple;
 import info.rmapproject.indexing.solr.repository.EventTupleIndexingRepository;
 import info.rmapproject.indexing.solr.repository.IndexDTOMapper;
@@ -52,6 +56,8 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
     @Autowired
     private RMapService rmapService;
 
+    private DiscosSolrOperations discosSolrOperations;
+
     /**
      * Retry indexing operations every {@code (indexRetryMs * indexRetryBackoffFactor)} ms, up to
      * {@code indexRetryMaxMs}.
@@ -72,8 +78,8 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
      *                                  {@code indexRetryMaxMs}
      */
     public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
-                                    IndexDTOMapper dtoMapper) {
-        this(indexer, dtoMapper,100, 120000);
+                                    IndexDTOMapper dtoMapper, DiscosSolrOperations solrOperations) {
+        this(indexer, dtoMapper, solrOperations, 100, 120000);
     }
 
     /**
@@ -94,8 +100,9 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
      *                                  {@code indexRetryMaxMs}
      */
      public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
-                                     IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs) {
-        this(indexer, dtoMapper, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
+                                     IndexDTOMapper dtoMapper, DiscosSolrOperations solrOperations,
+                                     int indexRetryTimeoutMs, int indexRetryMaxMs) {
+        this(indexer, dtoMapper, solrOperations, indexRetryTimeoutMs, indexRetryMaxMs, 1.5F);
      }
 
     /**
@@ -112,8 +119,8 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
      *                                  {@code indexRetryMaxMs}
      */
     public DefaultIndexRetryHandler(EventTupleIndexingRepository<DiscoSolrDocument> indexer,
-                                    IndexDTOMapper dtoMapper, int indexRetryTimeoutMs, int indexRetryMaxMs,
-                                    float indexRetryBackoffFactor) {
+                                    IndexDTOMapper dtoMapper, DiscosSolrOperations solrOperations,
+                                    int indexRetryTimeoutMs, int indexRetryMaxMs, float indexRetryBackoffFactor) {
         this.indexRetryTimeoutMs = assertPositive(indexRetryTimeoutMs,
                 iae("Index retry timeout must be a positive integer."));
         this.indexRetryBackoffFactor = assertPositive(indexRetryBackoffFactor,
@@ -122,6 +129,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
                 iae("Index retry max ms must be a positive integer."));
         this.indexer = assertNotNull(indexer, iae("Repository must not be null."));
         this.dtoMapper = assertNotNull(dtoMapper, iae("DTO Mapper must not be null."));
+        this.discosSolrOperations = assertNotNull(solrOperations, iae("Disco Solr Operations must not be null."));
 
         validateRetryMaxMs(indexRetryTimeoutMs, indexRetryMaxMs,
                 "Index retry max ms must be equal or greater than index retry timeout");
@@ -153,6 +161,23 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
         do {
 
             try {
+                /*
+                    Source DiSCOs of DELETION and TOMBSTONE events cannot be retrieved from the RMAP API, so they are
+                    handled "specially".  There's no point to proceed in creating a KafkaDTO, or sending the DTO to the
+                    indexer, because the indexer requires that the DTO be a connected graph of the event,
+                    source disco, and target disco.  Because the RMAP API doesn't give out tombstone or deleted discos
+                    (maybe that should be a policy implemented in the web api and not in the java api?), there's no
+                    point in pursuing the creation of a connected graph: the elements of the graph can't be retrieved
+                    from the API.  So just short-circuit the process here.
+                */
+                if (event.getEventType() == RMapEventType.DELETION || event.getEventType() == RMapEventType.TOMBSTONE) {
+                    LOG.trace("Cannot index events of type {}, however, the lineage with progenitor URI {} will be " +
+                            "removed from the index.", event.getEventType(), event.getLineageProgenitor());
+                    discosSolrOperations.deleteDocumentsForLineage(event.getLineageProgenitor().getStringValue());
+                    success = true;
+                    continue;
+                }
+
                 LOG.trace("Indexing event {}, attempt {} (total elapsed time {} ms)",
                         event.getId().getStringValue(), attempt, (currentTimeMillis() - start));
                 KafkaDTO dto = composeDTO(event, rmapService);
@@ -201,6 +226,7 @@ public class DefaultIndexRetryHandler implements IndexingRetryHandler, EventTupl
     }
 
     private KafkaDTO composeDTO(RMapEvent event, RMapService rmapService) {
+        LOG.trace("Composing KafkaDTO for event (id '{}', type '{}'): {}", event.getId(), event.getEventType(), event);
         RMapDiSCO sourceDisco = getDisco(findEventIri(event, SOURCE), rmapService);
         RMapDiSCO targetDisco = getDisco(findEventIri(event, TARGET), rmapService);
         RMapAgent agent = getAgent(event.getAssociatedAgent().getIri(), rmapService);
