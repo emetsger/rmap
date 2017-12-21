@@ -25,7 +25,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  *
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
-@SolrDocument(solrCoreName = "discos")
+@SolrDocument(collection = "discos")
 public class DiscoSolrDocument implements KafkaMetadata {
 
     /**

@@ -37,9 +37,19 @@
         </analyzer>
     </fieldType>
 
-    <fieldType name="description" class="solr.TextField"/>
+    <fieldType name="description" class="solr.TextField">
+        <analyzer>
+	        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	        <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+    </fieldType>
 
-    <fieldType name="triples" class="solr.TextField" multiValued="true"/>     
+    <fieldType name="triples" class="solr.TextField" multiValued="true"> <!-- multiple triples -->
+        <analyzer>
+	        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	        <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+    </fieldType>     
     
     <fieldType name="datetime" class="solr.DatePointField"/>
 
@@ -102,20 +112,15 @@
     <!--
       Agent that is responsible for the event and state of the DiSCO
     -->
-
     <field name="agent_uri" type="uri"/>
     <field name="agent_provider_uri" type="uri"/>
-    <field name="agent_name" type="description"/>
-    <!-- auth id? -->
+    <field name="agent_name" type="string"/>
 
     <field name="kafka_topic" type="string"/>
 
     <field name="kafka_partition" type="int"/>
 
     <field name="kafka_offset" type="long"/>
-
-
-
 
     <!-- Portions of the default managed_schema file follows.  It seems that solr depends on some of these fieldTypes being defined -->
 
@@ -163,11 +168,6 @@
     <fieldType name="int" class="solr.TrieIntField" positionIncrementGap="0" precisionStep="0"/>
 
     <fieldType name="ints" class="solr.TrieIntField" positionIncrementGap="0" multiValued="true" precisionStep="0"/>
-
-    <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
-
-    <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" geo="true" maxDistErr="0.001"
-               distErrPct="0.025" distanceUnits="kilometers"/>
 
     <fieldType name="long" class="solr.TrieLongField" positionIncrementGap="0" precisionStep="0"/>
 

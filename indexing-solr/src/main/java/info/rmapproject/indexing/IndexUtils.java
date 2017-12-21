@@ -32,7 +32,10 @@ import static java.net.URI.create;
  * @author Elliot Metsger (emetsger@jhu.edu)
  */
 public class IndexUtils {
-
+	
+	public static final String HL_PREFIX = "##$";
+	public static final String HL_POSTFIX = "$##";
+	
     public static boolean notNull(Object o) {
         return o != null;
     }
