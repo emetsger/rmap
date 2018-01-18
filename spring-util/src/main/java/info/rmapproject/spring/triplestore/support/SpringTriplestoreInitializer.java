@@ -21,7 +21,7 @@ public class SpringTriplestoreInitializer implements TriplestoreInitializer {
     private boolean destroyEnabled;
 
     @Override
-    public void initializeTriplestore() {
+    public synchronized void initializeTriplestore() {
         assertState();
         if (initializeEnabled) {
             URL u = triplestoreManager.createTriplestore();
@@ -32,7 +32,7 @@ public class SpringTriplestoreInitializer implements TriplestoreInitializer {
     }
 
     @Override
-    public void destroyTriplestore() {
+    public synchronized void destroyTriplestore() {
         assertState();
         if (destroyEnabled) {
             URL u = triplestoreManager.removeTriplestore();
@@ -43,7 +43,7 @@ public class SpringTriplestoreInitializer implements TriplestoreInitializer {
     }
 
     @Override
-    public void clearTriplestore() {
+    public synchronized void clearTriplestore() {
         assertState();
         URL u = triplestoreManager.removeTriplestore();
         LOG.debug("Cleared triplestore at {}", u);

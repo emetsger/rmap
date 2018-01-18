@@ -69,7 +69,7 @@ public class Rdf4jTriplestoreManager implements TriplestoreManager {
      * @return the URL of the repository
      */
     @Override
-    public URL createTriplestore() {
+    public synchronized URL createTriplestore() {
         AtomicBoolean exists = new AtomicBoolean(Boolean.FALSE);
         execute(httpClient, "GET", repositoryUrl(defaultName).toString(), emptyMap(), null,
                 (res) -> {
@@ -94,7 +94,7 @@ public class Rdf4jTriplestoreManager implements TriplestoreManager {
      * @throws RuntimeException if the repository cannot be cleared, or if the repository does not exist
      */
     @Override
-    public URL clearTriplestore() {
+    public synchronized URL clearTriplestore() {
         return clearTriplestore(defaultName);
     }
 
@@ -105,11 +105,11 @@ public class Rdf4jTriplestoreManager implements TriplestoreManager {
      * @throws RuntimeException if the repository cannot be deleted, or if the repository does not exist
      */
     @Override
-    public URL removeTriplestore() {
+    public synchronized URL removeTriplestore() {
         return removeTriplestore(defaultName);
     }
 
-    private URL createTriplestore(String name) {
+    private synchronized URL createTriplestore(String name) {
         FormBody createBody = createRepositoryFormBody(name, defaultType, defaultIndexes);
 
         execute(httpClient, "POST", createUrl().toString(), emptyMap(), createBody,
