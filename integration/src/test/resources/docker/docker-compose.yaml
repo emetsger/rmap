@@ -53,14 +53,15 @@ services:
   rdf4j:
     container_name: rdf4j
     image: jetty:9.4.7-alpine
+    user: root
     env_file: .env
-#    read_only: true
     environment:
-      JAVA_OPTIONS: "-Dorg.eclipse.rdf4j.appdata.basedir=/tmp/jetty/rdf4j-data"
+      JAVA_OPTIONS: "-Dorg.eclipse.rdf4j.appdata.basedir=/tmp/rdf4j/data -Djetty.port=${RDF4J_PORT}"
     ports:
       - "${RDF4J_PORT}:${RDF4J_PORT}"
     volumes:
-      - "./rdf4j/data:/tmp/jetty/rdf4j-data"
+      - "./rdf4j/data:/tmp/rdf4j/data:rw"
       - "./rdf4j/webapps:/var/lib/jetty/webapps"
       - "/tmp/jetty/:/tmp/jetty/"
       - "/tmp/jetty-run/:/run/jetty/"
+#    command: [ "sh", "-c", "java -jar /usr/local/jetty/start.jar --port ${RDF4J_PORT}"]
