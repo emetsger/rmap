@@ -361,7 +361,7 @@
                 <executions>
                     <execution>
                         <id>copy-rdf4j-wars</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>generate-test-resources</phase>
                         <goals>
                             <goal>copy</goal>
                         </goals>
@@ -406,20 +406,6 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
-                    </execution>
-                    <execution>
-                        <id>default-cli</id>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <external>
-                                        <type>compose</type>
-                                        <basedir>src/test/resources/docker</basedir>
-                                        <composeFile>docker-compose.yaml</composeFile>
-                                    </external>
-                                </image>
-                            </images>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
