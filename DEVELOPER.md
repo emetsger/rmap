@@ -38,9 +38,9 @@ The developer runtime is appropriate for testing modifications to the source cod
 
 - `mvn clean install` from the base RMap directory
 - then `cd` into the `integration` directory
-- run `mvn validate docker:start cargo:run`
-  - the `validate` phase starts the Derby database, and initializes the database schema
-  - `docker:start` boots Zookeeper, Kafka, and Solr in Docker
+- run `mvn process-test-resources docker:start cargo:run`
+  - the `process-test-resource` phase starts the Derby database, initializes the database schema, and prepares RDF4J web applications for deployment
+  - `docker:start` boots Zookeeper, Kafka, RDF4J, and Solr in Docker
   - `cargo:run` starts Tomcat, which runs the API and HTML web applications
 > Because the runtime configuration depends on the presence of the `docker.host.address` property, and because that property is only available when the [Docker Maven Plugin](https://dmp.fabric8.io/) is invoked, `docker:start` must be invoked with `cargo:run` on the same command line.
 - the runtime can be stopped by typing `CTRL-C` at the console, followed by `mvn docker:stop`
@@ -106,9 +106,11 @@ Hibernate is used to generate the database schema, and Spring is used to populat
 ## Integration Environment
 The integration environment attempts to match the production environment as closely as possible.  The environment is configured inside the `integration` module's Maven POM.  The Maven [lifecycle](http://maven.apache.org/ref/3.3.9/maven-core/lifecycles.html#default_Lifecycle) is leveraged to start up the various services to support the IT environment.
 
-The `validate` lifecycle phase uses beanshell script to launch the Derby network server.  The network server is used so that both the RMap API and HTML UI webapps can connect to a shared database instance.  In addition, integration test fixtures may connect to the shared database in order to inspect or initialize content.  The Derby instance home is configured to be in `integration/target/test-classes/derby`.
+The `validate` lifecycle phase uses a custom Ant task to launch the Derby network server.  The network server is used so that both the RMap API and HTML UI webapps can connect to a shared database instance.  In addition, integration test fixtures may connect to the shared database in order to inspect or initialize content.  The Derby instance home is configured to be in `integration/target/test-classes/derby`.
 
-The next relevant lifecycle phase is the `pre-integration-test` phase.  The Cargo Maven plugin is used to configure and launch an instance of Tomcat.  The Tomcat instance contains  the RMap API and HTML UI web applications under test, and the RDF4J HTTP server and Workbench web applications.  A lot happens inside of this phase, which will be discussed a bit later.
+The `process-test-resources` phase copies the RDF4J Workbench and Triplestore web applications to `target/`, so they can be exposed to the Docker as a volume.  See the `rdf4j` configuration in `docker-compose.yaml` for more detail.
+
+The next relevant lifecycle phase is the `pre-integration-test` phase.  The Cargo Maven plugin is used to configure and launch an instance of Tomcat.  The Tomcat instance contains  the RMap API and HTML UI web applications under test.  A lot happens inside of this phase, which will be discussed a bit later.
 
 Then the `integration-test` phase is started, and the Maven Failsafe plugin takes over.  The actual integration tests execute in this phase, exercising the HTTP endpoints of the RMap API and HTML UI.
 
@@ -117,11 +119,15 @@ Finally, the `post-integration-test` phase stops Tomcat, and the `verify` phase 
 ### Database and Triplestore initialization
 Remember that the Derby network server is started in the `validate` phase, and has a home directory allocated for managing the database under `integration/target/test-classes/derby`.  That is, after the `validate` phase, clients may connect to the database.  By using a JDBC url with the option `create=true`, the database will be created automatically upon the first connection if it doesn't already exist.  In fact, the integration environment uses the `create=true` option throughout.  This means that there is no special logic in the integration environment for creating the database itself.  It relies on Derby to handle the database creation.
  
-When the `pre-integration-test` phase is entered, Tomcat is started with four web applications:
+When the `pre-integration-test` phase is entered, Tomcat is started with two web applications:
  * RMap API (`api` module)
  * RMap HTML UI (`webapp` module)
- * RDF4J HTTP server (provides an HTTP API to _existing_ RDF4J triplestores)
- * RDF4J Workbench HTML UI (provides an HTML UI to _create_ and manage RDF4J triplestores)
+ 
+Docker is started with four applications: 
+ * RDF4J HTTP server (provides an HTTP API to _existing_ RDF4J triplestores) and the RDF4J Workbench HTML UI (provides an HTML UI to _create_ and manage RDF4J triplestores)
+ * Solr
+ * Kafka
+ * Zookeeper
 
  When the RMap applications start, a few things happen:
  1. Hibernate connects to the database and creates the table schema for RMap if it doesn't already exist.
